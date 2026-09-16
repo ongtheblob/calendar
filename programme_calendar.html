@@ -1,0 +1,5081 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Programme Calendar - HBB & OTH</title>
+
+<style>
+
+/* =========================================================
+   BASIC
+========================================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #202124;
+  background: #f8f9fa;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+
+/* =========================================================
+   LAYOUT
+========================================================= */
+
+.app {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
+
+.sidebar {
+  width: 330px;
+  min-width: 330px;
+  background: #ffffff;
+  border-right: 1px solid #dadce0;
+  padding: 18px;
+  overflow-y: auto;
+}
+
+.sidebar h2 {
+  margin: 0 0 18px;
+  font-size: 20px;
+}
+
+.form-group {
+  margin-bottom: 14px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  border: 1px solid #dadce0;
+  border-radius: 6px;
+  padding: 9px 10px;
+  background: #fff;
+  color: #202124;
+  font-size: 14px;
+}
+
+textarea {
+  min-height: 65px;
+  resize: vertical;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid rgba(26,115,232,.18);
+  border-color: #1a73e8;
+}
+
+.duration-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.hint {
+  color: #5f6368;
+  font-size: 11px;
+  line-height: 1.4;
+  margin-top: 5px;
+}
+
+.btn {
+  width: 100%;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-top: 7px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: #1a73e8;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #155fc0;
+}
+
+.btn-secondary {
+  background: #f1f3f4;
+  color: #202124;
+}
+
+.btn-secondary:hover {
+  background: #e5e7e9;
+}
+
+.btn-danger {
+  background: #d93025;
+  color: white;
+}
+
+.rules {
+  margin-top: 18px;
+  padding: 12px;
+  border-radius: 8px;
+  background: #f8f9fa;
+  color: #5f6368;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.rules strong {
+  color: #202124;
+}
+
+
+/* =========================================================
+   MAIN
+========================================================= */
+
+.main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: white;
+}
+
+.toolbar {
+  height: 68px;
+  min-height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  border-bottom: 1px solid #dadce0;
+}
+
+.toolbar-left,
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toolbar-btn {
+  width: auto;
+  padding: 8px 12px;
+  border: 1px solid #dadce0;
+  border-radius: 6px;
+  background: white;
+  color: #202124;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.toolbar-btn:hover {
+  background: #f1f3f4;
+}
+
+.month-title {
+  margin-left: 8px;
+  font-size: 21px;
+  font-weight: 500;
+}
+
+.current-calendar {
+  color: #5f6368;
+  font-size: 13px;
+}
+
+
+/* =========================================================
+   CALENDAR
+========================================================= */
+
+.calendar {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.week-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-bottom: 1px solid #dadce0;
+}
+
+.week-header div {
+  padding: 9px 4px;
+  text-align: center;
+  color: #5f6368;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.calendar-grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(6, minmax(95px, 1fr));
+  overflow: auto;
+}
+
+.day-cell {
+  min-width: 0;
+  min-height: 0;
+  padding: 6px;
+  overflow: auto;
+  border-right: 1px solid #dadce0;
+  border-bottom: 1px solid #dadce0;
+  background: white;
+}
+
+.day-cell:nth-child(7n) {
+  border-right: none;
+}
+
+.day-cell.other-month {
+  background: #fafafa;
+}
+
+.date-number {
+  width: 27px;
+  height: 27px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+
+.today .date-number {
+  background: #1a73e8;
+  color: white;
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   PROGRAMME EVENT
+========================================================= */
+
+.event {
+  padding: 5px 6px;
+  margin-bottom: 4px;
+  border-left: 3px solid #1a73e8;
+  border-radius: 4px;
+  background: #e8f0fe;
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.event:hover {
+  filter: brightness(.97);
+}
+
+.event-time {
+  font-weight: 700;
+}
+
+.event-name {
+  margin-top: 2px;
+  font-weight: 600;
+}
+
+.event-meta {
+  margin-top: 2px;
+  color: #5f6368;
+  font-size: 10px;
+}
+
+
+/* =========================================================
+   MANPOWER DAY BUTTON
+========================================================= */
+
+.manpower-button {
+  width: 100%;
+  padding: 5px 6px;
+  margin-top: 6px;
+  border: none;
+  border-radius: 5px;
+  background: #f1f3f4;
+  color: #5f6368;
+  font-size: 10px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.manpower-button:hover {
+  background: #e5e7e9;
+}
+
+.manpower-button.good {
+  background: #e6f4ea;
+  color: #188038;
+}
+
+.manpower-button.warning {
+  background: #fef7e0;
+  color: #b06000;
+}
+
+
+/* =========================================================
+   SHEET TABS
+========================================================= */
+
+.sheet-tabs {
+  height: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  padding: 0 10px;
+  background: #f1f3f4;
+  border-top: 1px solid #dadce0;
+}
+
+.sheet-tab {
+  position: relative;
+  width: 110px;
+  height: 38px;
+  border: none;
+  border-radius: 8px 8px 0 0;
+  background: #e0e0e0;
+  color: #5f6368;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sheet-tab:hover {
+  background: #d9dadb;
+}
+
+.sheet-tab.active {
+  background: white;
+  color: #202124;
+}
+
+.sheet-tab.active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: #1a73e8;
+}
+
+
+/* =========================================================
+   MODALS
+========================================================= */
+
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,.35);
+}
+
+.modal-overlay.visible {
+  display: flex;
+}
+
+.modal {
+  width: min(520px, 92vw);
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 20px;
+  border-radius: 10px;
+  background: white;
+  box-shadow: 0 15px 50px rgba(0,0,0,.25);
+}
+
+.modal h3 {
+  margin: 0 0 18px;
+  font-size: 20px;
+}
+
+.modal-row {
+  margin-bottom: 12px;
+}
+
+.modal-label {
+  margin-bottom: 3px;
+  color: #5f6368;
+  font-size: 11px;
+}
+
+.modal-value {
+  font-size: 14px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.modal-actions .btn {
+  width: auto;
+  min-width: 90px;
+  margin-top: 0;
+}
+
+.staff-list {
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 8px;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.staff-option {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 4px;
+  border-bottom: 1px solid #eeeeee;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.staff-option:last-child {
+  border-bottom: none;
+}
+
+.staff-option input {
+  width: 17px;
+  height: 17px;
+  margin: 0;
+}
+
+.staff-toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.small-btn {
+  width: auto;
+  padding: 7px 10px;
+  border: 1px solid #dadce0;
+  border-radius: 6px;
+  background: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.small-btn:hover {
+  background: #f1f3f4;
+}
+
+.count-box {
+  margin: 10px 0 14px;
+  font-size: 14px;
+}
+
+.staff-status {
+  min-height: 18px;
+  margin-top: 5px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.staff-status.good {
+  color: #188038;
+}
+
+.staff-status.warning {
+  color: #b06000;
+}
+
+.staff-status.neutral {
+  color: #5f6368;
+}
+
+@media (max-width: 850px) {
+  .sidebar {
+    width: 290px;
+    min-width: 290px;
+  }
+
+  .toolbar-right {
+    display: none;
+  }
+}
+
+@media (max-width: 650px) {
+  .app {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    min-width: 0;
+    max-height: 46vh;
+    border-right: none;
+    border-bottom: 1px solid #dadce0;
+  }
+
+  .calendar-grid {
+    grid-template-rows: repeat(6, 115px);
+  }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <!-- =====================================================
+       SIDEBAR
+  ====================================================== -->
+
+  <aside class="sidebar">
+
+    <h2>Add Programme</h2>
+
+    <div class="form-group">
+      <label for="programme">Programme</label>
+
+      <select id="programme">
+
+        <option value="">
+          Select programme
+        </option>
+
+        <option value="Body Composition Assessment">
+          Body Composition Assessment
+        </option>
+
+        <option value="Active Health Senior Interest Group">
+          Active Health Senior Interest Group
+        </option>
+
+        <option value="Function - Combat Age-Related Loss of Muscle (CALM) 1.0">
+          Function - Combat Age-Related Loss of Muscle (CALM) 1.0
+        </option>
+
+        <option value="Function - Combat Age-Related Loss of Muscle (CALM) 2.0">
+          Function - Combat Age-Related Loss of Muscle (CALM) 2.0
+        </option>
+
+        <option value="Strength 1.0">
+          Strength 1.0
+        </option>
+
+        <option value="Strength 2.0 - Assessment & Check-In">
+          Strength 2.0 - Assessment & Check-In
+        </option>
+
+        <option value="Strength 2.0 - Mobility Workout">
+          Strength 2.0 - Mobility Workout
+        </option>
+
+        <option value="Strength 2.0 - Functional Fitness Workout">
+          Strength 2.0 - Functional Fitness Workout
+        </option>
+
+        <option value="Strength 2.0 - Foundation Strength Workout">
+          Strength 2.0 - Foundation Strength Workout
+        </option>
+
+        <option value="Perform 1.0">
+          Perform 1.0
+        </option>
+
+        <option value="Perform 2.0 - Assessment & Check-In">
+          Perform 2.0 - Assessment & Check-In
+        </option>
+
+        <option value="Perform 2.0 - ENGINE Workout">
+          Perform 2.0 - ENGINE Workout
+        </option>
+
+        <option value="Perform 2.0 - AMRAP Workout">
+          Perform 2.0 - AMRAP Workout
+        </option>
+
+        <option value="Perform 2.0 - Multi-Modal Workout">
+          Perform 2.0 - Multi-Modal Workout
+        </option>
+
+        <option value="Manage Knee Health">
+          Manage Knee Health
+        </option>
+
+        <option value="Manage Metabolic Health">
+          Manage Metabolic Health
+        </option>
+
+        <option value="Others">
+          Others
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <div
+      class="form-group hidden"
+      id="customProgrammeGroup"
+    >
+
+      <label for="customProgramme">
+        Other Programme Name
+      </label>
+
+      <input
+        id="customProgramme"
+        type="text"
+        placeholder="Enter programme name"
+      >
+
+    </div>
+
+
+    <div class="form-group">
+
+      <label for="venue">
+        Venue / Calendar Sheet
+      </label>
+
+      <select id="venue">
+
+        <option value="HBB">
+          HBB
+        </option>
+
+        <option value="OTH">
+          OTH
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <div class="form-group">
+
+      <label for="startDate">
+        First Session Date
+      </label>
+
+      <input
+        id="startDate"
+        type="date"
+      >
+
+    </div>
+
+
+    <div class="form-group">
+
+      <label for="startTime">
+        Start Time
+      </label>
+
+      <input
+        id="startTime"
+        type="time"
+        value="09:00"
+      >
+
+    </div>
+
+
+    <div
+      class="form-group hidden"
+      id="durationGroup"
+    >
+
+      <label>
+        Duration for Others
+      </label>
+
+      <div class="duration-row">
+
+        <select id="durationPreset">
+
+          <option value="30">
+            30 minutes
+          </option>
+
+          <option value="45">
+            45 minutes
+          </option>
+
+          <option value="60" selected>
+            1 hour
+          </option>
+
+          <option value="75">
+            1 hour 15 minutes
+          </option>
+
+          <option value="90">
+            1 hour 30 minutes
+          </option>
+
+          <option value="105">
+            1 hour 45 minutes
+          </option>
+
+          <option value="120">
+            2 hours
+          </option>
+
+          <option value="custom">
+            Custom
+          </option>
+
+        </select>
+
+
+        <input
+          id="customDuration"
+          type="number"
+          min="1"
+          step="1"
+          placeholder="Minutes"
+          disabled
+        >
+
+      </div>
+
+      <div class="hint">
+        All listed programmes are automatically 1 hour.
+        Only Others has adjustable duration.
+      </div>
+
+    </div>
+
+
+    <div class="form-group">
+
+      <label for="remarks">
+        Remarks
+      </label>
+
+      <textarea
+        id="remarks"
+        placeholder="Optional remarks"
+      ></textarea>
+
+    </div>
+
+
+    <div class="form-group">
+
+      <label for="status">
+        Status
+      </label>
+
+      <select id="status">
+
+        <option value="Uploaded (100% Created)">
+          Uploaded (100% Created)
+        </option>
+
+        <option value="Draft">
+          Draft
+        </option>
+
+        <option value="Confirmed">
+          Confirmed
+        </option>
+
+        <option value="Cancelled">
+          Cancelled
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <button
+      class="btn btn-primary"
+      id="addButton"
+    >
+      Add Programme
+    </button>
+
+
+    <button
+      class="btn btn-secondary"
+      id="exportCurrentButton"
+    >
+      Export Current Sheet CSV
+    </button>
+
+
+    <button
+      class="btn btn-secondary"
+      id="exportAllButton"
+    >
+      Export HBB + OTH CSV
+    </button>
+
+
+    <button
+      class="btn btn-secondary"
+      id="clearButton"
+    >
+      Clear All Data
+    </button>
+
+
+    <div class="rules">
+
+      <strong>Programme Rules</strong>
+
+      <br><br>
+
+      <strong>6 weeks</strong><br>
+      Manage Knee Health<br>
+      Manage Metabolic Health<br>
+      CALM 2.0
+
+      <br><br>
+
+      <strong>8 weeks</strong><br>
+      CALM 1.0<br>
+      Strength 1.0<br>
+      Perform 1.0
+
+      <br><br>
+
+      <strong>Stand-alone</strong><br>
+      All other programmes
+
+      <br><br>
+
+      <strong>Duration:</strong> 1 hour for all standard
+      programmes. Others is adjustable.
+
+      <br><br>
+
+      <strong>Manpower:</strong> assigned by venue + day,
+      independently from programmes.
+
+    </div>
+
+  </aside>
+
+
+  <!-- =====================================================
+       MAIN
+  ====================================================== -->
+
+  <main class="main">
+
+    <div class="toolbar">
+
+      <div class="toolbar-left">
+
+        <button
+          class="toolbar-btn"
+          id="todayButton"
+        >
+          Today
+        </button>
+
+        <button
+          class="toolbar-btn"
+          id="previousButton"
+        >
+          ‹
+        </button>
+
+        <button
+          class="toolbar-btn"
+          id="nextButton"
+        >
+          ›
+        </button>
+
+        <div
+          class="month-title"
+          id="monthTitle"
+        ></div>
+
+      </div>
+
+
+      <div class="toolbar-right">
+
+        <span class="current-calendar">
+          Calendar:
+        </span>
+
+        <strong id="currentVenueLabel">
+          HBB
+        </strong>
+
+      </div>
+
+    </div>
+
+
+    <div class="calendar">
+
+      <div class="week-header">
+
+        <div>Sun</div>
+        <div>Mon</div>
+        <div>Tue</div>
+        <div>Wed</div>
+        <div>Thu</div>
+        <div>Fri</div>
+        <div>Sat</div>
+
+      </div>
+
+
+      <div
+        class="calendar-grid"
+        id="calendarGrid"
+      ></div>
+
+    </div>
+
+
+    <!-- GOOGLE SHEETS STYLE TABS -->
+
+    <div class="sheet-tabs">
+
+      <button
+        class="sheet-tab active"
+        id="hbbSheetTab"
+      >
+        HBB
+      </button>
+
+      <button
+        class="sheet-tab"
+        id="othSheetTab"
+      >
+        OTH
+      </button>
+
+    </div>
+
+  </main>
+
+</div>
+
+
+<!-- =======================================================
+     PROGRAMME DETAILS / EDIT MODAL
+======================================================== -->
+
+<div
+  class="modal-overlay"
+  id="eventModal"
+>
+
+  <div class="modal">
+
+    <h3 id="modalProgramme">
+      Programme
+    </h3>
+
+
+    <div class="modal-row">
+      <div class="modal-label">
+        Venue
+      </div>
+
+      <div
+        class="modal-value"
+        id="modalVenue"
+      ></div>
+    </div>
+
+
+    <div class="modal-row">
+      <div class="modal-label">
+        Date
+      </div>
+
+      <div
+        class="modal-value"
+        id="modalDate"
+      ></div>
+    </div>
+
+
+    <div class="modal-row">
+      <div class="modal-label">
+        Time
+      </div>
+
+      <div
+        class="modal-value"
+        id="modalTime"
+      ></div>
+    </div>
+
+
+    <div class="modal-row">
+      <div class="modal-label">
+        Duration
+      </div>
+
+      <div
+        class="modal-value"
+        id="modalDuration"
+      ></div>
+    </div>
+
+
+    <div class="modal-row">
+      <div class="modal-label">
+        Pax
+      </div>
+
+      <div
+        class="modal-value"
+        id="modalPax"
+      ></div>
+    </div>
+
+
+    <div class="modal-row">
+      <div class="modal-label">
+        Session
+      </div>
+
+      <div
+        class="modal-value"
+        id="modalSession"
+      ></div>
+    </div>
+
+
+    <div class="modal-row">
+      <div class="modal-label">
+        Status
+      </div>
+
+      <div
+        class="modal-value"
+        id="modalStatus"
+      ></div>
+    </div>
+
+
+    <div class="modal-row">
+      <div class="modal-label">
+        Remarks
+      </div>
+
+      <div
+        class="modal-value"
+        id="modalRemarks"
+      ></div>
+    </div>
+
+
+    <div class="modal-actions">
+
+      <button
+        class="btn btn-primary"
+        id="editButton"
+      >
+        Edit Programme
+      </button>
+
+      <button
+        class="btn btn-danger"
+        id="deleteButton"
+      >
+        Delete
+      </button>
+
+      <button
+        class="btn btn-secondary"
+        id="closeButton"
+      >
+        Close
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- =======================================================
+     EDIT PROGRAMME MODAL
+======================================================== -->
+
+<div
+  class="modal-overlay"
+  id="editModal"
+>
+
+  <div class="modal">
+
+    <h3>
+      Edit Programme
+    </h3>
+
+
+    <div class="form-group">
+
+      <label for="editProgramme">
+        Programme
+      </label>
+
+      <select id="editProgramme">
+
+        <option value="">
+          Select programme
+        </option>
+
+        <option value="Body Composition Assessment">
+          Body Composition Assessment
+        </option>
+
+        <option value="Active Health Senior Interest Group">
+          Active Health Senior Interest Group
+        </option>
+
+        <option value="Function - Combat Age-Related Loss of Muscle (CALM) 1.0">
+          Function - Combat Age-Related Loss of Muscle (CALM) 1.0
+        </option>
+
+        <option value="Function - Combat Age-Related Loss of Muscle (CALM) 2.0">
+          Function - Combat Age-Related Loss of Muscle (CALM) 2.0
+        </option>
+
+        <option value="Strength 1.0">
+          Strength 1.0
+        </option>
+
+        <option value="Strength 2.0 - Assessment & Check-In">
+          Strength 2.0 - Assessment & Check-In
+        </option>
+
+        <option value="Strength 2.0 - Mobility Workout">
+          Strength 2.0 - Mobility Workout
+        </option>
+
+        <option value="Strength 2.0 - Functional Fitness Workout">
+          Strength 2.0 - Functional Fitness Workout
+        </option>
+
+        <option value="Strength 2.0 - Foundation Strength Workout">
+          Strength 2.0 - Foundation Strength Workout
+        </option>
+
+        <option value="Perform 1.0">
+          Perform 1.0
+        </option>
+
+        <option value="Perform 2.0 - Assessment & Check-In">
+          Perform 2.0 - Assessment & Check-In
+        </option>
+
+        <option value="Perform 2.0 - ENGINE Workout">
+          Perform 2.0 - ENGINE Workout
+        </option>
+
+        <option value="Perform 2.0 - AMRAP Workout">
+          Perform 2.0 - AMRAP Workout
+        </option>
+
+        <option value="Perform 2.0 - Multi-Modal Workout">
+          Perform 2.0 - Multi-Modal Workout
+        </option>
+
+        <option value="Manage Knee Health">
+          Manage Knee Health
+        </option>
+
+        <option value="Manage Metabolic Health">
+          Manage Metabolic Health
+        </option>
+
+        <option value="__CUSTOM__">
+          Other / Custom
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <div
+      class="form-group hidden"
+      id="editCustomProgrammeGroup"
+    >
+
+      <label for="editCustomProgramme">
+        Custom Programme Name
+      </label>
+
+      <input
+        id="editCustomProgramme"
+        type="text"
+        placeholder="Enter programme name"
+      >
+
+    </div>
+
+
+    <div class="form-group">
+
+      <label for="editVenue">
+        Venue / Calendar
+      </label>
+
+      <select id="editVenue">
+        <option value="HBB">HBB</option>
+        <option value="OTH">OTH</option>
+      </select>
+
+    </div>
+
+
+    <div class="form-group">
+
+      <label for="editStartDate">
+        First Session Date
+      </label>
+
+      <input
+        id="editStartDate"
+        type="date"
+      >
+
+    </div>
+
+
+    <div class="form-group">
+
+      <label for="editStartTime">
+        Start Time
+      </label>
+
+      <input
+        id="editStartTime"
+        type="time"
+      >
+
+    </div>
+
+
+    <div
+      class="form-group hidden"
+      id="editDurationGroup"
+    >
+
+      <label for="editDuration">
+        Duration for Others
+      </label>
+
+      <input
+        id="editDuration"
+        type="number"
+        min="1"
+        step="1"
+        placeholder="Minutes"
+      >
+
+    </div>
+
+
+    <div class="form-group">
+
+      <label for="editRemarks">
+        Remarks
+      </label>
+
+      <textarea id="editRemarks"></textarea>
+
+    </div>
+
+
+    <div class="form-group">
+
+      <label for="editStatus">
+        Status
+      </label>
+
+      <select id="editStatus">
+
+        <option value="Uploaded (100% Created)">
+          Uploaded (100% Created)
+        </option>
+
+        <option value="Draft">
+          Draft
+        </option>
+
+        <option value="Confirmed">
+          Confirmed
+        </option>
+
+        <option value="Cancelled">
+          Cancelled
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <div class="hint">
+      Editing a series updates the entire series.
+      The new first session becomes W1.
+    </div>
+
+
+    <div class="modal-actions">
+
+      <button
+        class="btn btn-primary"
+        id="saveEditButton"
+      >
+        Save Changes
+      </button>
+
+      <button
+        class="btn btn-secondary"
+        id="cancelEditButton"
+      >
+        Cancel
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- =======================================================
+     MANPOWER MODAL
+======================================================== -->
+
+<div
+  class="modal-overlay"
+  id="manpowerModal"
+>
+
+  <div class="modal">
+
+    <h3>
+      Daily Manpower
+    </h3>
+
+
+    <div class="modal-row">
+
+      <div class="modal-label">
+        Venue
+      </div>
+
+      <div
+        class="modal-value"
+        id="manpowerVenue"
+      ></div>
+
+    </div>
+
+
+    <div class="modal-row">
+
+      <div class="modal-label">
+        Date
+      </div>
+
+      <div
+        class="modal-value"
+        id="manpowerDate"
+      ></div>
+
+    </div>
+
+
+    <div class="staff-toolbar">
+
+      <button
+        class="small-btn"
+        id="selectAllStaff"
+      >
+        Select All
+      </button>
+
+      <button
+        class="small-btn"
+        id="clearAllStaff"
+      >
+        Clear All
+      </button>
+
+    </div>
+
+
+    <div
+      class="staff-list"
+      id="staffList"
+    ></div>
+
+
+    <div class="count-box">
+      Present:
+      <strong id="presentCount">0</strong>
+    </div>
+
+
+    <div class="form-group">
+
+      <label for="requiredManpower">
+        Required Manpower
+      </label>
+
+      <input
+        id="requiredManpower"
+        type="number"
+        min="0"
+        step="1"
+        placeholder="Optional"
+      >
+
+    </div>
+
+
+    <div class="form-group">
+
+      <label for="manpowerNotes">
+        Notes
+      </label>
+
+      <textarea
+        id="manpowerNotes"
+        placeholder="Optional notes for the day"
+      ></textarea>
+
+    </div>
+
+
+    <div
+      class="staff-status"
+      id="staffStatus"
+    ></div>
+
+
+    <div class="modal-actions">
+
+      <button
+        class="btn btn-primary"
+        id="saveManpower"
+      >
+        Save
+      </button>
+
+      <button
+        class="btn btn-secondary"
+        id="closeManpower"
+      >
+        Cancel
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   PROGRAMME RULES
+========================================================= */
+
+const SERIES_WEEKS = {
+
+  "Manage Knee Health": 6,
+
+  "Manage Metabolic Health": 6,
+
+  "Function - Combat Age-Related Loss of Muscle (CALM) 1.0": 8,
+
+  "Function - Combat Age-Related Loss of Muscle (CALM) 2.0": 6,
+
+  "Strength 1.0": 8,
+
+  "Perform 1.0": 8
+
+};
+
+
+/* =========================================================
+   PAX RULES
+========================================================= */
+
+const PAX = {
+
+  "Strength 1.0": 12,
+
+  "Strength 2.0 - Foundation Strength Workout": 14,
+
+  "Strength 2.0 - Functional Fitness Workout": 12,
+
+  "Strength 2.0 - Mobility Workout": 12,
+
+  "Strength 2.0 - Assessment & Check-In": 10,
+
+  "Perform 1.0": 10,
+
+  "Perform 2.0 - Multi-Modal Workout": 12,
+
+  "Perform 2.0 - AMRAP Workout": 12,
+
+  "Perform 2.0 - ENGINE Workout": 12,
+
+  "Perform 2.0 - Assessment & Check-In": 10,
+
+  "Function - Combat Age-Related Loss of Muscle (CALM) 1.0": 12,
+
+  "Function - Combat Age-Related Loss of Muscle (CALM) 2.0": 14,
+
+  "Manage Knee Health": 8,
+
+  "Manage Metabolic Health": 8,
+
+  "Body Composition Assessment": 16,
+
+  "Active Health Senior Interest Group": 12
+
+};
+
+
+/* =========================================================
+   STAFF LIST
+========================================================= */
+
+const STAFF_LIST = [
+
+  "Joelle",
+  "Jireh",
+  "RJ",
+  "Clarissa",
+  "Rachael",
+  "Team Nila",
+  "APS",
+  "Other"
+
+];
+
+
+/*
+   Replace Staff A, Staff B etc. with your real staff names.
+*/
+
+
+/* =========================================================
+   STORAGE
+========================================================= */
+
+const EVENTS_KEY =
+  "programme_calendar_events_final";
+
+const MANPOWER_KEY =
+  "programme_calendar_manpower_final";
+
+
+let events =
+  loadData(
+    EVENTS_KEY,
+    []
+  );
+
+
+let manpower =
+  loadData(
+    MANPOWER_KEY,
+    {}
+  );
+
+
+/* =========================================================
+   STATE
+========================================================= */
+
+let currentVenue =
+  "HBB";
+
+
+let currentDate =
+  new Date(
+    new Date().getFullYear(),
+    new Date().getMonth(),
+    1
+  );
+
+
+let selectedEventId =
+  null;
+
+
+let manpowerDate =
+  null;
+
+
+/* =========================================================
+   DOM
+========================================================= */
+
+const programmeSelect =
+  document.getElementById(
+    "programme"
+  );
+
+
+const customProgrammeGroup =
+  document.getElementById(
+    "customProgrammeGroup"
+  );
+
+
+const customProgrammeInput =
+  document.getElementById(
+    "customProgramme"
+  );
+
+
+const venueSelect =
+  document.getElementById(
+    "venue"
+  );
+
+
+const startDateInput =
+  document.getElementById(
+    "startDate"
+  );
+
+
+const startTimeInput =
+  document.getElementById(
+    "startTime"
+  );
+
+
+const durationGroup =
+  document.getElementById(
+    "durationGroup"
+  );
+
+
+const durationPreset =
+  document.getElementById(
+    "durationPreset"
+  );
+
+
+const customDuration =
+  document.getElementById(
+    "customDuration"
+  );
+
+
+const remarksInput =
+  document.getElementById(
+    "remarks"
+  );
+
+
+const statusInput =
+  document.getElementById(
+    "status"
+  );
+
+
+const calendarGrid =
+  document.getElementById(
+    "calendarGrid"
+  );
+
+
+const monthTitle =
+  document.getElementById(
+    "monthTitle"
+  );
+
+
+const currentVenueLabel =
+  document.getElementById(
+    "currentVenueLabel"
+  );
+
+
+const hbbSheetTab =
+  document.getElementById(
+    "hbbSheetTab"
+  );
+
+
+const othSheetTab =
+  document.getElementById(
+    "othSheetTab"
+  );
+
+
+const eventModal =
+  document.getElementById(
+    "eventModal"
+  );
+
+
+const editModal =
+  document.getElementById(
+    "editModal"
+  );
+
+
+const manpowerModal =
+  document.getElementById(
+    "manpowerModal"
+  );
+
+
+/* =========================================================
+   EDIT DOM
+========================================================= */
+
+const editProgramme =
+  document.getElementById(
+    "editProgramme"
+  );
+
+
+const editCustomProgrammeGroup =
+  document.getElementById(
+    "editCustomProgrammeGroup"
+  );
+
+
+const editCustomProgramme =
+  document.getElementById(
+    "editCustomProgramme"
+  );
+
+
+const editVenue =
+  document.getElementById(
+    "editVenue"
+  );
+
+
+const editStartDate =
+  document.getElementById(
+    "editStartDate"
+  );
+
+
+const editStartTime =
+  document.getElementById(
+    "editStartTime"
+  );
+
+
+const editDurationGroup =
+  document.getElementById(
+    "editDurationGroup"
+  );
+
+
+const editDuration =
+  document.getElementById(
+    "editDuration"
+  );
+
+
+const editRemarks =
+  document.getElementById(
+    "editRemarks"
+  );
+
+
+const editStatus =
+  document.getElementById(
+    "editStatus"
+  );
+
+
+/* =========================================================
+   INITIALISE
+========================================================= */
+
+startDateInput.value =
+  formatInputDate(
+    new Date()
+  );
+
+
+venueSelect.value =
+  currentVenue;
+
+
+renderCalendar();
+
+
+/* =========================================================
+   PROGRAMME FORM
+========================================================= */
+
+programmeSelect.addEventListener(
+  "change",
+  () => {
+
+    const isOthers =
+      programmeSelect.value ===
+      "Others";
+
+
+    customProgrammeGroup
+      .classList
+      .toggle(
+        "hidden",
+        !isOthers
+      );
+
+
+    durationGroup
+      .classList
+      .toggle(
+        "hidden",
+        !isOthers
+      );
+
+
+    if (!isOthers) {
+
+      customProgrammeInput.value =
+        "";
+
+      durationPreset.value =
+        "60";
+
+      customDuration.value =
+        "";
+
+      customDuration.disabled =
+        true;
+
+    }
+
+  }
+);
+
+
+durationPreset.addEventListener(
+  "change",
+  () => {
+
+    const isCustom =
+      durationPreset.value ===
+      "custom";
+
+
+    customDuration.disabled =
+      !isCustom;
+
+
+    if (!isCustom) {
+
+      customDuration.value =
+        "";
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   SHEETS
+========================================================= */
+
+hbbSheetTab.addEventListener(
+  "click",
+  () => {
+
+    switchVenue(
+      "HBB"
+    );
+
+  }
+);
+
+
+othSheetTab.addEventListener(
+  "click",
+  () => {
+
+    switchVenue(
+      "OTH"
+    );
+
+  }
+);
+
+
+function switchVenue(
+  venue
+) {
+
+  currentVenue =
+    venue;
+
+
+  venueSelect.value =
+    venue;
+
+
+  hbbSheetTab
+    .classList
+    .toggle(
+      "active",
+      venue === "HBB"
+    );
+
+
+  othSheetTab
+    .classList
+    .toggle(
+      "active",
+      venue === "OTH"
+    );
+
+
+  currentVenueLabel.textContent =
+    venue;
+
+
+  renderCalendar();
+
+}
+
+
+/* =========================================================
+   ADD PROGRAMME
+========================================================= */
+
+document
+  .getElementById(
+    "addButton"
+  )
+  .addEventListener(
+    "click",
+    addProgramme
+  );
+
+
+function addProgramme() {
+
+  const selected =
+    programmeSelect.value;
+
+
+  if (!selected) {
+
+    alert(
+      "Please select a programme."
+    );
+
+    return;
+
+  }
+
+
+  let programmeName =
+    selected;
+
+
+  if (
+    selected ===
+    "Others"
+  ) {
+
+    programmeName =
+      customProgrammeInput
+        .value
+        .trim();
+
+
+    if (!programmeName) {
+
+      alert(
+        "Please enter the Other Programme name."
+      );
+
+      return;
+
+    }
+
+  }
+
+
+  const venue =
+    venueSelect.value;
+
+
+  const startDate =
+    startDateInput.value;
+
+
+  const startTime =
+    startTimeInput.value;
+
+
+  if (
+    !startDate ||
+    !startTime
+  ) {
+
+    alert(
+      "Please enter a first session date and time."
+    );
+
+    return;
+
+  }
+
+
+  const duration =
+    getProgrammeDuration(
+      programmeName
+    );
+
+
+  if (
+    !Number.isFinite(
+      duration
+    ) ||
+    duration <= 0
+  ) {
+
+    alert(
+      "Please enter a valid duration."
+    );
+
+    return;
+
+  }
+
+
+  const totalSessions =
+    SERIES_WEEKS[
+      programmeName
+    ] || 1;
+
+
+  const seriesId =
+    makeId(
+      "series"
+    );
+
+
+  for (
+    let week = 0;
+    week < totalSessions;
+    week++
+  ) {
+
+    const sessionDate =
+      addDays(
+        parseInputDate(
+          startDate
+        ),
+        week * 7
+      );
+
+
+    events.push({
+
+      id:
+        makeId(
+          "event"
+        ),
+
+      seriesId,
+
+      programme:
+        programmeName,
+
+      venue,
+
+      date:
+        formatInputDate(
+          sessionDate
+        ),
+
+      time:
+        startTime,
+
+      duration,
+
+      pax:
+        getPax(
+          programmeName
+        ),
+
+      status:
+        statusInput.value,
+
+      remarks:
+        remarksInput.value.trim(),
+
+      sessionNumber:
+        totalSessions > 1
+          ? week + 1
+          : null,
+
+      totalSessions,
+
+      type:
+        totalSessions > 1
+          ? "Series"
+          : "Stand-alone"
+
+    });
+
+  }
+
+
+  saveData(
+    EVENTS_KEY,
+    events
+  );
+
+
+  currentDate =
+    new Date(
+      parseInputDate(
+        startDate
+      ).getFullYear(),
+      parseInputDate(
+        startDate
+      ).getMonth(),
+      1
+    );
+
+
+  switchVenue(
+    venue
+  );
+
+
+  resetForm();
+
+}
+
+
+/* =========================================================
+   PROGRAMME DURATION
+========================================================= */
+
+function getProgrammeDuration(
+  programmeName
+) {
+
+  if (
+    programmeName !==
+    "Others"
+  ) {
+
+    return 60;
+
+  }
+
+
+  if (
+    durationPreset.value !==
+    "custom"
+  ) {
+
+    return Number(
+      durationPreset.value
+    );
+
+  }
+
+
+  return Number(
+    customDuration.value
+  );
+
+}
+
+
+/* =========================================================
+   PAX
+========================================================= */
+
+function getPax(
+  programmeName
+) {
+
+  return Object.prototype.hasOwnProperty.call(
+    PAX,
+    programmeName
+  )
+    ? PAX[
+        programmeName
+      ]
+    : "";
+
+}
+
+
+/* =========================================================
+   RENDER CALENDAR
+========================================================= */
+
+function renderCalendar() {
+
+  calendarGrid.innerHTML =
+    "";
+
+
+  const year =
+    currentDate.getFullYear();
+
+
+  const month =
+    currentDate.getMonth();
+
+
+  monthTitle.textContent =
+    currentDate.toLocaleDateString(
+      "en-SG",
+      {
+        month:
+          "long",
+
+        year:
+          "numeric"
+      }
+    );
+
+
+  currentVenueLabel.textContent =
+    currentVenue;
+
+
+  const firstDay =
+    new Date(
+      year,
+      month,
+      1
+    );
+
+
+  const firstWeekday =
+    firstDay.getDay();
+
+
+  const daysInMonth =
+    new Date(
+      year,
+      month + 1,
+      0
+    ).getDate();
+
+
+  const previousMonthDays =
+    new Date(
+      year,
+      month,
+      0
+    ).getDate();
+
+
+  for (
+    let index = 0;
+    index < 42;
+    index++
+  ) {
+
+    let cellDate;
+
+    let dayNumber;
+
+    let otherMonth =
+      false;
+
+
+    if (
+      index <
+      firstWeekday
+    ) {
+
+      dayNumber =
+        previousMonthDays -
+        firstWeekday +
+        index +
+        1;
+
+
+      cellDate =
+        new Date(
+          year,
+          month - 1,
+          dayNumber
+        );
+
+
+      otherMonth =
+        true;
+
+    } else if (
+      index <
+      firstWeekday +
+      daysInMonth
+    ) {
+
+      dayNumber =
+        index -
+        firstWeekday +
+        1;
+
+
+      cellDate =
+        new Date(
+          year,
+          month,
+          dayNumber
+        );
+
+    } else {
+
+      dayNumber =
+        index -
+        firstWeekday -
+        daysInMonth +
+        1;
+
+
+      cellDate =
+        new Date(
+          year,
+          month + 1,
+          dayNumber
+        );
+
+
+      otherMonth =
+        true;
+
+    }
+
+
+    const cell =
+      document.createElement(
+        "div"
+      );
+
+
+    cell.className =
+      "day-cell";
+
+
+    if (
+      otherMonth
+    ) {
+
+      cell.classList.add(
+        "other-month"
+      );
+
+    }
+
+
+    if (
+      isSameDay(
+        cellDate,
+        new Date()
+      )
+    ) {
+
+      cell.classList.add(
+        "today"
+      );
+
+    }
+
+
+    const dateNumber =
+      document.createElement(
+        "div"
+      );
+
+
+    dateNumber.className =
+      "date-number";
+
+
+    dateNumber.textContent =
+      dayNumber;
+
+
+    cell.appendChild(
+      dateNumber
+    );
+
+
+    const dateString =
+      formatInputDate(
+        cellDate
+      );
+
+
+    const dayEvents =
+      events
+        .filter(
+          event =>
+            event.date ===
+              dateString &&
+            event.venue ===
+              currentVenue
+        )
+        .sort(
+          (a,b) =>
+            a.time.localeCompare(
+              b.time
+            )
+        );
+
+
+    dayEvents.forEach(
+      event => {
+
+        const element =
+          document.createElement(
+            "div"
+          );
+
+
+        element.className =
+          "event";
+
+
+        const endTime =
+          addMinutesToTime(
+            event.time,
+            event.duration
+          );
+
+
+        const sessionText =
+          event.totalSessions > 1
+
+            ? `W${event.sessionNumber} of ${event.totalSessions}`
+
+            : "Stand-alone";
+
+
+        const paxText =
+          event.pax !== ""
+            ? ` · ${event.pax} pax`
+            : "";
+
+
+        element.innerHTML = `
+
+          <div class="event-time">
+            ${escapeHtml(
+              formatTime(
+                event.time
+              )
+            )}
+            -
+            ${escapeHtml(
+              formatTime(
+                endTime
+              )
+            )}
+          </div>
+
+          <div class="event-name">
+            ${escapeHtml(
+              event.programme
+            )}
+          </div>
+
+          <div class="event-meta">
+            ${escapeHtml(
+              sessionText
+            )}
+            ${escapeHtml(
+              paxText
+            )}
+          </div>
+
+        `;
+
+
+        element.addEventListener(
+          "click",
+          e => {
+
+            e.stopPropagation();
+
+            openEventModal(
+              event
+            );
+
+          }
+        );
+
+
+        cell.appendChild(
+          element
+        );
+
+      }
+    );
+
+
+    /*
+      Day-level manpower
+    */
+
+    const manpowerRecord =
+      getManpower(
+        currentVenue,
+        dateString
+      );
+
+
+    const manpowerButton =
+      document.createElement(
+        "button"
+      );
+
+
+    manpowerButton.type =
+      "button";
+
+
+    manpowerButton.className =
+      "manpower-button";
+
+
+    const present =
+      manpowerRecord
+        .staff
+        .length;
+
+
+    const required =
+      manpowerRecord.required ===
+      ""
+        ? null
+        : Number(
+            manpowerRecord.required
+          );
+
+
+    if (
+      present === 0 &&
+      required === null
+    ) {
+
+      manpowerButton.textContent =
+        "👥 Set manpower";
+
+    } else if (
+      required !== null &&
+      present >= required
+    ) {
+
+      manpowerButton.classList.add(
+        "good"
+      );
+
+
+      manpowerButton.textContent =
+        `👥 ${present} staff / ${required} req.`;
+
+    } else {
+
+      manpowerButton.classList.add(
+        "warning"
+      );
+
+
+      manpowerButton.textContent =
+        `👥 ${present} staff / ${required} req.`;
+
+    }
+
+
+    manpowerButton.addEventListener(
+      "click",
+      e => {
+
+        e.stopPropagation();
+
+        openManpowerModal(
+          currentVenue,
+          dateString
+        );
+
+      }
+    );
+
+
+    cell.appendChild(
+      manpowerButton
+    );
+
+
+    calendarGrid.appendChild(
+      cell
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   PROGRAMME MODAL
+========================================================= */
+
+function openEventModal(
+  event
+) {
+
+  selectedEventId =
+    event.id;
+
+
+  document.getElementById(
+    "modalProgramme"
+  ).textContent =
+    event.programme;
+
+
+  document.getElementById(
+    "modalVenue"
+  ).textContent =
+    event.venue;
+
+
+  document.getElementById(
+    "modalDate"
+  ).textContent =
+    formatDisplayDate(
+      event.date
+    );
+
+
+  document.getElementById(
+    "modalTime"
+  ).textContent =
+    `${formatTime(
+      event.time
+    )} - ${formatTime(
+      addMinutesToTime(
+        event.time,
+        event.duration
+      )
+    )}`;
+
+
+  document.getElementById(
+    "modalDuration"
+  ).textContent =
+    formatDuration(
+      event.duration
+    );
+
+
+  document.getElementById(
+    "modalPax"
+  ).textContent =
+    event.pax === ""
+      ? "Not specified"
+      : `${event.pax} pax`;
+
+
+  document.getElementById(
+    "modalSession"
+  ).textContent =
+    event.totalSessions > 1
+      ? `Week ${event.sessionNumber} of ${event.totalSessions}`
+      : "Stand-alone session";
+
+
+  document.getElementById(
+    "modalStatus"
+  ).textContent =
+    event.status || "";
+
+
+  document.getElementById(
+    "modalRemarks"
+  ).textContent =
+    event.remarks || "—";
+
+
+  eventModal
+    .classList
+    .add(
+      "visible"
+    );
+
+}
+
+
+/* =========================================================
+   OPEN EDIT
+========================================================= */
+
+document
+  .getElementById(
+    "editButton"
+  )
+  .addEventListener(
+    "click",
+    openEditModal
+  );
+
+
+function openEditModal() {
+
+  if (!selectedEventId) {
+    return;
+  }
+
+
+  const selected =
+    events.find(
+      event =>
+        event.id ===
+        selectedEventId
+    );
+
+
+  if (!selected) {
+    return;
+  }
+
+
+  /*
+    Find the W1 event for the series.
+  */
+
+  const firstEvent =
+    events
+      .filter(
+        event =>
+          event.seriesId ===
+          selected.seriesId
+      )
+      .sort(
+        (a,b) =>
+          dateTimeValue(a) -
+          dateTimeValue(b)
+      )[0];
+
+
+  editProgramme.value =
+    isKnownProgramme(
+      firstEvent.programme
+    )
+      ? firstEvent.programme
+      : "__CUSTOM__";
+
+
+  if (
+    editProgramme.value ===
+    "__CUSTOM__"
+  ) {
+
+    editCustomProgrammeGroup
+      .classList
+      .remove(
+        "hidden"
+      );
+
+
+    editCustomProgramme.value =
+      firstEvent.programme;
+
+  } else {
+
+    editCustomProgrammeGroup
+      .classList
+      .add(
+        "hidden"
+      );
+
+
+    editCustomProgramme.value =
+      "";
+
+  }
+
+
+  editVenue.value =
+    firstEvent.venue;
+
+
+  editStartDate.value =
+    firstEvent.date;
+
+
+  editStartTime.value =
+    firstEvent.time;
+
+
+  editRemarks.value =
+    firstEvent.remarks || "";
+
+
+  editStatus.value =
+    firstEvent.status ||
+    "Uploaded (100% Created)";
+
+
+  if (
+    editProgramme.value ===
+    "__CUSTOM__"
+  ) {
+
+    editDurationGroup
+      .classList
+      .remove(
+        "hidden"
+      );
+
+
+    editDuration.value =
+      firstEvent.duration;
+
+  } else {
+
+    editDurationGroup
+      .classList
+      .add(
+        "hidden"
+      );
+
+
+    editDuration.value =
+      60;
+
+  }
+
+
+  eventModal
+    .classList
+    .remove(
+      "visible"
+    );
+
+
+  editModal
+    .classList
+    .add(
+      "visible"
+    );
+
+}
+
+
+/* =========================================================
+   EDIT PROGRAMME SELECT CHANGE
+========================================================= */
+
+editProgramme.addEventListener(
+  "change",
+  () => {
+
+    const custom =
+      editProgramme.value ===
+      "__CUSTOM__";
+
+
+    editCustomProgrammeGroup
+      .classList
+      .toggle(
+        "hidden",
+        !custom
+      );
+
+
+    editDurationGroup
+      .classList
+      .toggle(
+        "hidden",
+        !custom
+      );
+
+
+    if (!custom) {
+
+      editCustomProgramme.value =
+        "";
+
+      editDuration.value =
+        60;
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   SAVE EDIT
+========================================================= */
+
+document
+  .getElementById(
+    "saveEditButton"
+  )
+  .addEventListener(
+    "click",
+    saveEdit
+  );
+
+
+function saveEdit() {
+
+  if (!selectedEventId) {
+    return;
+  }
+
+
+  const selected =
+    events.find(
+      event =>
+        event.id ===
+        selectedEventId
+    );
+
+
+  if (!selected) {
+    return;
+  }
+
+
+  const oldSeriesId =
+    selected.seriesId;
+
+
+  const firstEvent =
+    events
+      .filter(
+        event =>
+          event.seriesId ===
+          oldSeriesId
+      )
+      .sort(
+        (a,b) =>
+          dateTimeValue(a) -
+          dateTimeValue(b)
+      )[0];
+
+
+  if (!firstEvent) {
+    return;
+  }
+
+
+  let programmeName;
+
+
+  if (
+    editProgramme.value ===
+    "__CUSTOM__"
+  ) {
+
+    programmeName =
+      editCustomProgramme.value
+        .trim();
+
+
+    if (!programmeName) {
+
+      alert(
+        "Please enter the custom programme name."
+      );
+
+      return;
+
+    }
+
+  } else {
+
+    programmeName =
+      editProgramme.value;
+
+  }
+
+
+  const newVenue =
+    editVenue.value;
+
+
+  const newDate =
+    editStartDate.value;
+
+
+  const newTime =
+    editStartTime.value;
+
+
+  if (
+    !newDate ||
+    !newTime
+  ) {
+
+    alert(
+      "Please enter a date and time."
+    );
+
+    return;
+
+  }
+
+
+  let newDuration;
+
+
+  if (
+    editProgramme.value ===
+    "__CUSTOM__"
+  ) {
+
+    newDuration =
+      Number(
+        editDuration.value
+      );
+
+  } else {
+
+    newDuration =
+      60;
+
+  }
+
+
+  if (
+    !Number.isFinite(
+      newDuration
+    ) ||
+    newDuration <= 0
+  ) {
+
+    alert(
+      "Please enter a valid duration."
+    );
+
+    return;
+
+  }
+
+
+  const totalSessions =
+    SERIES_WEEKS[
+      programmeName
+    ] || 1;
+
+
+  /*
+    Remove old series.
+  */
+
+  events =
+    events.filter(
+      event =>
+        event.seriesId !==
+        oldSeriesId
+    );
+
+
+  /*
+    Create new series.
+    First date is always W1.
+  */
+
+  for (
+    let week = 0;
+    week < totalSessions;
+    week++
+  ) {
+
+    const sessionDate =
+      addDays(
+        parseInputDate(
+          newDate
+        ),
+        week * 7
+      );
+
+
+    events.push({
+
+      id:
+        makeId(
+          "event"
+        ),
+
+      seriesId:
+        oldSeriesId,
+
+      programme:
+        programmeName,
+
+      venue:
+        newVenue,
+
+      date:
+        formatInputDate(
+          sessionDate
+        ),
+
+      time:
+        newTime,
+
+      duration:
+        newDuration,
+
+      pax:
+        getPax(
+          programmeName
+        ),
+
+      status:
+        editStatus.value,
+
+      remarks:
+        editRemarks.value
+          .trim(),
+
+      sessionNumber:
+        totalSessions > 1
+          ? week + 1
+          : null,
+
+      totalSessions,
+
+      type:
+        totalSessions > 1
+          ? "Series"
+          : "Stand-alone"
+
+    });
+
+  }
+
+
+  saveData(
+    EVENTS_KEY,
+    events
+  );
+
+
+  const date =
+    parseInputDate(
+      newDate
+    );
+
+
+  currentDate =
+    new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      1
+    );
+
+
+  closeEditModal();
+
+
+  switchVenue(
+    newVenue
+  );
+
+
+  renderCalendar();
+
+}
+
+
+/* =========================================================
+   DELETE
+========================================================= */
+
+document
+  .getElementById(
+    "deleteButton"
+  )
+  .addEventListener(
+    "click",
+    deleteSelected
+  );
+
+
+function deleteSelected() {
+
+  if (!selectedEventId) {
+    return;
+  }
+
+
+  const selected =
+    events.find(
+      event =>
+        event.id ===
+        selectedEventId
+    );
+
+
+  if (!selected) {
+    return;
+  }
+
+
+  const message =
+    selected.totalSessions > 1
+      ? "Delete the entire programme series?"
+      : "Delete this session?";
+
+
+  if (
+    !confirm(
+      message
+    )
+  ) {
+
+    return;
+
+  }
+
+
+  if (
+    selected.totalSessions > 1
+  ) {
+
+    events =
+      events.filter(
+        event =>
+          event.seriesId !==
+          selected.seriesId
+      );
+
+  } else {
+
+    events =
+      events.filter(
+        event =>
+          event.id !==
+          selected.id
+      );
+
+  }
+
+
+  saveData(
+    EVENTS_KEY,
+    events
+  );
+
+
+  closeEventModal();
+
+
+  renderCalendar();
+
+}
+
+
+/* =========================================================
+   CLOSE PROGRAMME MODAL
+========================================================= */
+
+document
+  .getElementById(
+    "closeButton"
+  )
+  .addEventListener(
+    "click",
+    closeEventModal
+  );
+
+
+eventModal.addEventListener(
+  "click",
+  event => {
+
+    if (
+      event.target ===
+      eventModal
+    ) {
+
+      closeEventModal();
+
+    }
+
+  }
+);
+
+
+function closeEventModal() {
+
+  selectedEventId =
+    null;
+
+
+  eventModal
+    .classList
+    .remove(
+      "visible"
+    );
+
+}
+
+
+/* =========================================================
+   EDIT MODAL CLOSE
+========================================================= */
+
+document
+  .getElementById(
+    "cancelEditButton"
+  )
+  .addEventListener(
+    "click",
+    closeEditModal
+  );
+
+
+editModal.addEventListener(
+  "click",
+  event => {
+
+    if (
+      event.target ===
+      editModal
+    ) {
+
+      closeEditModal();
+
+    }
+
+  }
+);
+
+
+function closeEditModal() {
+
+  editModal
+    .classList
+    .remove(
+      "visible"
+    );
+
+  selectedEventId =
+    null;
+
+}
+
+
+/* =========================================================
+   MANPOWER
+========================================================= */
+
+function manpowerKey(
+  venue,
+  date
+) {
+
+  return `${venue}__${date}`;
+
+}
+
+
+function getManpower(
+  venue,
+  date
+) {
+
+  const existing =
+    manpower[
+      manpowerKey(
+        venue,
+        date
+      )
+    ];
+
+
+  if (!existing) {
+
+    return {
+
+      staff: [],
+
+      required: "",
+
+      notes: ""
+
+    };
+
+  }
+
+
+  return {
+
+    staff:
+      Array.isArray(
+        existing.staff
+      )
+        ? existing.staff
+        : [],
+
+    required:
+      existing.required ??
+      "",
+
+    notes:
+      existing.notes ??
+      ""
+
+  };
+
+}
+
+
+/* =========================================================
+   OPEN MANPOWER
+========================================================= */
+
+function openManpowerModal(
+  venue,
+  date
+) {
+
+  manpowerDate =
+    date;
+
+
+  const record =
+    getManpower(
+      venue,
+      date
+    );
+
+
+  document.getElementById(
+    "manpowerVenue"
+  ).textContent =
+    venue;
+
+
+  document.getElementById(
+    "manpowerDate"
+  ).textContent =
+    formatDisplayDate(
+      date
+    );
+
+
+  document.getElementById(
+    "requiredManpower"
+  ).value =
+    record.required;
+
+
+  document.getElementById(
+    "manpowerNotes"
+  ).value =
+    record.notes;
+
+
+  renderStaffChecklist(
+    record.staff
+  );
+
+
+  updateStaffCount();
+
+  updateStaffStatus();
+
+
+  manpowerModal
+    .classList
+    .add(
+      "visible"
+    );
+
+}
+
+
+/* =========================================================
+   STAFF LIST
+========================================================= */
+
+function renderStaffChecklist(
+  selectedStaff
+) {
+
+  const container =
+    document.getElementById(
+      "staffList"
+    );
+
+
+  container.innerHTML =
+    "";
+
+
+  STAFF_LIST.forEach(
+    name => {
+
+      const label =
+        document.createElement(
+          "label"
+        );
+
+
+      label.className =
+        "staff-option";
+
+
+      const checkbox =
+        document.createElement(
+          "input"
+        );
+
+
+      checkbox.type =
+        "checkbox";
+
+
+      checkbox.value =
+        name;
+
+
+      checkbox.checked =
+        selectedStaff.includes(
+          name
+        );
+
+
+      checkbox.addEventListener(
+        "change",
+        () => {
+
+          updateStaffCount();
+
+          updateStaffStatus();
+
+        }
+      );
+
+
+      const text =
+        document.createElement(
+          "span"
+        );
+
+
+      text.textContent =
+        name;
+
+
+      label.appendChild(
+        checkbox
+      );
+
+
+      label.appendChild(
+        text
+      );
+
+
+      container.appendChild(
+        label
+      );
+
+    }
+  );
+
+}
+
+
+function selectedStaff() {
+
+  return Array.from(
+    document.querySelectorAll(
+      '#staffList input[type="checkbox"]:checked'
+    )
+  )
+  .map(
+    checkbox =>
+      checkbox.value
+  );
+
+}
+
+
+/* =========================================================
+   SELECT ALL / CLEAR ALL
+========================================================= */
+
+document
+  .getElementById(
+    "selectAllStaff"
+  )
+  .addEventListener(
+    "click",
+    () => {
+
+      document
+        .querySelectorAll(
+          '#staffList input[type="checkbox"]'
+        )
+        .forEach(
+          checkbox => {
+
+            checkbox.checked =
+              true;
+
+          }
+        );
+
+
+      updateStaffCount();
+
+      updateStaffStatus();
+
+    }
+  );
+
+
+document
+  .getElementById(
+    "clearAllStaff"
+  )
+  .addEventListener(
+    "click",
+    () => {
+
+      document
+        .querySelectorAll(
+          '#staffList input[type="checkbox"]'
+        )
+        .forEach(
+          checkbox => {
+
+            checkbox.checked =
+              false;
+
+          }
+        );
+
+
+      updateStaffCount();
+
+      updateStaffStatus();
+
+    }
+  );
+
+
+/* =========================================================
+   STAFF COUNT
+========================================================= */
+
+function updateStaffCount() {
+
+  document.getElementById(
+    "presentCount"
+  ).textContent =
+    selectedStaff().length;
+
+}
+
+
+/* =========================================================
+   STAFF STATUS
+========================================================= */
+
+document
+  .getElementById(
+    "requiredManpower"
+  )
+  .addEventListener(
+    "input",
+    updateStaffStatus
+  );
+
+
+function updateStaffStatus() {
+
+  const status =
+    document.getElementById(
+      "staffStatus"
+    );
+
+
+  const requiredInput =
+    document.getElementById(
+      "requiredManpower"
+    ).value;
+
+
+  const present =
+    selectedStaff().length;
+
+
+  status.className =
+    "staff-status";
+
+
+  if (
+    requiredInput === ""
+  ) {
+
+    status.classList.add(
+      "neutral"
+    );
+
+
+    status.textContent =
+      "";
+
+    return;
+
+  }
+
+
+  const required =
+    Number(
+      requiredInput
+    );
+
+
+  if (
+    present >= required
+  ) {
+
+    status.classList.add(
+      "good"
+    );
+
+
+    status.textContent =
+      "✓ Adequately staffed";
+
+  } else {
+
+    status.classList.add(
+      "warning"
+    );
+
+
+    status.textContent =
+      `⚠ Understaffed by ${required - present}`;
+
+  }
+
+}
+
+
+/* =========================================================
+   SAVE MANPOWER
+========================================================= */
+
+document
+  .getElementById(
+    "saveManpower"
+  )
+  .addEventListener(
+    "click",
+    saveManpower
+  );
+
+
+function saveManpower() {
+
+  if (!manpowerDate) {
+    return;
+  }
+
+
+  const requiredInput =
+    document.getElementById(
+      "requiredManpower"
+    ).value;
+
+
+  manpower[
+    manpowerKey(
+      currentVenue,
+      manpowerDate
+    )
+  ] = {
+
+    staff:
+      selectedStaff(),
+
+    required:
+      requiredInput === ""
+        ? ""
+        : Number(
+            requiredInput
+          ),
+
+    notes:
+      document.getElementById(
+        "manpowerNotes"
+      ).value.trim()
+
+  };
+
+
+  saveData(
+    MANPOWER_KEY,
+    manpower
+  );
+
+
+  closeManpowerModal();
+
+  renderCalendar();
+
+}
+
+
+/* =========================================================
+   CLOSE MANPOWER
+========================================================= */
+
+document
+  .getElementById(
+    "closeManpower"
+  )
+  .addEventListener(
+    "click",
+    closeManpowerModal
+  );
+
+
+manpowerModal.addEventListener(
+  "click",
+  event => {
+
+    if (
+      event.target ===
+      manpowerModal
+    ) {
+
+      closeManpowerModal();
+
+    }
+
+  }
+);
+
+
+function closeManpowerModal() {
+
+  manpowerDate =
+    null;
+
+
+  manpowerModal
+    .classList
+    .remove(
+      "visible"
+    );
+
+}
+
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
+document
+  .getElementById(
+    "previousButton"
+  )
+  .addEventListener(
+    "click",
+    () => {
+
+      currentDate =
+        new Date(
+          currentDate.getFullYear(),
+          currentDate.getMonth() - 1,
+          1
+        );
+
+
+      renderCalendar();
+
+    }
+  );
+
+
+document
+  .getElementById(
+    "nextButton"
+  )
+  .addEventListener(
+    "click",
+    () => {
+
+      currentDate =
+        new Date(
+          currentDate.getFullYear(),
+          currentDate.getMonth() + 1,
+          1
+        );
+
+
+      renderCalendar();
+
+    }
+  );
+
+
+document
+  .getElementById(
+    "todayButton"
+  )
+  .addEventListener(
+    "click",
+    () => {
+
+      const today =
+        new Date();
+
+
+      currentDate =
+        new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          1
+        );
+
+
+      renderCalendar();
+
+    }
+  );
+
+
+/* =========================================================
+   EXPORT CSV
+========================================================= */
+
+document
+  .getElementById(
+    "exportCurrentButton"
+  )
+  .addEventListener(
+    "click",
+    () => {
+
+      exportCSV(
+        currentVenue
+      );
+
+    }
+  );
+
+
+document
+  .getElementById(
+    "exportAllButton"
+  )
+  .addEventListener(
+    "click",
+    () => {
+
+      exportCSV(
+        null
+      );
+
+    }
+  );
+
+
+function exportCSV(
+  venueFilter
+) {
+
+  const filteredEvents =
+    venueFilter
+
+      ? events.filter(
+          event =>
+            event.venue ===
+            venueFilter
+        )
+
+      : [...events];
+
+
+  const relevantManpower =
+    Object.entries(
+      manpower
+    )
+    .filter(
+      ([key]) =>
+        !venueFilter ||
+        key.startsWith(
+          venueFilter + "__"
+        )
+    );
+
+
+  if (
+    filteredEvents.length === 0 &&
+    relevantManpower.length === 0
+  ) {
+
+    alert(
+      "There is no data to export."
+    );
+
+    return;
+
+  }
+
+
+  const groups = {};
+
+
+  filteredEvents.forEach(
+    event => {
+
+      const key =
+        `${event.venue}__${event.seriesId || event.id}`;
+
+
+      if (
+        !groups[key]
+      ) {
+
+        groups[key] =
+          [];
+
+      }
+
+
+      groups[key].push(
+        event
+      );
+
+    }
+  );
+
+
+  const headers = [
+
+    "Month",
+    "Remarks",
+    "Programme Name",
+    "Venue",
+    "Date/ Week 1",
+    "Time",
+    "Duration",
+    "Pax",
+    "Status",
+    "W1",
+    "W2",
+    "W3",
+    "W4",
+    "W5",
+    "W6",
+    "W7",
+    "W8",
+    "Manpower Present",
+    "Manpower Required",
+    "Staff Present",
+    "Manpower Notes"
+
+  ];
+
+
+  const rows = [];
+
+
+  Object.values(
+    groups
+  ).forEach(
+    series => {
+
+      series.sort(
+        (a,b) =>
+          dateTimeValue(a) -
+          dateTimeValue(b)
+      );
+
+
+      const first =
+        series[0];
+
+
+      const dayManpower =
+        getManpower(
+          first.venue,
+          first.date
+        );
+
+
+      const row = [
+
+        formatMonth(
+          first.date
+        ),
+
+        first.remarks ||
+          "",
+
+        first.programme ||
+          "",
+
+        first.venue ||
+          "",
+
+        formatDisplayDate(
+          first.date
+        ),
+
+        formatTime(
+          first.time
+        ),
+
+        formatDuration(
+          first.duration
+        ),
+
+        first.pax ??
+          "",
+
+        first.status ||
+          "",
+
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+
+        dayManpower.staff.length,
+
+        dayManpower.required,
+
+        dayManpower.staff.join(
+          "; "
+        ),
+
+        dayManpower.notes
+
+      ];
+
+
+      series.forEach(
+        event => {
+
+          const week =
+            event.sessionNumber ||
+            1;
+
+
+          if (
+            week >= 1 &&
+            week <= 8
+          ) {
+
+            row[
+              9 + week - 1
+            ] =
+              formatShortDate(
+                event.date
+              );
+
+          }
+
+        }
+      );
+
+
+      rows.push(
+        row
+      );
+
+    }
+  );
+
+
+  /*
+    Add manpower-only days too.
+  */
+
+  relevantManpower.forEach(
+    ([key, record]) => {
+
+      const parts =
+        key.split(
+          "__"
+        );
+
+
+      const venue =
+        parts[0];
+
+
+      const date =
+        parts[1];
+
+
+      const hasProgramme =
+        filteredEvents.some(
+          event =>
+            event.venue ===
+              venue &&
+            event.date ===
+              date
+        );
+
+
+      if (
+        !hasProgramme
+      ) {
+
+        rows.push([
+
+          formatMonth(
+            date
+          ),
+
+          record.notes ||
+            "",
+
+          "",
+
+          venue,
+
+          formatDisplayDate(
+            date
+          ),
+
+          "",
+
+          "",
+
+          "",
+
+          "",
+
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+
+          Array.isArray(
+            record.staff
+          )
+            ? record.staff.length
+            : 0,
+
+          record.required ??
+            "",
+
+          Array.isArray(
+            record.staff
+          )
+            ? record.staff.join(
+                "; "
+              )
+            : "",
+
+          record.notes ||
+            ""
+
+        ]);
+
+      }
+
+    }
+  );
+
+
+  rows.sort(
+    (a,b) =>
+      parseDisplayDate(
+        a[4]
+      ) -
+      parseDisplayDate(
+        b[4]
+      )
+  );
+
+
+  const csv =
+    [
+      headers,
+      ...rows
+    ]
+    .map(
+      row =>
+        row
+          .map(
+            csvEscape
+          )
+          .join(",")
+    )
+    .join(
+      "\r\n"
+    );
+
+
+  const name =
+    venueFilter
+      ? `Programme_Schedule_${venueFilter}.csv`
+      : "Programme_Schedule_HBB_OTH.csv";
+
+
+  downloadCSV(
+    csv,
+    name
+  );
+
+}
+
+
+/* =========================================================
+   CLEAR ALL
+========================================================= */
+
+document
+  .getElementById(
+    "clearButton"
+  )
+  .addEventListener(
+    "click",
+    () => {
+
+      if (
+        !confirm(
+          "This will delete all programme and manpower data for HBB and OTH. Continue?"
+        )
+      ) {
+
+        return;
+
+      }
+
+
+      events =
+        [];
+
+
+      manpower =
+        {};
+
+
+      saveData(
+        EVENTS_KEY,
+        events
+      );
+
+
+      saveData(
+        MANPOWER_KEY,
+        manpower
+      );
+
+
+      renderCalendar();
+
+    }
+  );
+
+
+/* =========================================================
+   RESET FORM
+========================================================= */
+
+function resetForm() {
+
+  programmeSelect.value =
+    "";
+
+
+  customProgrammeInput.value =
+    "";
+
+
+  customProgrammeGroup
+    .classList
+    .add(
+      "hidden"
+    );
+
+
+  durationGroup
+    .classList
+    .add(
+      "hidden"
+    );
+
+
+  durationPreset.value =
+    "60";
+
+
+  customDuration.value =
+    "";
+
+
+  customDuration.disabled =
+    true;
+
+
+  venueSelect.value =
+    currentVenue;
+
+
+  startDateInput.value =
+    formatInputDate(
+      new Date()
+    );
+
+
+  startTimeInput.value =
+    "09:00";
+
+
+  remarksInput.value =
+    "";
+
+
+  statusInput.value =
+    "Uploaded (100% Created)";
+
+}
+
+
+/* =========================================================
+   UTILITY FUNCTIONS
+========================================================= */
+
+function isKnownProgramme(
+  name
+) {
+
+  return Object.keys(
+    PAX
+  ).includes(
+    name
+  );
+
+}
+
+
+function parseInputDate(
+  value
+) {
+
+  const [
+    year,
+    month,
+    day
+  ] =
+    value
+      .split("-")
+      .map(
+        Number
+      );
+
+
+  return new Date(
+    year,
+    month - 1,
+    day
+  );
+
+}
+
+
+function formatInputDate(
+  date
+) {
+
+  const year =
+    date.getFullYear();
+
+
+  const month =
+    String(
+      date.getMonth() + 1
+    ).padStart(
+      2,
+      "0"
+    );
+
+
+  const day =
+    String(
+      date.getDate()
+    ).padStart(
+      2,
+      "0"
+    );
+
+
+  return `${year}-${month}-${day}`;
+
+}
+
+
+function addDays(
+  date,
+  days
+) {
+
+  const result =
+    new Date(
+      date
+    );
+
+
+  result.setDate(
+    result.getDate() +
+    days
+  );
+
+
+  return result;
+
+}
+
+
+function addMinutesToTime(
+  time,
+  minutes
+) {
+
+  const [
+    hours,
+    mins
+  ] =
+    time
+      .split(":")
+      .map(
+        Number
+      );
+
+
+  const total =
+    hours * 60 +
+    mins +
+    Number(
+      minutes
+    );
+
+
+  const newHours =
+    Math.floor(
+      total / 60
+    ) % 24;
+
+
+  const newMinutes =
+    total % 60;
+
+
+  return `${String(
+    newHours
+  ).padStart(
+    2,
+    "0"
+  )}:${String(
+    newMinutes
+  ).padStart(
+    2,
+    "0"
+  )}`;
+
+}
+
+
+function formatTime(
+  time
+) {
+
+  const [
+    hours,
+    minutes
+  ] =
+    time
+      .split(":")
+      .map(
+        Number
+      );
+
+
+  const date =
+    new Date();
+
+
+  date.setHours(
+    hours,
+    minutes,
+    0,
+    0
+  );
+
+
+  return date.toLocaleTimeString(
+    "en-SG",
+    {
+      hour:
+        "numeric",
+
+      minute:
+        "2-digit"
+    }
+  );
+
+}
+
+
+function formatDuration(
+  minutes
+) {
+
+  const total =
+    Number(
+      minutes
+    );
+
+
+  if (
+    total < 60
+  ) {
+
+    return `${total} min`;
+
+  }
+
+
+  const hours =
+    Math.floor(
+      total / 60
+    );
+
+
+  const remaining =
+    total % 60;
+
+
+  if (
+    remaining === 0
+  ) {
+
+    return `${hours} hour${hours === 1 ? "" : "s"}`;
+
+  }
+
+
+  return `${hours} hr ${remaining} min`;
+
+}
+
+
+function formatDisplayDate(
+  dateString
+) {
+
+  return parseInputDate(
+    dateString
+  ).toLocaleDateString(
+    "en-SG",
+    {
+      weekday:
+        "short",
+
+      day:
+        "numeric",
+
+      month:
+        "short",
+
+      year:
+        "numeric"
+    }
+  );
+
+}
+
+
+function formatShortDate(
+  dateString
+) {
+
+  return parseInputDate(
+    dateString
+  ).toLocaleDateString(
+    "en-SG",
+    {
+      day:
+        "numeric",
+
+      month:
+        "short"
+    }
+  );
+
+}
+
+
+function formatMonth(
+  dateString
+) {
+
+  return parseInputDate(
+    dateString
+  ).toLocaleDateString(
+    "en-SG",
+    {
+      month:
+        "short"
+    }
+  );
+
+}
+
+
+function dateTimeValue(
+  event
+) {
+
+  return new Date(
+    `${event.date}T${event.time}`
+  ).getTime();
+
+}
+
+
+function parseDisplayDate(
+  value
+) {
+
+  return new Date(
+    String(
+      value
+    )
+      .replace(
+        /^[A-Za-z]+,\s*/,
+        ""
+      )
+  ).getTime();
+
+}
+
+
+function isSameDay(
+  a,
+  b
+) {
+
+  return (
+
+    a.getFullYear() ===
+      b.getFullYear()
+
+    &&
+
+    a.getMonth() ===
+      b.getMonth()
+
+    &&
+
+    a.getDate() ===
+      b.getDate()
+
+  );
+
+}
+
+
+function makeId(
+  prefix
+) {
+
+  if (
+    window.crypto &&
+    typeof window.crypto.randomUUID ===
+      "function"
+  ) {
+
+    return (
+      prefix +
+      "_" +
+      window.crypto.randomUUID()
+    );
+
+  }
+
+
+  return (
+    prefix +
+    "_" +
+    Date.now() +
+    "_" +
+    Math.random()
+      .toString(36)
+      .slice(2)
+  );
+
+}
+
+
+function escapeHtml(
+  value
+) {
+
+  return String(
+    value
+  )
+  .replace(
+    /&/g,
+    "&amp;"
+  )
+  .replace(
+    /</g,
+    "&lt;"
+  )
+  .replace(
+    />/g,
+    "&gt;"
+  )
+  .replace(
+    /"/g,
+    "&quot;"
+  )
+  .replace(
+    /'/g,
+    "&#039;"
+  );
+
+}
+
+
+function loadData(
+  key,
+  fallback
+) {
+
+  try {
+
+    const saved =
+      localStorage.getItem(
+        key
+      );
+
+
+    if (!saved) {
+
+      return fallback;
+
+    }
+
+
+    const parsed =
+      JSON.parse(
+        saved
+      );
+
+
+    return parsed ??
+      fallback;
+
+  } catch (
+    error
+  ) {
+
+    console.error(
+      error
+    );
+
+
+    return fallback;
+
+  }
+
+}
+
+
+function saveData(
+  key,
+  data
+) {
+
+  localStorage.setItem(
+    key,
+    JSON.stringify(
+      data
+    )
+  );
+
+}
+
+
+function csvEscape(
+  value
+) {
+
+  const text =
+    value === null ||
+    value === undefined
+      ? ""
+      : String(
+          value
+        );
+
+
+  return `"${text.replace(
+    /"/g,
+    '""'
+  )}"`;
+
+}
+
+
+function downloadCSV(
+  csv,
+  filename
+) {
+
+  const blob =
+    new Blob(
+      [
+        "\uFEFF",
+        csv
+      ],
+      {
+        type:
+          "text/csv;charset=utf-8;"
+      }
+    );
+
+
+  const url =
+    URL.createObjectURL(
+      blob
+    );
+
+
+  const link =
+    document.createElement(
+      "a"
+    );
+
+
+  link.href =
+    url;
+
+
+  link.download =
+    filename;
+
+
+  document.body.appendChild(
+    link
+  );
+
+
+  link.click();
+
+
+  link.remove();
+
+
+  URL.revokeObjectURL(
+    url
+  );
+
+}
+
+</script>
+
+</body>
+</html>
