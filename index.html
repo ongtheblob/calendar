@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Programme Calendar - HBB & OTH</title>
+
+  <link rel="stylesheet" href="./style.css">
+</head>
+
+<body>
+
+<div class="app">
+
+  <!-- =====================================================
+       SIDEBAR
+  ====================================================== -->
+
+  <aside class="sidebar">
+
+    <h2>Add Programme</h2>
+
+    <div class="form-group">
+      <label for="programme">Programme</label>
+
+      <select id="programme">
+
+        <option value="">
+          Select programme
+        </option>
+
+        <option value="Body Composition Assessment">
+          Body Composition Assessment
+        </option>
+
+        <option value="Active Health Senior Interest Group">
+          Active Health Senior Interest Group
+        </option>
+
+        <option value="Function - Combat Age-Related Loss of Muscle (CALM) 1.0">
+          Function - Combat Age-Related Loss of Muscle (CALM) 1.0
+        </option>
+
+        <option value="Function - Combat Age-Related Loss of Muscle (CALM) 2.0">
+          Function - Combat Age-Related Loss of Muscle (CALM) 2.0
+        </option>
+
+        <option value="Strength 1.0">
+          Strength 1.0
+        </option>
+
+        <option value="Strength 2.0 - Assessment & Check-In">
+          Strength 2.0 - Assessment & Check-In
+        </option>
+
+        <option value="Strength 2.0 - Mobility Workout">
+          Strength 2.0 - Mobility Workout
+        </option>
+
+        <option value="Strength 2.0 - Functional Fitness Workout">
+          Strength 2.0 - Functional Fitness Workout
+        </option>
+
+        <option value="Strength 2.0 - Foundation Strength Workout">
+          Strength 2.0 - Foundation Strength Workout
+        </option>
+
+        <option value="Perform 1.0">
+          Perform 1.0
+        </option>
+
+        <option value="Perform 2.0 - Assessment & Check-In">
+          Perform 2.0 - Assessment & Check-In
+        </option>
+
+        <option value="Perform 2.0 - ENGINE Workout">
+          Perform 2.0 - ENGINE Workout
+        </option>
+
+        <option value="Perform 2.0 - AMRAP Workout">
+          Perform 2.0 - AMRAP Workout
+        </option>
+
+        <option value="Perform 2.0 - Multi-Modal Workout">
+          Perform 2.0 - Multi-Modal Workout
+        </option>
+
+        <option value="Manage Knee Health">
+          Manage Knee Health
+        </option>
+
+        <option value="Manage Metabolic Health">
+          Manage Metabolic Health
+        </option>
+
+        <option value="Others">
+          Others
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <div
+      class="form-group hidden"
+      id="customProgrammeGroup"
+    >
+
+      <label for="customProgramme">
+        Other Programme Name
+      </label>
+
+      <input
+        id="customProgramme"
+        type="text"
+        placeholder="Enter programme name"
+      >
+
+    </div>
+
+
+    <div class="form-group">
+
+      <label for="venue">
+        Venue / Calendar Sheet
+      </label>
+
+      <select id="venue">
+
+        <option value="HBB">
+          HBB
+        </option>
+
+        <option value="OTH">
+          OTH
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <div class="form-group">
+
+      <label for="startDate">
+        First Session Date
+      </label>
+
+      <input
+        id="startDate"
+        type="date"
+      >
+
+    </div>
+
+
+    <div class="form-group">
+
+      <label for="startTime">
+        Start Time
+      </label>
+
+      <input
+        id="startTime"
+        type="time"
+        value="09:00"
+      >
+
+    </div>
+
+
+    <div
+      class="form-group hidden"
+      id="durationGroup"
+    >
+
+      <label>
+        Duration for Others
+      </label>
+
+      <div class="duration-row">
+
+        <select id="durationPreset">
+
+          <option value="30">
+            30 minutes
+          </option>
+
+          <option value="45">
+            45 minutes
+          </option>
+
+          <option value="60" selected>
+            1 hour
+          </option>
+
+          <option value="75">
+            1 hour 15 minutes
+          </option>
+
+          <option value="90">
+            1 hour 30 minutes
+          </option>
+
+          <option value="105">
+            1 hour 45 minutes
+          </option>
+
+          <option value="120">
+            2 hours
+          </option>
+
+          <option value="custom">
+            Custom
+          </option>
+
+        </select>
+
+
+        <input
+          id="customDuration"
+          type="number"
+          min="1"
+          step="1"
+          placeholder="Minutes"
+          disabled
+        >
+
+      </div>
+
+      <div class="hint">
+        All listed programmes are automatically 1 hour.
+        Only Others has adjustable duration.
+      </div>
+
+    </div>
+
+
+    <div class="form-group">
+
+      <label for="remarks">
+        Remarks
+      </label>
+
+      <textarea
+        id="remarks"
+        placeholder="Optional remarks"
+      ></textarea>
+
+    </div>
+
+
+    <div class="form-group">
+
+      <label for="status">
+        Status
+      </label>
+
+      <select id="status">
+
+        <option value="Uploaded (100% Created)">
+          Uploaded (100% Created)
+        </option>
+
+        <option value="Draft">
+          Draft
+        </option>
+
+        <option value="Confirmed">
+          Confirmed
+        </option>
+
+        <option value="Cancelled">
+          Cancelled
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <button
+      class="btn btn-primary"
+      id="addButton"
+    >
+      Add Programme
+    </button>
+
+
+    <button
+      class="btn btn-secondary"
+      id="exportCurrentButton"
+    >
+      Export Current Sheet CSV
+    </button>
+
+
+    <button
+      class="btn btn-secondary"
+      id="exportAllButton"
+    >
+      Export HBB + OTH CSV
+    </button>
+
+
+    <button
+      class="btn btn-secondary"
+      id="clearButton"
+    >
+      Clear All Data
+    </button>
+
+
+    <div class="rules">
+
+      <strong>Programme Rules</strong>
+
+      <br><br>
+
+      <strong>6 weeks</strong><br>
+      Manage Knee Health<br>
+      Manage Metabolic Health<br>
+      CALM 2.0
+
+      <br><br>
+
+      <strong>8 weeks</strong><br>
+      CALM 1.0<br>
+      Strength 1.0<br>
+      Perform 1.0
+
+      <br><br>
+
+      <strong>Stand-alone</strong><br>
+      All other programmes
+
+      <br><br>
+
+      <strong>Duration:</strong> 1 hour for all standard
+      programmes. Others is adjustable.
+
+      <br><br>
+
+      <strong>Manpower:</strong> assigned by venue + day,
+      independently from programmes.
+
+    </div>
+
+  </aside>
+
+
+  <!-- =====================================================
+       MAIN
+  ====================================================== -->
+
+  <main class="main">
+
+    <div class="toolbar">
+
+      <div class="toolbar-left">
+
+        <button
+          class="toolbar-btn"
+          id="todayButton"
+        >
+          Today
+        </button>
+
+        <button
+          class="toolbar-btn"
+          id="previousButton"
+        >
+          ‹
+        </button>
+
+        <button
+          class="toolbar-btn"
+          id="nextButton"
+        >
+          ›
+        </button>
+
+        <div
+          class="month-title"
+          id="monthTitle"
+        ></div>
+
+      </div>
+
+
+      <div class="toolbar-right">
+
+        <span class="current-calendar">
+          Calendar:
+        </span>
+
+        <strong id="currentVenueLabel">
+          HBB
+        </strong>
+
+      </div>
+
+    </div>
+
+
+    <div class="calendar">
+
+      <div class="week-header">
+
+        <div>Sun</div>
+        <div>Mon</div>
+        <div>Tue</div>
+        <div>Wed</div>
+        <div>Thu</div>
+        <div>Fri</div>
+        <div>Sat</div>
+
+      </div>
+
+
+      <div
+        class="calendar-grid"
+        id="calendarGrid"
+      ></div>
+
+    </div>
+
+
+    <!-- GOOGLE SHEETS STYLE TABS -->
+
+    <div class="sheet-tabs">
+
+      <button
+        class="sheet-tab active"
+        id="hbbSheetTab"
+      >
+        HBB
+      </button>
+
+      <button
+        class="sheet-tab"
+        id="othSheetTab"
+      >
+        OTH
+      </button>
+
+    </div>
+
+  </main>
+
+</div>
+
+
+<!-- =======================================================
+     PROGRAMME DETAILS / EDIT MODAL
+======================================================== -->
+
+<div
+  class="modal-overlay"
+  id="eventModal"
+>
+
+  <div class="modal">
+
+    <h3 id="modalProgramme">
+      Programme
+    </h3>
+
+
+    <div class="modal-row">
+      <div class="modal-label">
+        Venue
+      </div>
+
+      <div
+        class="modal-value"
+        id="modalVenue"
+      ></div>
+    </div>
+
+
+    <div class="modal-row">
+      <div class="modal-label">
+        Date
+      </div>
+
+      <div
+        class="modal-value"
+        id="modalDate"
+      ></div>
+    </div>
+
+
+    <div class="modal-row">
+      <div class="modal-label">
+        Time
+      </div>
+
+      <div
+        class="modal-value"
+        id="modalTime"
+      ></div>
+    </div>
+
+
+    <div class="modal-row">
+      <div class="modal-label">
+        Duration
+      </div>
+
+      <div
+        class="modal-value"
+        id="modalDuration"
+      ></div>
+    </div>
+
+
+    <div class="modal-row">
+      <div class="modal-label">
+        Pax
+      </div>
+
+      <div
+        class="modal-value"
+        id="modalPax"
+      ></div>
+    </div>
+
+
+    <div class="modal-row">
+      <div class="modal-label">
+        Session
+      </div>
+
+      <div
+        class="modal-value"
+        id="modalSession"
+      ></div>
+    </div>
+
+
+    <div class="modal-row">
+      <div class="modal-label">
+        Status
+      </div>
+
+      <div
+        class="modal-value"
+        id="modalStatus"
+      ></div>
+    </div>
+
+
+    <div class="modal-row">
+      <div class="modal-label">
+        Remarks
+      </div>
+
+      <div
+        class="modal-value"
+        id="modalRemarks"
+      ></div>
+    </div>
+
+
+    <div class="modal-actions">
+
+      <button
+        class="btn btn-primary"
+        id="editButton"
+      >
+        Edit Programme
+      </button>
+
+      <button
+        class="btn btn-danger"
+        id="deleteButton"
+      >
+        Delete
+      </button>
+
+      <button
+        class="btn btn-secondary"
+        id="closeButton"
+      >
+        Close
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- =======================================================
+     EDIT PROGRAMME MODAL
+======================================================== -->
+
+<div
+  class="modal-overlay"
+  id="editModal"
+>
+
+  <div class="modal">
+
+    <h3>
+      Edit Programme
+    </h3>
+
+
+    <div class="form-group">
+
+      <label for="editProgramme">
+        Programme
+      </label>
+
+      <select id="editProgramme">
+
+        <option value="">
+          Select programme
+        </option>
+
+        <option value="Body Composition Assessment">
+          Body Composition Assessment
+        </option>
+
+        <option value="Active Health Senior Interest Group">
+          Active Health Senior Interest Group
+        </option>
+
+        <option value="Function - Combat Age-Related Loss of Muscle (CALM) 1.0">
+          Function - Combat Age-Related Loss of Muscle (CALM) 1.0
+        </option>
+
+        <option value="Function - Combat Age-Related Loss of Muscle (CALM) 2.0">
+          Function - Combat Age-Related Loss of Muscle (CALM) 2.0
+        </option>
+
+        <option value="Strength 1.0">
+          Strength 1.0
+        </option>
+
+        <option value="Strength 2.0 - Assessment & Check-In">
+          Strength 2.0 - Assessment & Check-In
+        </option>
+
+        <option value="Strength 2.0 - Mobility Workout">
+          Strength 2.0 - Mobility Workout
+        </option>
+
+        <option value="Strength 2.0 - Functional Fitness Workout">
+          Strength 2.0 - Functional Fitness Workout
+        </option>
+
+        <option value="Strength 2.0 - Foundation Strength Workout">
+          Strength 2.0 - Foundation Strength Workout
+        </option>
+
+        <option value="Perform 1.0">
+          Perform 1.0
+        </option>
+
+        <option value="Perform 2.0 - Assessment & Check-In">
+          Perform 2.0 - Assessment & Check-In
+        </option>
+
+        <option value="Perform 2.0 - ENGINE Workout">
+          Perform 2.0 - ENGINE Workout
+        </option>
+
+        <option value="Perform 2.0 - AMRAP Workout">
+          Perform 2.0 - AMRAP Workout
+        </option>
+
+        <option value="Perform 2.0 - Multi-Modal Workout">
+          Perform 2.0 - Multi-Modal Workout
+        </option>
+
+        <option value="Manage Knee Health">
+          Manage Knee Health
+        </option>
+
+        <option value="Manage Metabolic Health">
+          Manage Metabolic Health
+        </option>
+
+        <option value="__CUSTOM__">
+          Other / Custom
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <div
+      class="form-group hidden"
+      id="editCustomProgrammeGroup"
+    >
+
+      <label for="editCustomProgramme">
+        Custom Programme Name
+      </label>
+
+      <input
+        id="editCustomProgramme"
+        type="text"
+        placeholder="Enter programme name"
+      >
+
+    </div>
+
+
+    <div class="form-group">
+
+      <label for="editVenue">
+        Venue / Calendar
+      </label>
+
+      <select id="editVenue">
+        <option value="HBB">HBB</option>
+        <option value="OTH">OTH</option>
+      </select>
+
+    </div>
+
+
+    <div class="form-group">
+
+      <label for="editStartDate">
+        First Session Date
+      </label>
+
+      <input
+        id="editStartDate"
+        type="date"
+      >
+
+    </div>
+
+
+    <div class="form-group">
+
+      <label for="editStartTime">
+        Start Time
+      </label>
+
+      <input
+        id="editStartTime"
+        type="time"
+      >
+
+    </div>
+
+
+    <div
+      class="form-group hidden"
+      id="editDurationGroup"
+    >
+
+      <label for="editDuration">
+        Duration for Others
+      </label>
+
+      <input
+        id="editDuration"
+        type="number"
+        min="1"
+        step="1"
+        placeholder="Minutes"
+      >
+
+    </div>
+
+
+    <div class="form-group">
+
+      <label for="editRemarks">
+        Remarks
+      </label>
+
+      <textarea id="editRemarks"></textarea>
+
+    </div>
+
+
+    <div class="form-group">
+
+      <label for="editStatus">
+        Status
+      </label>
+
+      <select id="editStatus">
+
+        <option value="Uploaded (100% Created)">
+          Uploaded (100% Created)
+        </option>
+
+        <option value="Draft">
+          Draft
+        </option>
+
+        <option value="Confirmed">
+          Confirmed
+        </option>
+
+        <option value="Cancelled">
+          Cancelled
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <div class="hint">
+      Editing a series updates the entire series.
+      The new first session becomes W1.
+    </div>
+
+
+    <div class="modal-actions">
+
+      <button
+        class="btn btn-primary"
+        id="saveEditButton"
+      >
+        Save Changes
+      </button>
+
+      <button
+        class="btn btn-secondary"
+        id="cancelEditButton"
+      >
+        Cancel
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- =======================================================
+     MANPOWER MODAL
+======================================================== -->
+
+<div
+  class="modal-overlay"
+  id="manpowerModal"
+>
+
+  <div class="modal">
+
+    <h3>
+      Daily Manpower
+    </h3>
+
+
+    <div class="modal-row">
+
+      <div class="modal-label">
+        Venue
+      </div>
+
+      <div
+        class="modal-value"
+        id="manpowerVenue"
+      ></div>
+
+    </div>
+
+
+    <div class="modal-row">
+
+      <div class="modal-label">
+        Date
+      </div>
+
+      <div
+        class="modal-value"
+        id="manpowerDate"
+      ></div>
+
+    </div>
+
+
+    <div class="staff-toolbar">
+
+      <button
+        class="small-btn"
+        id="selectAllStaff"
+      >
+        Select All
+      </button>
+
+      <button
+        class="small-btn"
+        id="clearAllStaff"
+      >
+        Clear All
+      </button>
+
+    </div>
+
+
+    <div
+      class="staff-list"
+      id="staffList"
+    ></div>
+
+
+    <div class="count-box">
+      Present:
+      <strong id="presentCount">0</strong>
+    </div>
+
+
+    <div class="form-group">
+
+      <label for="requiredManpower">
+        Required Manpower
+      </label>
+
+      <input
+        id="requiredManpower"
+        type="number"
+        min="0"
+        step="1"
+        placeholder="Optional"
+      >
+
+    </div>
+
+
+    <div class="form-group">
+
+      <label for="manpowerNotes">
+        Notes
+      </label>
+
+      <textarea
+        id="manpowerNotes"
+        placeholder="Optional notes for the day"
+      ></textarea>
+
+    </div>
+
+
+    <div
+      class="staff-status"
+      id="staffStatus"
+    ></div>
+
+
+    <div class="modal-actions">
+
+      <button
+        class="btn btn-primary"
+        id="saveManpower"
+      >
+        Save
+      </button>
+
+      <button
+        class="btn btn-secondary"
+        id="closeManpower"
+      >
+        Cancel
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<script src="./script.js"></script>
+</body>
+</html>
