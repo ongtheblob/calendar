@@ -1,11 +1,6 @@
 /* =========================================================
-   PROGRAMME CALENDAR
-   HBB & OTH
-========================================================= */
-
-
-/* =========================================================
-   PROGRAMME RULES
+   PROGRAMME CALENDAR - HBB & OTH
+   Month / Week / Day views
 ========================================================= */
 
 const SERIES_WEEKS = {
@@ -16,11 +11,6 @@ const SERIES_WEEKS = {
   "Strength 1.0": 8,
   "Perform 1.0": 8
 };
-
-
-/* =========================================================
-   PAX RULES
-========================================================= */
 
 const PAX = {
   "Strength 1.0": 12,
@@ -41,11 +31,6 @@ const PAX = {
   "Active Health Senior Interest Group": 12
 };
 
-
-/* =========================================================
-   STAFF LIST
-========================================================= */
-
 const STAFF_LIST = [
   "Joelle",
   "Jireh",
@@ -57,54 +42,25 @@ const STAFF_LIST = [
   "Other"
 ];
 
+const EVENTS_KEY = "programme_calendar_events_final";
+const MANPOWER_KEY = "programme_calendar_manpower_final";
 
-/* =========================================================
-   STORAGE
-========================================================= */
+let events = loadData(EVENTS_KEY, []);
+let manpower = loadData(MANPOWER_KEY, {});
 
-const EVENTS_KEY =
-  "programme_calendar_events_final";
+let currentVenue = "HBB";
+let currentDate = new Date();
 
-const MANPOWER_KEY =
-  "programme_calendar_manpower_final";
+/*
+  IMPORTANT:
+  This variable intentionally does NOT use the name
+  "calendarView", because the HTML element itself has
+  id="calendarView".
+*/
+let activeCalendarView = "month";
 
-
-let events =
-  loadData(
-    EVENTS_KEY,
-    []
-  );
-
-
-let manpower =
-  loadData(
-    MANPOWER_KEY,
-    {}
-  );
-
-
-/* =========================================================
-   STATE
-========================================================= */
-
-let currentVenue =
-  "HBB";
-
-
-let currentDate =
-  new Date();
-
-
-let calendarView =
-  "month";
-
-
-let selectedEventId =
-  null;
-
-
-let manpowerDate =
-  null;
+let selectedEventId = null;
+let manpowerDate = null;
 
 
 /* =========================================================
@@ -112,123 +68,64 @@ let manpowerDate =
 ========================================================= */
 
 const programmeSelect =
-  document.getElementById(
-    "programme"
-  );
-
+  document.getElementById("programme");
 
 const customProgrammeGroup =
-  document.getElementById(
-    "customProgrammeGroup"
-  );
-
+  document.getElementById("customProgrammeGroup");
 
 const customProgrammeInput =
-  document.getElementById(
-    "customProgramme"
-  );
-
+  document.getElementById("customProgramme");
 
 const venueSelect =
-  document.getElementById(
-    "venue"
-  );
-
+  document.getElementById("venue");
 
 const startDateInput =
-  document.getElementById(
-    "startDate"
-  );
-
+  document.getElementById("startDate");
 
 const startTimeInput =
-  document.getElementById(
-    "startTime"
-  );
-
+  document.getElementById("startTime");
 
 const durationGroup =
-  document.getElementById(
-    "durationGroup"
-  );
-
+  document.getElementById("durationGroup");
 
 const durationPreset =
-  document.getElementById(
-    "durationPreset"
-  );
-
+  document.getElementById("durationPreset");
 
 const customDuration =
-  document.getElementById(
-    "customDuration"
-  );
-
+  document.getElementById("customDuration");
 
 const remarksInput =
-  document.getElementById(
-    "remarks"
-  );
-
+  document.getElementById("remarks");
 
 const statusInput =
-  document.getElementById(
-    "status"
-  );
-
+  document.getElementById("status");
 
 const calendarGrid =
-  document.getElementById(
-    "calendarGrid"
-  );
-
+  document.getElementById("calendarGrid");
 
 const monthTitle =
-  document.getElementById(
-    "monthTitle"
-  );
-
+  document.getElementById("monthTitle");
 
 const currentVenueLabel =
-  document.getElementById(
-    "currentVenueLabel"
-  );
-
+  document.getElementById("currentVenueLabel");
 
 const calendarViewSelect =
-  document.getElementById(
-    "calendarView"
-  );
-
+  document.getElementById("calendarView");
 
 const hbbSheetTab =
-  document.getElementById(
-    "hbbSheetTab"
-  );
-
+  document.getElementById("hbbSheetTab");
 
 const othSheetTab =
-  document.getElementById(
-    "othSheetTab"
-  );
-
+  document.getElementById("othSheetTab");
 
 const eventModal =
-  document.getElementById(
-    "eventModal"
-  );
-
+  document.getElementById("eventModal");
 
 const editModal =
-  document.getElementById(
-    "editModal"
-  );
-
+  document.getElementById("editModal");
 
 const manpowerModal =
-  document.getElementById(
-    "manpowerModal"
-  );
+  document.getElementById("manpowerModal");
 
 
 /* =========================================================
@@ -236,63 +133,34 @@ const manpowerModal =
 ========================================================= */
 
 const editProgramme =
-  document.getElementById(
-    "editProgramme"
-  );
-
+  document.getElementById("editProgramme");
 
 const editCustomProgrammeGroup =
-  document.getElementById(
-    "editCustomProgrammeGroup"
-  );
-
+  document.getElementById("editCustomProgrammeGroup");
 
 const editCustomProgramme =
-  document.getElementById(
-    "editCustomProgramme"
-  );
-
+  document.getElementById("editCustomProgramme");
 
 const editVenue =
-  document.getElementById(
-    "editVenue"
-  );
-
+  document.getElementById("editVenue");
 
 const editStartDate =
-  document.getElementById(
-    "editStartDate"
-  );
-
+  document.getElementById("editStartDate");
 
 const editStartTime =
-  document.getElementById(
-    "editStartTime"
-  );
-
+  document.getElementById("editStartTime");
 
 const editDurationGroup =
-  document.getElementById(
-    "editDurationGroup"
-  );
-
+  document.getElementById("editDurationGroup");
 
 const editDuration =
-  document.getElementById(
-    "editDuration"
-  );
-
+  document.getElementById("editDuration");
 
 const editRemarks =
-  document.getElementById(
-    "editRemarks"
-  );
-
+  document.getElementById("editRemarks");
 
 const editStatus =
-  document.getElementById(
-    "editStatus"
-  );
+  document.getElementById("editStatus");
 
 
 /* =========================================================
@@ -300,22 +168,15 @@ const editStatus =
 ========================================================= */
 
 startDateInput.value =
-  formatInputDate(
-    new Date()
-  );
-
+  formatInputDate(new Date());
 
 venueSelect.value =
   currentVenue;
 
-
 if (calendarViewSelect) {
-
   calendarViewSelect.value =
-    calendarView;
-
+    activeCalendarView;
 }
-
 
 renderCalendar();
 
@@ -329,9 +190,7 @@ programmeSelect.addEventListener(
   () => {
 
     const isOthers =
-      programmeSelect.value ===
-      "Others";
-
+      programmeSelect.value === "Others";
 
     customProgrammeGroup
       .classList
@@ -340,14 +199,12 @@ programmeSelect.addEventListener(
         !isOthers
       );
 
-
     durationGroup
       .classList
       .toggle(
         "hidden",
         !isOthers
       );
-
 
     if (!isOthers) {
 
@@ -362,7 +219,6 @@ programmeSelect.addEventListener(
 
       customDuration.disabled =
         true;
-
     }
 
   }
@@ -378,19 +234,14 @@ durationPreset.addEventListener(
   () => {
 
     const isCustom =
-      durationPreset.value ===
-      "custom";
-
+      durationPreset.value === "custom";
 
     customDuration.disabled =
       !isCustom;
 
-
     if (!isCustom) {
-
       customDuration.value =
         "";
-
     }
 
   }
@@ -407,22 +258,17 @@ if (calendarViewSelect) {
     "change",
     () => {
 
-      calendarView =
+      activeCalendarView =
         calendarViewSelect.value;
 
-
       if (
-        calendarView ===
-        "week"
+        activeCalendarView === "week"
       ) {
 
         currentDate =
-          startOfWeek(
-            currentDate
-          );
+          startOfWeek(currentDate);
 
       }
-
 
       renderCalendar();
 
@@ -433,44 +279,31 @@ if (calendarViewSelect) {
 
 
 /* =========================================================
-   SHEETS / VENUES
+   VENUE / SHEETS
 ========================================================= */
 
 hbbSheetTab.addEventListener(
   "click",
   () => {
-
-    switchVenue(
-      "HBB"
-    );
-
+    switchVenue("HBB");
   }
 );
-
 
 othSheetTab.addEventListener(
   "click",
   () => {
-
-    switchVenue(
-      "OTH"
-    );
-
+    switchVenue("OTH");
   }
 );
 
 
-function switchVenue(
-  venue
-) {
+function switchVenue(venue) {
 
   currentVenue =
     venue;
 
-
   venueSelect.value =
     venue;
-
 
   hbbSheetTab
     .classList
@@ -479,7 +312,6 @@ function switchVenue(
       venue === "HBB"
     );
 
-
   othSheetTab
     .classList
     .toggle(
@@ -487,10 +319,8 @@ function switchVenue(
       venue === "OTH"
     );
 
-
   currentVenueLabel.textContent =
     venue;
-
 
   renderCalendar();
 
@@ -498,24 +328,222 @@ function switchVenue(
 
 
 /* =========================================================
-   ADD PROGRAMME
+   BUTTON EVENT LISTENERS
 ========================================================= */
 
 document
-  .getElementById(
-    "addButton"
-  )
+  .getElementById("addButton")
   .addEventListener(
     "click",
     addProgramme
   );
 
+document
+  .getElementById("editButton")
+  .addEventListener(
+    "click",
+    openEditModal
+  );
+
+document
+  .getElementById("saveEditButton")
+  .addEventListener(
+    "click",
+    saveEdit
+  );
+
+document
+  .getElementById("deleteButton")
+  .addEventListener(
+    "click",
+    deleteSelected
+  );
+
+document
+  .getElementById("closeButton")
+  .addEventListener(
+    "click",
+    closeEventModal
+  );
+
+document
+  .getElementById("cancelEditButton")
+  .addEventListener(
+    "click",
+    closeEditModal
+  );
+
+document
+  .getElementById("saveManpower")
+  .addEventListener(
+    "click",
+    saveManpower
+  );
+
+document
+  .getElementById("closeManpower")
+  .addEventListener(
+    "click",
+    closeManpowerModal
+  );
+
+document
+  .getElementById("selectAllStaff")
+  .addEventListener(
+    "click",
+    selectAllStaff
+  );
+
+document
+  .getElementById("clearAllStaff")
+  .addEventListener(
+    "click",
+    clearAllStaff
+  );
+
+document
+  .getElementById("requiredManpower")
+  .addEventListener(
+    "input",
+    updateStaffStatus
+  );
+
+document
+  .getElementById("previousButton")
+  .addEventListener(
+    "click",
+    goPrevious
+  );
+
+document
+  .getElementById("nextButton")
+  .addEventListener(
+    "click",
+    goNext
+  );
+
+document
+  .getElementById("todayButton")
+  .addEventListener(
+    "click",
+    goToday
+  );
+
+document
+  .getElementById("exportCurrentButton")
+  .addEventListener(
+    "click",
+    () => exportCSV(currentVenue)
+  );
+
+document
+  .getElementById("exportAllButton")
+  .addEventListener(
+    "click",
+    () => exportCSV(null)
+  );
+
+document
+  .getElementById("clearButton")
+  .addEventListener(
+    "click",
+    clearAllData
+  );
+
+
+/* =========================================================
+   MODAL BACKDROP CLOSE
+========================================================= */
+
+eventModal.addEventListener(
+  "click",
+  event => {
+
+    if (
+      event.target === eventModal
+    ) {
+      closeEventModal();
+    }
+
+  }
+);
+
+
+editModal.addEventListener(
+  "click",
+  event => {
+
+    if (
+      event.target === editModal
+    ) {
+      closeEditModal();
+    }
+
+  }
+);
+
+
+manpowerModal.addEventListener(
+  "click",
+  event => {
+
+    if (
+      event.target === manpowerModal
+    ) {
+      closeManpowerModal();
+    }
+
+  }
+);
+
+
+/* =========================================================
+   EDIT PROGRAMME SELECT
+========================================================= */
+
+editProgramme.addEventListener(
+  "change",
+  () => {
+
+    const custom =
+      editProgramme.value === "__CUSTOM__";
+
+    editCustomProgrammeGroup
+      .classList
+      .toggle(
+        "hidden",
+        !custom
+      );
+
+    editDurationGroup
+      .classList
+      .toggle(
+        "hidden",
+        !custom
+      );
+
+    if (!custom) {
+
+      editCustomProgramme.value =
+        "";
+
+      editDuration.value =
+        60;
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   ADD PROGRAMME
+========================================================= */
 
 function addProgramme() {
 
   const selected =
     programmeSelect.value;
-
 
   if (!selected) {
 
@@ -524,7 +552,6 @@ function addProgramme() {
     );
 
     return;
-
   }
 
 
@@ -533,15 +560,13 @@ function addProgramme() {
 
 
   if (
-    selected ===
-    "Others"
+    selected === "Others"
   ) {
 
     programmeName =
       customProgrammeInput
         .value
         .trim();
-
 
     if (!programmeName) {
 
@@ -550,7 +575,6 @@ function addProgramme() {
       );
 
       return;
-
     }
 
   }
@@ -559,10 +583,8 @@ function addProgramme() {
   const venue =
     venueSelect.value;
 
-
   const startDate =
     startDateInput.value;
-
 
   const startTime =
     startTimeInput.value;
@@ -578,7 +600,6 @@ function addProgramme() {
     );
 
     return;
-
   }
 
 
@@ -589,9 +610,7 @@ function addProgramme() {
 
 
   if (
-    !Number.isFinite(
-      duration
-    ) ||
+    !Number.isFinite(duration) ||
     duration <= 0
   ) {
 
@@ -600,7 +619,6 @@ function addProgramme() {
     );
 
     return;
-
   }
 
 
@@ -611,9 +629,7 @@ function addProgramme() {
 
 
   const seriesId =
-    makeId(
-      "series"
-    );
+    makeId("series");
 
 
   for (
@@ -634,9 +650,7 @@ function addProgramme() {
     events.push({
 
       id:
-        makeId(
-          "event"
-        ),
+        makeId("event"),
 
       seriesId,
 
@@ -695,25 +709,18 @@ function addProgramme() {
     );
 
 
-  currentDate =
-    selectedDate;
-
-
   if (
-    calendarView ===
+    activeCalendarView ===
     "week"
   ) {
 
     currentDate =
       startOfWeek(
-        currentDate
+        selectedDate
       );
 
-  }
-
-
-  if (
-    calendarView ===
+  } else if (
+    activeCalendarView ===
     "month"
   ) {
 
@@ -723,6 +730,11 @@ function addProgramme() {
         selectedDate.getMonth(),
         1
       );
+
+  } else {
+
+    currentDate =
+      selectedDate;
 
   }
 
@@ -746,8 +758,7 @@ function getProgrammeDuration(
 ) {
 
   if (
-    programmeName !==
-    "Others"
+    programmeName !== "Others"
   ) {
 
     return 60;
@@ -775,7 +786,7 @@ function getProgrammeDuration(
 
 
 /* =========================================================
-   PAX
+   GET PAX
 ========================================================= */
 
 function getPax(
@@ -786,22 +797,24 @@ function getPax(
     PAX,
     programmeName
   )
-    ? PAX[
-        programmeName
-      ]
+    ? PAX[programmeName]
     : "";
 
 }
 
 
 /* =========================================================
-   MAIN RENDER CONTROLLER
+   MASTER RENDER
 ========================================================= */
 
 function renderCalendar() {
 
+  currentVenueLabel.textContent =
+    currentVenue;
+
+
   if (
-    calendarView ===
+    activeCalendarView ===
     "week"
   ) {
 
@@ -813,7 +826,7 @@ function renderCalendar() {
 
 
   if (
-    calendarView ===
+    activeCalendarView ===
     "day"
   ) {
 
@@ -830,709 +843,10 @@ function renderCalendar() {
 
 
 /* =========================================================
-   VIEW LABEL
-========================================================= */
-
-function getViewDateLabel() {
-
-  if (
-    calendarView ===
-    "day"
-  ) {
-
-    return currentDate.toLocaleDateString(
-      "en-SG",
-      {
-        weekday:
-          "long",
-
-        day:
-          "numeric",
-
-        month:
-          "long",
-
-        year:
-          "numeric"
-      }
-    );
-
-  }
-
-
-  if (
-    calendarView ===
-    "week"
-  ) {
-
-    const start =
-      startOfWeek(
-        currentDate
-      );
-
-
-    const end =
-      addDays(
-        start,
-        6
-      );
-
-
-    const startText =
-      start.toLocaleDateString(
-        "en-SG",
-        {
-          day:
-            "numeric",
-
-          month:
-            "short"
-        }
-      );
-
-
-    const endText =
-      end.toLocaleDateString(
-        "en-SG",
-        {
-          day:
-            "numeric",
-
-          month:
-            "short",
-
-          year:
-            "numeric"
-        }
-      );
-
-
-    return `${startText} - ${endText}`;
-
-  }
-
-
-  return currentDate.toLocaleDateString(
-    "en-SG",
-    {
-      month:
-        "long",
-
-      year:
-        "numeric"
-    }
-  );
-
-}
-
-
-/* =========================================================
-   START OF WEEK
-========================================================= */
-
-function startOfWeek(
-  date
-) {
-
-  const result =
-    new Date(
-      date
-    );
-
-
-  result.setHours(
-    0,
-    0,
-    0,
-    0
-  );
-
-
-  result.setDate(
-    result.getDate() -
-    result.getDay()
-  );
-
-
-  return result;
-
-}
-
-
-/* =========================================================
-   FLEXIBLE HEADER
-========================================================= */
-
-function renderFlexibleHeader(
-  dates
-) {
-
-  const header =
-    document.querySelector(
-      ".week-header"
-    );
-
-
-  header.innerHTML =
-    "";
-
-
-  if (
-    calendarView ===
-    "day"
-  ) {
-
-    header.className =
-      "week-header day-view-header";
-
-  } else {
-
-    header.className =
-      "week-header week-view-header";
-
-  }
-
-
-  dates.forEach(
-    date => {
-
-      const button =
-        document.createElement(
-          "button"
-        );
-
-
-      button.type =
-        "button";
-
-
-      if (
-        isSameDay(
-          date,
-          new Date()
-        )
-      ) {
-
-        button.classList.add(
-          "today-header"
-        );
-
-      }
-
-
-      button.textContent =
-        date.toLocaleDateString(
-          "en-SG",
-          {
-            weekday:
-              "short",
-
-            day:
-              "numeric",
-
-            month:
-              "short"
-          }
-        );
-
-
-      if (
-        calendarView ===
-        "week"
-      ) {
-
-        button.addEventListener(
-          "click",
-          () => {
-
-            currentDate =
-              new Date(
-                date
-              );
-
-
-            calendarView =
-              "day";
-
-
-            if (
-              calendarViewSelect
-            ) {
-
-              calendarViewSelect.value =
-                "day";
-
-            }
-
-
-            renderCalendar();
-
-          }
-        );
-
-      }
-
-
-      header.appendChild(
-        button
-      );
-
-    }
-  );
-
-}
-
-
-/* =========================================================
-   EVENT ELEMENT
-========================================================= */
-
-function createCalendarEventElement(
-  event
-) {
-
-  const element =
-    document.createElement(
-      "div"
-    );
-
-
-  element.className =
-    "event";
-
-
-  const endTime =
-    addMinutesToTime(
-      event.time,
-      event.duration
-    );
-
-
-  const sessionText =
-    event.totalSessions > 1
-      ? `W${event.sessionNumber} of ${event.totalSessions}`
-      : "Stand-alone";
-
-
-  const paxText =
-    event.pax !== ""
-      ? ` · ${event.pax} pax`
-      : "";
-
-
-  element.innerHTML = `
-
-    <div class="event-time">
-
-      ${escapeHtml(
-        formatTime(
-          event.time
-        )
-      )}
-
-      -
-
-      ${escapeHtml(
-        formatTime(
-          endTime
-        )
-      )}
-
-    </div>
-
-
-    <div class="event-name">
-
-      ${escapeHtml(
-        event.programme
-      )}
-
-    </div>
-
-
-    <div class="event-meta">
-
-      ${escapeHtml(
-        sessionText
-      )}
-
-      ${escapeHtml(
-        paxText
-      )}
-
-    </div>
-
-  `;
-
-
-  element.addEventListener(
-    "click",
-    e => {
-
-      e.stopPropagation();
-
-
-      openEventModal(
-        event
-      );
-
-    }
-  );
-
-
-  return element;
-
-}
-
-
-/* =========================================================
-   MANPOWER BUTTON
-========================================================= */
-
-function createManpowerButton(
-  venue,
-  dateString
-) {
-
-  const manpowerRecord =
-    getManpower(
-      venue,
-      dateString
-    );
-
-
-  const manpowerButton =
-    document.createElement(
-      "button"
-    );
-
-
-  manpowerButton.type =
-    "button";
-
-
-  manpowerButton.className =
-    "manpower-button";
-
-
-  const present =
-    manpowerRecord.staff.length;
-
-
-  const required =
-    manpowerRecord.required ===
-    ""
-      ? null
-      : Number(
-          manpowerRecord.required
-        );
-
-
-  if (
-    present === 0 &&
-    required === null
-  ) {
-
-    manpowerButton.textContent =
-      "👥 Set manpower";
-
-  } else if (
-    required !== null &&
-    present >= required
-  ) {
-
-    manpowerButton.classList.add(
-      "good"
-    );
-
-
-    manpowerButton.textContent =
-      `👥 ${present} staff / ${required} req.`;
-
-  } else {
-
-    manpowerButton.classList.add(
-      "warning"
-    );
-
-
-    manpowerButton.textContent =
-      `👥 ${present} staff / ${required} req.`;
-
-  }
-
-
-  manpowerButton.addEventListener(
-    "click",
-    e => {
-
-      e.stopPropagation();
-
-
-      openManpowerModal(
-        venue,
-        dateString
-      );
-
-    }
-  );
-
-
-  return manpowerButton;
-
-}
-
-
-/* =========================================================
-   WEEK / DAY COLUMN
-========================================================= */
-
-function renderFlexibleDayColumn(
-  date
-) {
-
-  const column =
-    document.createElement(
-      "div"
-    );
-
-
-  column.className =
-    "week-column";
-
-
-  if (
-    isSameDay(
-      date,
-      new Date()
-    )
-  ) {
-
-    column.classList.add(
-      "today-column"
-    );
-
-  }
-
-
-  const dateString =
-    formatInputDate(
-      date
-    );
-
-
-  const dayEvents =
-    events
-      .filter(
-        event =>
-          event.date ===
-            dateString &&
-          event.venue ===
-            currentVenue
-      )
-      .sort(
-        (a, b) =>
-          a.time.localeCompare(
-            b.time
-          )
-      );
-
-
-  if (
-    dayEvents.length ===
-    0
-  ) {
-
-    const empty =
-      document.createElement(
-        "div"
-      );
-
-
-    empty.className =
-      "view-empty";
-
-
-    empty.textContent =
-      "No programmes";
-
-
-    column.appendChild(
-      empty
-    );
-
-  }
-
-
-  dayEvents.forEach(
-    event => {
-
-      const element =
-        createCalendarEventElement(
-          event
-        );
-
-
-      if (
-        calendarView ===
-        "day"
-      ) {
-
-        element.classList.add(
-          "day-view-event"
-        );
-
-      } else {
-
-        element.classList.add(
-          "week-view-event"
-        );
-
-      }
-
-
-      column.appendChild(
-        element
-      );
-
-    }
-  );
-
-
-  column.appendChild(
-    createManpowerButton(
-      currentVenue,
-      dateString
-    )
-  );
-
-
-  return column;
-
-}
-
-
-/* =========================================================
-   WEEK VIEW
-========================================================= */
-
-function renderWeekView() {
-
-  currentVenueLabel.textContent =
-    currentVenue;
-
-
-  const start =
-    startOfWeek(
-      currentDate
-    );
-
-
-  currentDate =
-    new Date(
-      start
-    );
-
-
-  monthTitle.textContent =
-    getViewDateLabel();
-
-
-  const dates =
-    Array.from(
-      {
-        length:
-          7
-      },
-      (_, index) =>
-        addDays(
-          start,
-          index
-        )
-    );
-
-
-  renderFlexibleHeader(
-    dates
-  );
-
-
-  calendarGrid.innerHTML =
-    "";
-
-
-  calendarGrid.className =
-    "calendar-grid week-view";
-
-
-  dates.forEach(
-    date => {
-
-      calendarGrid.appendChild(
-        renderFlexibleDayColumn(
-          date
-        )
-      );
-
-    }
-  );
-
-}
-
-
-/* =========================================================
-   DAY VIEW
-========================================================= */
-
-function renderDayView() {
-
-  currentVenueLabel.textContent =
-    currentVenue;
-
-
-  monthTitle.textContent =
-    getViewDateLabel();
-
-
-  const date =
-    new Date(
-      currentDate
-    );
-
-
-  renderFlexibleHeader(
-    [
-      date
-    ]
-  );
-
-
-  calendarGrid.innerHTML =
-    "";
-
-
-  calendarGrid.className =
-    "calendar-grid day-view";
-
-
-  calendarGrid.appendChild(
-    renderFlexibleDayColumn(
-      date
-    )
-  );
-
-}
-
-
-/* =========================================================
    MONTH VIEW
 ========================================================= */
 
 function renderMonthView() {
-
-  currentVenueLabel.textContent =
-    currentVenue;
-
 
   const header =
     document.querySelector(
@@ -1567,7 +881,6 @@ function renderMonthView() {
 
   const year =
     currentDate.getFullYear();
-
 
   const month =
     currentDate.getMonth();
@@ -1622,17 +935,14 @@ function renderMonthView() {
 
     let cellDate;
 
-
     let dayNumber;
-
 
     let otherMonth =
       false;
 
 
     if (
-      index <
-      firstWeekday
+      index < firstWeekday
     ) {
 
       dayNumber =
@@ -1755,34 +1065,15 @@ function renderMonthView() {
       );
 
 
-    const dayEvents =
-      events
-        .filter(
-          event =>
-            event.date ===
-              dateString &&
-            event.venue ===
-              currentVenue
-        )
-        .sort(
-          (a, b) =>
-            a.time.localeCompare(
-              b.time
-            )
-        );
-
-
-    dayEvents.forEach(
+    getDayEvents(
+      dateString
+    ).forEach(
       event => {
 
-        const element =
+        cell.appendChild(
           createCalendarEventElement(
             event
-          );
-
-
-        cell.appendChild(
-          element
+          )
         );
 
       }
@@ -1802,6 +1093,653 @@ function renderMonthView() {
     );
 
   }
+
+}
+
+
+/* =========================================================
+   WEEK VIEW
+========================================================= */
+
+function renderWeekView() {
+
+  currentDate =
+    startOfWeek(
+      currentDate
+    );
+
+
+  monthTitle.textContent =
+    getViewDateLabel();
+
+
+  const dates =
+    Array.from(
+      {
+        length:
+          7
+      },
+      (_, index) =>
+        addDays(
+          currentDate,
+          index
+        )
+    );
+
+
+  renderFlexibleHeader(
+    dates
+  );
+
+
+  calendarGrid.className =
+    "calendar-grid week-view";
+
+
+  calendarGrid.innerHTML =
+    "";
+
+
+  dates.forEach(
+    date => {
+
+      calendarGrid.appendChild(
+        renderFlexibleDayColumn(
+          date
+        )
+      );
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   DAY VIEW
+========================================================= */
+
+function renderDayView() {
+
+  monthTitle.textContent =
+    getViewDateLabel();
+
+
+  renderFlexibleHeader(
+    [
+      currentDate
+    ]
+  );
+
+
+  calendarGrid.className =
+    "calendar-grid day-view";
+
+
+  calendarGrid.innerHTML =
+    "";
+
+
+  calendarGrid.appendChild(
+    renderFlexibleDayColumn(
+      currentDate
+    )
+  );
+
+}
+
+
+/* =========================================================
+   HEADER FOR WEEK / DAY
+========================================================= */
+
+function renderFlexibleHeader(
+  dates
+) {
+
+  const header =
+    document.querySelector(
+      ".week-header"
+    );
+
+
+  header.innerHTML =
+    "";
+
+
+  header.className =
+    activeCalendarView ===
+    "day"
+      ? "week-header day-view-header"
+      : "week-header week-view-header";
+
+
+  dates.forEach(
+    date => {
+
+      const button =
+        document.createElement(
+          "button"
+        );
+
+
+      button.type =
+        "button";
+
+
+      if (
+        isSameDay(
+          date,
+          new Date()
+        )
+      ) {
+
+        button.classList.add(
+          "today-header"
+        );
+
+      }
+
+
+      button.textContent =
+        date.toLocaleDateString(
+          "en-SG",
+          {
+            weekday:
+              "short",
+
+            day:
+              "numeric",
+
+            month:
+              "short"
+          }
+        );
+
+
+      if (
+        activeCalendarView ===
+        "week"
+      ) {
+
+        button.addEventListener(
+          "click",
+          () => {
+
+            currentDate =
+              new Date(
+                date
+              );
+
+
+            activeCalendarView =
+              "day";
+
+
+            if (
+              calendarViewSelect
+            ) {
+
+              calendarViewSelect.value =
+                "day";
+
+            }
+
+
+            renderCalendar();
+
+          }
+        );
+
+      }
+
+
+      header.appendChild(
+        button
+      );
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   FLEXIBLE DAY COLUMN
+========================================================= */
+
+function renderFlexibleDayColumn(
+  date
+) {
+
+  const column =
+    document.createElement(
+      "div"
+    );
+
+
+  column.className =
+    "week-column";
+
+
+  if (
+    isSameDay(
+      date,
+      new Date()
+    )
+  ) {
+
+    column.classList.add(
+      "today-column"
+    );
+
+  }
+
+
+  const dateString =
+    formatInputDate(
+      date
+    );
+
+
+  const dayEvents =
+    getDayEvents(
+      dateString
+    );
+
+
+  if (
+    dayEvents.length ===
+    0
+  ) {
+
+    const empty =
+      document.createElement(
+        "div"
+      );
+
+
+    empty.className =
+      "view-empty";
+
+
+    empty.textContent =
+      "No programmes";
+
+
+    column.appendChild(
+      empty
+    );
+
+  }
+
+
+  dayEvents.forEach(
+    event => {
+
+      const element =
+        createCalendarEventElement(
+          event
+        );
+
+
+      if (
+        activeCalendarView ===
+        "day"
+      ) {
+
+        element.classList.add(
+          "day-view-event"
+        );
+
+      } else {
+
+        element.classList.add(
+          "week-view-event"
+        );
+
+      }
+
+
+      column.appendChild(
+        element
+      );
+
+    }
+  );
+
+
+  column.appendChild(
+    createManpowerButton(
+      currentVenue,
+      dateString
+    )
+  );
+
+
+  return column;
+
+}
+
+
+/* =========================================================
+   GET EVENTS FOR A DAY
+========================================================= */
+
+function getDayEvents(
+  dateString
+) {
+
+  return events
+    .filter(
+      event =>
+        event.date ===
+          dateString &&
+        event.venue ===
+          currentVenue
+    )
+    .sort(
+      (a, b) =>
+        a.time.localeCompare(
+          b.time
+        )
+    );
+
+}
+
+
+/* =========================================================
+   CREATE EVENT ELEMENT
+========================================================= */
+
+function createCalendarEventElement(
+  event
+) {
+
+  const element =
+    document.createElement(
+      "div"
+    );
+
+
+  element.className =
+    "event";
+
+
+  const endTime =
+    addMinutesToTime(
+      event.time,
+      event.duration
+    );
+
+
+  const sessionText =
+    event.totalSessions > 1
+      ? `W${event.sessionNumber} of ${event.totalSessions}`
+      : "Stand-alone";
+
+
+  const paxText =
+    event.pax !== ""
+      ? ` · ${event.pax} pax`
+      : "";
+
+
+  element.innerHTML = `
+
+    <div class="event-time">
+
+      ${escapeHtml(
+        formatTime(
+          event.time
+        )
+      )}
+
+      -
+
+      ${escapeHtml(
+        formatTime(
+          endTime
+        )
+      )}
+
+    </div>
+
+
+    <div class="event-name">
+
+      ${escapeHtml(
+        event.programme
+      )}
+
+    </div>
+
+
+    <div class="event-meta">
+
+      ${escapeHtml(
+        sessionText
+      )}
+
+      ${escapeHtml(
+        paxText
+      )}
+
+    </div>
+
+  `;
+
+
+  element.addEventListener(
+    "click",
+    eventObject => {
+
+      eventObject.stopPropagation();
+
+      openEventModal(
+        event
+      );
+
+    }
+  );
+
+
+  return element;
+
+}
+
+
+/* =========================================================
+   MANPOWER BUTTON
+========================================================= */
+
+function createManpowerButton(
+  venue,
+  dateString
+) {
+
+  const record =
+    getManpower(
+      venue,
+      dateString
+    );
+
+
+  const button =
+    document.createElement(
+      "button"
+    );
+
+
+  button.type =
+    "button";
+
+
+  button.className =
+    "manpower-button";
+
+
+  const present =
+    record.staff.length;
+
+
+  const required =
+    record.required ===
+      ""
+      ? null
+      : Number(
+          record.required
+        );
+
+
+  if (
+    present === 0 &&
+    required === null
+  ) {
+
+    button.textContent =
+      "👥 Set manpower";
+
+  } else if (
+    required !== null &&
+    present >= required
+  ) {
+
+    button.classList.add(
+      "good"
+    );
+
+
+    button.textContent =
+      `👥 ${present} staff / ${required} req.`;
+
+  } else {
+
+    button.classList.add(
+      "warning"
+    );
+
+
+    button.textContent =
+      `👥 ${present} staff / ${required} req.`;
+
+  }
+
+
+  button.addEventListener(
+    "click",
+    event => {
+
+      event.stopPropagation();
+
+
+      openManpowerModal(
+        venue,
+        dateString
+      );
+
+    }
+  );
+
+
+  return button;
+
+}
+
+
+/* =========================================================
+   VIEW DATE LABEL
+========================================================= */
+
+function getViewDateLabel() {
+
+  if (
+    activeCalendarView ===
+    "day"
+  ) {
+
+    return currentDate.toLocaleDateString(
+      "en-SG",
+      {
+        weekday:
+          "long",
+
+        day:
+          "numeric",
+
+        month:
+          "long",
+
+        year:
+          "numeric"
+      }
+    );
+
+  }
+
+
+  if (
+    activeCalendarView ===
+    "week"
+  ) {
+
+    const start =
+      startOfWeek(
+        currentDate
+      );
+
+
+    const end =
+      addDays(
+        start,
+        6
+      );
+
+
+    const startText =
+      start.toLocaleDateString(
+        "en-SG",
+        {
+          day:
+            "numeric",
+
+          month:
+            "short"
+        }
+      );
+
+
+    const endText =
+      end.toLocaleDateString(
+        "en-SG",
+        {
+          day:
+            "numeric",
+
+          month:
+            "short",
+
+          year:
+            "numeric"
+        }
+      );
+
+
+    return `${startText} - ${endText}`;
+
+  }
+
+
+  return currentDate.toLocaleDateString(
+    "en-SG",
+    {
+      month:
+        "long",
+
+      year:
+        "numeric"
+    }
+  );
 
 }
 
@@ -1900,22 +1838,10 @@ function openEventModal(
    OPEN EDIT
 ========================================================= */
 
-document
-  .getElementById(
-    "editButton"
-  )
-  .addEventListener(
-    "click",
-    openEditModal
-  );
-
-
 function openEditModal() {
 
   if (!selectedEventId) {
-
     return;
-
   }
 
 
@@ -1928,9 +1854,7 @@ function openEditModal() {
 
 
   if (!selected) {
-
     return;
-
   }
 
 
@@ -1956,34 +1880,23 @@ function openEditModal() {
       : "__CUSTOM__";
 
 
-  if (
+  const custom =
     editProgramme.value ===
-    "__CUSTOM__"
-  ) {
-
-    editCustomProgrammeGroup
-      .classList
-      .remove(
-        "hidden"
-      );
+    "__CUSTOM__";
 
 
-    editCustomProgramme.value =
-      firstEvent.programme;
-
-  } else {
-
-    editCustomProgrammeGroup
-      .classList
-      .add(
-        "hidden"
-      );
+  editCustomProgrammeGroup
+    .classList
+    .toggle(
+      "hidden",
+      !custom
+    );
 
 
-    editCustomProgramme.value =
-      "";
-
-  }
+  editCustomProgramme.value =
+    custom
+      ? firstEvent.programme
+      : "";
 
 
   editVenue.value =
@@ -2007,34 +1920,18 @@ function openEditModal() {
     "Uploaded (100% Created)";
 
 
-  if (
-    editProgramme.value ===
-    "__CUSTOM__"
-  ) {
-
-    editDurationGroup
-      .classList
-      .remove(
-        "hidden"
-      );
+  editDurationGroup
+    .classList
+    .toggle(
+      "hidden",
+      !custom
+    );
 
 
-    editDuration.value =
-      firstEvent.duration;
-
-  } else {
-
-    editDurationGroup
-      .classList
-      .add(
-        "hidden"
-      );
-
-
-    editDuration.value =
-      60;
-
-  }
+  editDuration.value =
+    custom
+      ? firstEvent.duration
+      : 60;
 
 
   eventModal
@@ -2054,69 +1951,13 @@ function openEditModal() {
 
 
 /* =========================================================
-   EDIT PROGRAMME SELECT CHANGE
-========================================================= */
-
-editProgramme.addEventListener(
-  "change",
-  () => {
-
-    const custom =
-      editProgramme.value ===
-      "__CUSTOM__";
-
-
-    editCustomProgrammeGroup
-      .classList
-      .toggle(
-        "hidden",
-        !custom
-      );
-
-
-    editDurationGroup
-      .classList
-      .toggle(
-        "hidden",
-        !custom
-      );
-
-
-    if (!custom) {
-
-      editCustomProgramme.value =
-        "";
-
-
-      editDuration.value =
-        60;
-
-    }
-
-  }
-);
-
-
-/* =========================================================
    SAVE EDIT
 ========================================================= */
-
-document
-  .getElementById(
-    "saveEditButton"
-  )
-  .addEventListener(
-    "click",
-    saveEdit
-  );
-
 
 function saveEdit() {
 
   if (!selectedEventId) {
-
     return;
-
   }
 
 
@@ -2129,9 +1970,7 @@ function saveEdit() {
 
 
   if (!selected) {
-
     return;
-
   }
 
 
@@ -2154,9 +1993,7 @@ function saveEdit() {
 
 
   if (!firstEvent) {
-
     return;
-
   }
 
 
@@ -2169,7 +2006,8 @@ function saveEdit() {
   ) {
 
     programmeName =
-      editCustomProgramme.value
+      editCustomProgramme
+        .value
         .trim();
 
 
@@ -2178,7 +2016,6 @@ function saveEdit() {
       alert(
         "Please enter the custom programme name."
       );
-
 
       return;
 
@@ -2213,31 +2050,18 @@ function saveEdit() {
       "Please enter a date and time."
     );
 
-
     return;
 
   }
 
 
-  let newDuration;
-
-
-  if (
+  const newDuration =
     editProgramme.value ===
-    "__CUSTOM__"
-  ) {
-
-    newDuration =
-      Number(
-        editDuration.value
-      );
-
-  } else {
-
-    newDuration =
-      60;
-
-  }
+      "__CUSTOM__"
+      ? Number(
+          editDuration.value
+        )
+      : 60;
 
 
   if (
@@ -2250,7 +2074,6 @@ function saveEdit() {
     alert(
       "Please enter a valid duration."
     );
-
 
     return;
 
@@ -2289,9 +2112,7 @@ function saveEdit() {
     events.push({
 
       id:
-        makeId(
-          "event"
-        ),
+        makeId("event"),
 
       seriesId:
         oldSeriesId,
@@ -2322,7 +2143,8 @@ function saveEdit() {
         editStatus.value,
 
       remarks:
-        editRemarks.value
+        editRemarks
+          .value
           .trim(),
 
       sessionNumber:
@@ -2354,25 +2176,18 @@ function saveEdit() {
     );
 
 
-  currentDate =
-    date;
-
-
   if (
-    calendarView ===
+    activeCalendarView ===
     "week"
   ) {
 
     currentDate =
       startOfWeek(
-        currentDate
+        date
       );
 
-  }
-
-
-  if (
-    calendarView ===
+  } else if (
+    activeCalendarView ===
     "month"
   ) {
 
@@ -2382,6 +2197,11 @@ function saveEdit() {
         date.getMonth(),
         1
       );
+
+  } else {
+
+    currentDate =
+      date;
 
   }
 
@@ -2393,9 +2213,6 @@ function saveEdit() {
     newVenue
   );
 
-
-  renderCalendar();
-
 }
 
 
@@ -2403,22 +2220,10 @@ function saveEdit() {
    DELETE
 ========================================================= */
 
-document
-  .getElementById(
-    "deleteButton"
-  )
-  .addEventListener(
-    "click",
-    deleteSelected
-  );
-
-
 function deleteSelected() {
 
   if (!selectedEventId) {
-
     return;
-
   }
 
 
@@ -2431,9 +2236,7 @@ function deleteSelected() {
 
 
   if (!selected) {
-
     return;
-
   }
 
 
@@ -2444,13 +2247,9 @@ function deleteSelected() {
 
 
   if (
-    !confirm(
-      message
-    )
+    !confirm(message)
   ) {
-
     return;
-
   }
 
 
@@ -2495,33 +2294,6 @@ function deleteSelected() {
    CLOSE PROGRAMME MODAL
 ========================================================= */
 
-document
-  .getElementById(
-    "closeButton"
-  )
-  .addEventListener(
-    "click",
-    closeEventModal
-  );
-
-
-eventModal.addEventListener(
-  "click",
-  event => {
-
-    if (
-      event.target ===
-      eventModal
-    ) {
-
-      closeEventModal();
-
-    }
-
-  }
-);
-
-
 function closeEventModal() {
 
   selectedEventId =
@@ -2538,35 +2310,8 @@ function closeEventModal() {
 
 
 /* =========================================================
-   EDIT MODAL CLOSE
+   CLOSE EDIT MODAL
 ========================================================= */
-
-document
-  .getElementById(
-    "cancelEditButton"
-  )
-  .addEventListener(
-    "click",
-    closeEditModal
-  );
-
-
-editModal.addEventListener(
-  "click",
-  event => {
-
-    if (
-      event.target ===
-      editModal
-    ) {
-
-      closeEditModal();
-
-    }
-
-  }
-);
-
 
 function closeEditModal() {
 
@@ -2715,11 +2460,11 @@ function openManpowerModal(
 
 
 /* =========================================================
-   STAFF LIST
+   STAFF CHECKLIST
 ========================================================= */
 
 function renderStaffChecklist(
-  selectedStaff
+  selected
 ) {
 
   const container =
@@ -2760,7 +2505,7 @@ function renderStaffChecklist(
 
 
       checkbox.checked =
-        selectedStaff.includes(
+        selected.includes(
           name
         );
 
@@ -2808,6 +2553,10 @@ function renderStaffChecklist(
 }
 
 
+/* =========================================================
+   SELECTED STAFF
+========================================================= */
+
 function selectedStaff() {
 
   return Array.from(
@@ -2824,69 +2573,59 @@ function selectedStaff() {
 
 
 /* =========================================================
-   SELECT ALL / CLEAR ALL
+   SELECT ALL STAFF
 ========================================================= */
 
-document
-  .getElementById(
-    "selectAllStaff"
-  )
-  .addEventListener(
-    "click",
-    () => {
+function selectAllStaff() {
 
-      document
-        .querySelectorAll(
-          '#staffList input[type="checkbox"]'
-        )
-        .forEach(
-          checkbox => {
+  document
+    .querySelectorAll(
+      '#staffList input[type="checkbox"]'
+    )
+    .forEach(
+      checkbox => {
 
-            checkbox.checked =
-              true;
+        checkbox.checked =
+          true;
 
-          }
-        );
+      }
+    );
 
 
-      updateStaffCount();
+  updateStaffCount();
 
 
-      updateStaffStatus();
+  updateStaffStatus();
 
-    }
-  );
-
-
-document
-  .getElementById(
-    "clearAllStaff"
-  )
-  .addEventListener(
-    "click",
-    () => {
-
-      document
-        .querySelectorAll(
-          '#staffList input[type="checkbox"]'
-        )
-        .forEach(
-          checkbox => {
-
-            checkbox.checked =
-              false;
-
-          }
-        );
+}
 
 
-      updateStaffCount();
+/* =========================================================
+   CLEAR ALL STAFF
+========================================================= */
+
+function clearAllStaff() {
+
+  document
+    .querySelectorAll(
+      '#staffList input[type="checkbox"]'
+    )
+    .forEach(
+      checkbox => {
+
+        checkbox.checked =
+          false;
+
+      }
+    );
 
 
-      updateStaffStatus();
+  updateStaffCount();
 
-    }
-  );
+
+  updateStaffStatus();
+
+}
 
 
 /* =========================================================
@@ -2906,16 +2645,6 @@ function updateStaffCount() {
 /* =========================================================
    STAFF STATUS
 ========================================================= */
-
-document
-  .getElementById(
-    "requiredManpower"
-  )
-  .addEventListener(
-    "input",
-    updateStaffStatus
-  );
-
 
 function updateStaffStatus() {
 
@@ -2940,8 +2669,7 @@ function updateStaffStatus() {
 
 
   if (
-    requiredInput ===
-    ""
+    requiredInput === ""
   ) {
 
     status.classList.add(
@@ -2965,8 +2693,7 @@ function updateStaffStatus() {
 
 
   if (
-    present >=
-    required
+    present >= required
   ) {
 
     status.classList.add(
@@ -2996,22 +2723,10 @@ function updateStaffStatus() {
    SAVE MANPOWER
 ========================================================= */
 
-document
-  .getElementById(
-    "saveManpower"
-  )
-  .addEventListener(
-    "click",
-    saveManpower
-  );
-
-
 function saveManpower() {
 
   if (!manpowerDate) {
-
     return;
-
   }
 
 
@@ -3041,7 +2756,8 @@ function saveManpower() {
     notes:
       document.getElementById(
         "manpowerNotes"
-      ).value.trim()
+      ).value
+      .trim()
 
   };
 
@@ -3064,33 +2780,6 @@ function saveManpower() {
    CLOSE MANPOWER
 ========================================================= */
 
-document
-  .getElementById(
-    "closeManpower"
-  )
-  .addEventListener(
-    "click",
-    closeManpowerModal
-  );
-
-
-manpowerModal.addEventListener(
-  "click",
-  event => {
-
-    if (
-      event.target ===
-      manpowerModal
-    ) {
-
-      closeManpowerModal();
-
-    }
-
-  }
-);
-
-
 function closeManpowerModal() {
 
   manpowerDate =
@@ -3110,172 +2799,134 @@ function closeManpowerModal() {
    NAVIGATION
 ========================================================= */
 
-document
-  .getElementById(
-    "previousButton"
-  )
-  .addEventListener(
-    "click",
-    () => {
+function goPrevious() {
 
-      if (
-        calendarView ===
-        "week"
-      ) {
+  if (
+    activeCalendarView ===
+    "week"
+  ) {
 
-        currentDate =
-          addDays(
-            startOfWeek(
-              currentDate
-            ),
-            -7
-          );
+    currentDate =
+      addDays(
+        startOfWeek(
+          currentDate
+        ),
+        -7
+      );
 
-      } else if (
-        calendarView ===
-        "day"
-      ) {
+  } else if (
+    activeCalendarView ===
+    "day"
+  ) {
 
-        currentDate =
-          addDays(
-            currentDate,
-            -1
-          );
+    currentDate =
+      addDays(
+        currentDate,
+        -1
+      );
 
-      } else {
+  } else {
 
-        currentDate =
-          new Date(
-            currentDate.getFullYear(),
-            currentDate.getMonth() - 1,
-            1
-          );
+    currentDate =
+      new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth() - 1,
+        1
+      );
 
-      }
+  }
 
 
-      renderCalendar();
+  renderCalendar();
 
-    }
-  );
-
-
-document
-  .getElementById(
-    "nextButton"
-  )
-  .addEventListener(
-    "click",
-    () => {
-
-      if (
-        calendarView ===
-        "week"
-      ) {
-
-        currentDate =
-          addDays(
-            startOfWeek(
-              currentDate
-            ),
-            7
-          );
-
-      } else if (
-        calendarView ===
-        "day"
-      ) {
-
-        currentDate =
-          addDays(
-            currentDate,
-            1
-          );
-
-      } else {
-
-        currentDate =
-          new Date(
-            currentDate.getFullYear(),
-            currentDate.getMonth() + 1,
-            1
-          );
-
-      }
+}
 
 
-      renderCalendar();
+function goNext() {
 
-    }
-  );
+  if (
+    activeCalendarView ===
+    "week"
+  ) {
+
+    currentDate =
+      addDays(
+        startOfWeek(
+          currentDate
+        ),
+        7
+      );
+
+  } else if (
+    activeCalendarView ===
+    "day"
+  ) {
+
+    currentDate =
+      addDays(
+        currentDate,
+        1
+      );
+
+  } else {
+
+    currentDate =
+      new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth() + 1,
+        1
+      );
+
+  }
 
 
-document
-  .getElementById(
-    "todayButton"
-  )
-  .addEventListener(
-    "click",
-    () => {
+  renderCalendar();
 
-      currentDate =
-        new Date();
+}
 
 
-      if (
-        calendarView ===
-        "week"
-      ) {
+function goToday() {
 
-        currentDate =
-          startOfWeek(
-            currentDate
-          );
-
-      }
+  currentDate =
+    new Date();
 
 
-      renderCalendar();
+  if (
+    activeCalendarView ===
+    "week"
+  ) {
 
-    }
-  );
+    currentDate =
+      startOfWeek(
+        currentDate
+      );
+
+  }
+
+
+  if (
+    activeCalendarView ===
+    "month"
+  ) {
+
+    currentDate =
+      new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        1
+      );
+
+  }
+
+
+  renderCalendar();
+
+}
 
 
 /* =========================================================
    EXPORT CSV
 ========================================================= */
-
-document
-  .getElementById(
-    "exportCurrentButton"
-  )
-  .addEventListener(
-    "click",
-    () => {
-
-      exportCSV(
-        currentVenue
-      );
-
-    }
-  );
-
-
-document
-  .getElementById(
-    "exportAllButton"
-  )
-  .addEventListener(
-    "click",
-    () => {
-
-      exportCSV(
-        null
-      );
-
-    }
-  );
-
 
 function exportCSV(
   venueFilter
@@ -3301,22 +2952,20 @@ function exportCSV(
       ([key]) =>
         !venueFilter ||
         key.startsWith(
-          venueFilter + "__"
+          venueFilter +
+          "__"
         )
     );
 
 
   if (
-    filteredEvents.length ===
-      0 &&
-    relevantManpower.length ===
-      0
+    !filteredEvents.length &&
+    !relevantManpower.length
   ) {
 
     alert(
       "There is no data to export."
     );
-
 
     return;
 
@@ -3334,9 +2983,7 @@ function exportCSV(
         `${event.venue}__${event.seriesId || event.id}`;
 
 
-      if (
-        !groups[key]
-      ) {
+      if (!groups[key]) {
 
         groups[key] =
           [];
@@ -3446,7 +3093,6 @@ function exportCSV(
         "",
         "",
         "",
-        "",
 
         dayManpower.staff.length,
 
@@ -3496,10 +3142,6 @@ function exportCSV(
     }
   );
 
-
-  /* -------------------------------------------------------
-     ADD MANPOWER-ONLY DAYS
-  ------------------------------------------------------- */
 
   relevantManpower.forEach(
     ([key, record]) => {
@@ -3623,7 +3265,7 @@ function exportCSV(
     );
 
 
-  const name =
+  const filename =
     venueFilter
       ? `Programme_Schedule_${venueFilter}.csv`
       : "Programme_Schedule_HBB_OTH.csv";
@@ -3631,59 +3273,52 @@ function exportCSV(
 
   downloadCSV(
     csv,
-    name
+    filename
   );
 
 }
 
 
 /* =========================================================
-   CLEAR ALL
+   CLEAR ALL DATA
 ========================================================= */
 
-document
-  .getElementById(
-    "clearButton"
-  )
-  .addEventListener(
-    "click",
-    () => {
+function clearAllData() {
 
-      if (
-        !confirm(
-          "This will delete all programme and manpower data for HBB and OTH. Continue?"
-        )
-      ) {
+  if (
+    !confirm(
+      "This will delete all programme and manpower data for HBB and OTH. Continue?"
+    )
+  ) {
 
-        return;
+    return;
 
-      }
+  }
 
 
-      events =
-        [];
+  events =
+    [];
 
 
-      manpower =
-        {};
+  manpower =
+    {};
 
 
-      saveData(
-        EVENTS_KEY,
-        events
-      );
-
-
-      saveData(
-        MANPOWER_KEY,
-        manpower
-      );
-
-
-      renderCalendar();
-
-    }
+  saveData(
+    EVENTS_KEY,
+    events
   );
+
+
+  saveData(
+    MANPOWER_KEY,
+    manpower
+  );
+
+
+  renderCalendar();
+
+}
 
 
 /* =========================================================
@@ -3751,16 +3386,15 @@ function resetForm() {
 
 
 /* =========================================================
-   UTILITY FUNCTIONS
+   UTILITY: KNOWN PROGRAMME
 ========================================================= */
 
 function isKnownProgramme(
   name
 ) {
 
-  return Object.keys(
-    PAX
-  ).includes(
+  return Object.prototype.hasOwnProperty.call(
+    PAX,
     name
   );
 
@@ -3768,7 +3402,7 @@ function isKnownProgramme(
 
 
 /* =========================================================
-   PARSE DATE
+   DATE PARSING
 ========================================================= */
 
 function parseInputDate(
@@ -3811,7 +3445,8 @@ function formatInputDate(
   const month =
     String(
       date.getMonth() + 1
-    ).padStart(
+    )
+    .padStart(
       2,
       "0"
     );
@@ -3820,7 +3455,8 @@ function formatInputDate(
   const day =
     String(
       date.getDate()
-    ).padStart(
+    )
+    .padStart(
       2,
       "0"
     );
@@ -3858,7 +3494,40 @@ function addDays(
 
 
 /* =========================================================
-   ADD MINUTES
+   START OF WEEK
+========================================================= */
+
+function startOfWeek(
+  date
+) {
+
+  const result =
+    new Date(
+      date
+    );
+
+
+  result.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+
+  result.setDate(
+    result.getDate() -
+    result.getDay()
+  );
+
+
+  return result;
+
+}
+
+
+/* =========================================================
+   ADD MINUTES TO TIME
 ========================================================= */
 
 function addMinutesToTime(
@@ -3880,9 +3549,7 @@ function addMinutesToTime(
   const total =
     hours * 60 +
     mins +
-    Number(
-      minutes
-    );
+    Number(minutes);
 
 
   const newHours =
@@ -3892,8 +3559,7 @@ function addMinutesToTime(
 
 
   const newMinutes =
-    total %
-    60;
+    total % 60;
 
 
   return `${String(
@@ -3971,8 +3637,7 @@ function formatDuration(
 
 
   if (
-    total <
-    60
+    total < 60
   ) {
 
     return `${total} min`;
@@ -3987,13 +3652,11 @@ function formatDuration(
 
 
   const remaining =
-    total %
-    60;
+    total % 60;
 
 
   if (
-    remaining ===
-    0
+    remaining === 0
   ) {
 
     return `${hours} hour${hours === 1 ? "" : "s"}`;
@@ -4016,7 +3679,8 @@ function formatDisplayDate(
 
   return parseInputDate(
     dateString
-  ).toLocaleDateString(
+  )
+  .toLocaleDateString(
     "en-SG",
     {
       weekday:
@@ -4046,7 +3710,8 @@ function formatShortDate(
 
   return parseInputDate(
     dateString
-  ).toLocaleDateString(
+  )
+  .toLocaleDateString(
     "en-SG",
     {
       day:
@@ -4070,7 +3735,8 @@ function formatMonth(
 
   return parseInputDate(
     dateString
-  ).toLocaleDateString(
+  )
+  .toLocaleDateString(
     "en-SG",
     {
       month:
