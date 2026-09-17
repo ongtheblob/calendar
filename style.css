@@ -555,3 +555,108 @@ textarea:focus {
     grid-template-rows: repeat(6, 115px);
   }
 }
+
+/* =========================================================
+   CALENDAR VIEW SELECTOR
+========================================================= */
+
+.view-select {
+  width: auto;
+  min-width: 105px;
+  padding: 8px 10px;
+  border: 1px solid #dadce0;
+  border-radius: 6px;
+  background: white;
+  color: #202124;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.view-select:focus {
+  outline: 2px solid rgba(26,115,232,.18);
+  border-color: #1a73e8;
+}
+
+
+/* =========================================================
+   WEEK / DAY VIEWS
+========================================================= */
+
+.calendar-grid.week-view {
+  grid-template-columns: repeat(7, minmax(150px, 1fr));
+  grid-template-rows: 1fr;
+  overflow-x: auto;
+  overflow-y: auto;
+}
+
+.calendar-grid.day-view {
+  grid-template-columns: minmax(320px, 1fr);
+  grid-template-rows: 1fr;
+  overflow: auto;
+}
+
+.week-header.week-view-header {
+  grid-template-columns: repeat(7, minmax(150px, 1fr));
+  overflow-x: auto;
+}
+
+.week-header.day-view-header {
+  grid-template-columns: minmax(320px, 1fr);
+}
+
+.week-header button {
+  border: 0;
+  border-right: 1px solid #dadce0;
+  background: white;
+  padding: 10px 8px;
+  color: #5f6368;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.week-header button:hover {
+  background: #f8f9fa;
+}
+
+.week-header button.today-header {
+  color: #1a73e8;
+}
+
+.week-column {
+  min-width: 150px;
+  min-height: 0;
+  padding: 8px;
+  overflow-y: auto;
+  border-right: 1px solid #dadce0;
+  background: white;
+}
+
+.week-column:last-child {
+  border-right: none;
+}
+
+.day-view .week-column {
+  min-width: 320px;
+}
+
+.week-column.today-column {
+  background: #f8fbff;
+}
+
+.week-view-event {
+  font-size: 12px;
+}
+
+.day-view-event {
+  font-size: 13px;
+  padding: 8px 10px;
+}
+
+.view-empty {
+  padding: 18px 8px;
+  color: #80868b;
+  font-size: 13px;
+  text-align: center;
+}
