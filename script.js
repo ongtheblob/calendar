@@ -1,5 +1,3 @@
-alert("SCRIPT.JS IS RUNNING");
-
 const calendarGrid =
   document.getElementById("calendarGrid");
 
