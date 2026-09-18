@@ -393,8 +393,8 @@ const editCustomProgramme =
     "editCustomProgramme"
   );
 
-const Venue =
-  document.getElementById("Venue");
+const venueSelect =
+  document.getElementById("venue");
 
 const editStartDate =
   document.getElementById("editStartDate");
