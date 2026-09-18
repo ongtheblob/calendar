@@ -1616,6 +1616,130 @@ durationPreset.addEventListener(
   }
 );
 
+function mapProgrammeToDatabase(
+  event
+) {
+
+  return {
+
+    id:
+      event.id,
+
+    series_id:
+      event.seriesId,
+
+    programme:
+      event.programme,
+
+    venue:
+      event.venue,
+
+    date:
+      event.date,
+
+    time:
+      event.time,
+
+    duration:
+      Number(
+        event.duration
+      ),
+
+    pax:
+      event.pax === ""
+        ? null
+        : Number(
+            event.pax
+          ),
+
+    status:
+      event.status || null,
+
+    remarks:
+      event.remarks || null,
+
+    session_number:
+      event.sessionNumber ??
+      null,
+
+    total_sessions:
+      event.totalSessions ??
+      1,
+
+    type:
+      event.type || null
+
+  };
+
+}
+
+function convertDatabaseProgramme(
+  row
+) {
+
+  return {
+
+    id:
+      row.id,
+
+    seriesId:
+      row.series_id,
+
+    programme:
+      row.programme,
+
+    venue:
+      row.venue,
+
+    date:
+      String(
+        row.date
+      ).substring(
+        0,
+        10
+      ),
+
+    time:
+      String(
+        row.time
+      ).substring(
+        0,
+        5
+      ),
+
+    duration:
+      Number(
+        row.duration ||
+        60
+      ),
+
+    pax:
+      row.pax ??
+      "",
+
+    status:
+      row.status ||
+      "",
+
+    remarks:
+      row.remarks ||
+      "",
+
+    sessionNumber:
+      row.session_number ??
+      null,
+
+    totalSessions:
+      row.total_sessions ??
+      1,
+
+    type:
+      row.type ||
+      "Stand-alone"
+
+  };
+
+}
 
 /* =========================================================
    ADD PROGRAMME
