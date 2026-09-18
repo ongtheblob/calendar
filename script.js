@@ -24,6 +24,11 @@ const supabaseClient =
     SUPABASE_PUBLISHABLE_KEY
   );
 
+window.supabaseDebug = {
+  client: supabaseClient,
+  ready: true
+};
+
 /* =========================================================
    PROGRAMME RULES
 ========================================================= */
