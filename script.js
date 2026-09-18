@@ -33,6 +33,52 @@ if (
 
 }
 
+/* =========================================================
+   TEST SUPABASE CONNECTION
+========================================================= */
+
+async function testSupabaseConnection() {
+
+  if (!supabaseClient) {
+
+    console.warn(
+      "Supabase client unavailable."
+    );
+
+    return;
+
+  }
+
+
+  const {
+    data,
+    error
+  } =
+    await supabaseClient
+      .from("programmes")
+      .select("*")
+      .limit(1);
+
+
+  if (error) {
+
+    console.error(
+      "Supabase connection test failed:",
+      error
+    );
+
+    return;
+
+  }
+
+
+  console.log(
+    "Supabase connection successful.",
+    data
+  );
+
+}
+
 
 /* =========================================================
    PROGRAMME CALENDAR
@@ -3290,3 +3336,5 @@ function escapeHtml(
 ========================================================= */
 
 initialise();
+
+testSupabaseConnection();
