@@ -2201,12 +2201,401 @@ document
    SAVE EDITED PROGRAMME TO SUPABASE
 ========================================================= */
 
+/* =========================================================
+   SAVE EDITED PROGRAMME TO SUPABASE
+========================================================= */
+
 async function saveEdit() {
 
-  // paste the new Supabase saveEdit() here
+  if (!selectedEventId) {
+    return;
+  }
+
+
+  const selected =
+    events.find(
+      event =>
+        event.id ===
+        selectedEventId
+    );
+
+
+  if (!selected) {
+    return;
+  }
+
+
+  /*
+    All sessions belonging to this programme
+    share the same seriesId.
+  */
+
+  const oldSeriesId =
+    selected.seriesId;
+
+
+  /*
+    Get the original first session.
+  */
+
+  const series =
+    events
+      .filter(
+        event =>
+          event.seriesId ===
+          oldSeriesId
+      )
+      .sort(
+        (a, b) =>
+          dateTimeValue(a) -
+          dateTimeValue(b)
+      );
+
+
+  const firstEvent =
+    series[0];
+
+
+  if (!firstEvent) {
+    return;
+  }
+
+
+  /*
+    Determine programme name.
+  */
+
+  let programmeName;
+
+
+  if (
+    editProgramme.value ===
+    "__CUSTOM__"
+  ) {
+
+    programmeName =
+      editCustomProgramme
+        .value
+        .trim();
+
+  } else {
+
+    programmeName =
+      editProgramme.value;
+
+  }
+
+
+  if (!programmeName) {
+
+    alert(
+      "Please select or enter a programme."
+    );
+
+    return;
+
+  }
+
+
+  /*
+    Determine duration.
+  */
+
+  let duration;
+
+
+  if (
+    editProgramme.value ===
+    "__CUSTOM__"
+  ) {
+
+    duration =
+      Number(
+        editDuration.value
+      );
+
+  } else {
+
+    duration =
+      60;
+
+  }
+
+
+  if (
+    !Number.isFinite(
+      duration
+    ) ||
+    duration <= 0
+  ) {
+
+    alert(
+      "Please enter a valid duration."
+    );
+
+    return;
+
+  }
+
+
+  /*
+    Determine number of sessions.
+  */
+
+  const totalSessions =
+    SERIES_WEEKS[
+      programmeName
+    ] || 1;
+
+
+  /*
+    Build the replacement series.
+  */
+
+  const replacement =
+    [];
+
+
+  for (
+    let i = 0;
+    i < totalSessions;
+    i++
+  ) {
+
+    const sessionDate =
+      addDays(
+        parseInputDate(
+          editStartDate.value
+        ),
+        i * 7
+      );
+
+
+    replacement.push({
+
+      id:
+        makeId(
+          "event"
+        ),
+
+      seriesId:
+        oldSeriesId,
+
+      programme:
+        programmeName,
+
+      venue:
+        editVenue.value,
+
+      date:
+        formatInputDate(
+          sessionDate
+        ),
+
+      time:
+        editStartTime.value,
+
+      duration,
+
+      pax:
+        getPax(
+          programmeName
+        ),
+
+      status:
+        editStatus.value,
+
+      remarks:
+        editRemarks.value.trim(),
+
+      sessionNumber:
+        totalSessions > 1
+          ? i + 1
+          : null,
+
+      totalSessions,
+
+      type:
+        totalSessions > 1
+          ? "Series"
+          : "Stand-alone"
+
+    });
+
+  }
+
+
+  /*
+    Make sure Supabase is connected.
+  */
+
+  if (!supabaseClient) {
+
+    alert(
+      "Supabase is not connected."
+    );
+
+    return;
+
+  }
+
+
+  /*
+    STEP 1:
+    Delete the old series from Supabase.
+  */
+
+  const {
+    error:
+      deleteError
+  } =
+    await supabaseClient
+      .from("programmes")
+      .delete()
+      .eq(
+        "series_id",
+        oldSeriesId
+      );
+
+
+  if (deleteError) {
+
+    console.error(
+      "Unable to delete old series:",
+      deleteError
+    );
+
+
+    alert(
+      `Unable to update programme: ${deleteError.message}`
+    );
+
+
+    return;
+
+  }
+
+
+  /*
+    STEP 2:
+    Insert the edited series.
+  */
+
+  const {
+    data,
+    error
+  } =
+    await supabaseClient
+      .from("programmes")
+      .insert(
+        replacement.map(
+          mapProgrammeToDatabase
+        )
+      )
+      .select();
+
+
+  if (error) {
+
+    console.error(
+      "Unable to save edited series:",
+      error
+    );
+
+
+    alert(
+      `Unable to save changes: ${error.message}`
+    );
+
+
+    /*
+      Re-load whatever is actually in Supabase.
+    */
+
+    await refreshProgrammesFromSupabase();
+
+
+    return;
+
+  }
+
+
+  /*
+    STEP 3:
+    Replace the old events in memory.
+  */
+
+  events =
+    events.filter(
+      event =>
+        event.seriesId !==
+        oldSeriesId
+    );
+
+
+  events.push(
+    ...(
+      data || []
+    )
+    .map(
+      convertDatabaseProgramme
+    )
+  );
+
+
+  /*
+    STEP 4:
+    Move the calendar to the edited
+    programme's first session.
+  */
+
+  currentDate =
+    parseInputDate(
+      editStartDate.value
+    );
+
+
+  if (
+    activeCalendarView ===
+    "month"
+  ) {
+
+    currentDate =
+      new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        1
+      );
+
+  } else if (
+    activeCalendarView ===
+    "week"
+  ) {
+
+    currentDate =
+      startOfWeek(
+        currentDate
+      );
+
+  }
+
+
+  /*
+    STEP 5:
+    Close modal and redraw.
+  */
+
+  closeEditModal();
+
+
+  switchVenue(
+    editVenue.value
+  );
+
+
+  renderCalendar();
 
 }
-
 
 /* =========================================================
    CANCEL EDIT
