@@ -10,32 +10,19 @@
    SUPABASE CONNECTION
 ========================================================= */
 
-if (
-  !window.supabase ||
-  typeof window.supabase.createClient !== "function"
-) {
-
-  throw new Error(
-    "Supabase library not loaded. Make sure index.html loads @supabase/supabase-js before script.js."
-  );
-
-}
-
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
 const SUPABASE_URL =
   "https://yrhcdpaicivyxjfrfmpy.supabase.co";
 
-
 const SUPABASE_PUBLISHABLE_KEY =
   "sb_publishable_jxGJEa2GF2dM8q4-bAO1eA_0SrLus17";
 
-
 const supabaseClient =
-  window.supabase.createClient(
+  createClient(
     SUPABASE_URL,
     SUPABASE_PUBLISHABLE_KEY
   );
-
 
 /* =========================================================
    PROGRAMME RULES
