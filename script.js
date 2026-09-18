@@ -228,6 +228,153 @@ const editModal =
 const manpowerModal =
   document.getElementById("manpowerModal");
 
+/* =========================================================
+   SUPABASE - LOAD PROGRAMMES
+========================================================= */
+
+async function loadProgrammesFromSupabase() {
+
+  if (!supabaseClient) {
+
+    console.warn(
+      "Supabase client unavailable."
+    );
+
+    return [];
+
+  }
+
+
+  const {
+    data,
+    error
+  } =
+    await supabaseClient
+      .from("programmes")
+      .select("*")
+      .order(
+        "date",
+        {
+          ascending: true
+        }
+      )
+      .order(
+        "time",
+        {
+          ascending: true
+        }
+      );
+
+
+  if (error) {
+
+    console.error(
+      "Unable to load programmes:",
+      error
+    );
+
+    return [];
+
+  }
+
+
+  return data || [];
+
+}
+
+
+/* =========================================================
+   CONVERT DATABASE PROGRAMME
+========================================================= */
+
+function convertDatabaseProgramme(
+  row
+) {
+
+  return {
+
+    id:
+      row.id,
+
+    seriesId:
+      row.series_id,
+
+    programme:
+      row.programme,
+
+    venue:
+      row.venue,
+
+    date:
+      String(
+        row.date
+      ).substring(
+        0,
+        10
+      ),
+
+    time:
+      String(
+        row.time
+      ).substring(
+        0,
+        5
+      ),
+
+    duration:
+      Number(
+        row.duration ||
+        60
+      ),
+
+    pax:
+      row.pax ??
+      "",
+
+    status:
+      row.status ||
+      "",
+
+    remarks:
+      row.remarks ||
+      "",
+
+    sessionNumber:
+      row.session_number ??
+      null,
+
+    totalSessions:
+      row.total_sessions ??
+      1,
+
+    type:
+      row.type ||
+      "Stand-alone"
+
+  };
+
+}
+
+
+/* =========================================================
+   REFRESH PROGRAMMES
+========================================================= */
+
+async function refreshProgrammesFromSupabase() {
+
+  const rows =
+    await loadProgrammesFromSupabase();
+
+
+  events =
+    rows.map(
+      convertDatabaseProgramme
+    );
+
+
+  renderCalendar();
+
+}
 
 /* =========================================================
    EDIT REFERENCES
@@ -246,8 +393,8 @@ const editCustomProgramme =
     "editCustomProgramme"
   );
 
-const editVenue =
-  document.getElementById("editVenue");
+const Venue =
+  document.getElementById("Venue");
 
 const editStartDate =
   document.getElementById("editStartDate");
@@ -1482,24 +1629,49 @@ document
     "click",
     addProgramme
   );
+async function addProgramme() {
+
+  // validation...
+
+  // create newEvents...
+
+  const {
+    data,
+    error
+  } =
+    await supabaseClient
+      .from("programmes")
+      .insert(
+        rows
+      )
+      .select();
 
 
-function addProgramme() {
+  if (error) {
 
-  const selected =
-    programmeSelect.value;
-
-
-  if (!selected) {
-
-    alert(
-      "Please select a programme."
+    console.error(
+      "Programme insert failed:",
+      error
     );
 
+    alert(
+      `Unable to save programme: ${error.message}`
+    );
 
     return;
 
   }
+
+
+  events =
+    data.map(
+      convertDatabaseProgramme
+    );
+
+
+  renderCalendar();
+
+}
 
 
   let programmeName =
@@ -2025,232 +2197,29 @@ document
     saveEdit
   );
 
+ /* =========================================================
+   SAVE EDITED PROGRAMME TO SUPABASE
+========================================================= */
 
 async function saveEdit() {
 
-  if (!selectedEventId) {
-    return;
-  }
-
-
-  const selected =
-    events.find(
-      function (event) {
-
-        return event.id ===
-          selectedEventId;
-
-      }
-    );
-
-
-  if (!selected) {
-    return;
-  }
-
-
-  const oldSeriesId =
-    selected.seriesId;
-
-
-  let programmeName;
-
-
-  if (
-    editProgramme.value ===
-    "__CUSTOM__"
-  ) {
-
-    programmeName =
-      editCustomProgramme
-        .value
-        .trim();
-
-  } else {
-
-    programmeName =
-      editProgramme.value;
-
-  }
-
-
-  if (!programmeName) {
-
-    alert(
-      "Please select a programme."
-    );
-
-
-    return;
-
-  }
-
-
-  const totalSessions =
-    SERIES_WEEKS[
-      programmeName
-    ] || 1;
-
-
-  const duration =
-    editProgramme.value ===
-      "__CUSTOM__"
-
-      ? Number(
-          editDuration.value
-        )
-
-      : 60;
-
-
-  if (
-    !Number.isFinite(
-      duration
-    ) ||
-    duration <= 0
-  ) {
-
-    alert(
-      "Please enter a valid duration."
-    );
-
-
-    return;
-
-  }
-
-
-  const replacement =
-    [];
-
-
-  for (
-    let i = 0;
-    i < totalSessions;
-    i++
-  ) {
-
-    const sessionDate =
-      addDays(
-        parseInputDate(
-          editStartDate.value
-        ),
-        i * 7
-      );
-
-
-    replacement.push({
-
-      id:
-        makeId(
-          "event"
-        ),
-
-      seriesId:
-        oldSeriesId,
-
-      programme:
-        programmeName,
-
-      venue:
-        editVenue.value,
-
-      date:
-        formatInputDate(
-          sessionDate
-        ),
-
-      time:
-        editStartTime.value,
-
-      duration,
-
-      pax:
-        getPax(
-          programmeName
-        ),
-
-      status:
-        editStatus.value,
-
-      remarks:
-        editRemarks.value.trim(),
-
-      sessionNumber:
-        totalSessions > 1
-          ? i + 1
-          : null,
-
-      totalSessions,
-
-      type:
-        totalSessions > 1
-          ? "Series"
-          : "Stand-alone"
-
-    });
-
-  }
-
-
-  events =
-    events.filter(
-      function (event) {
-
-        return event.seriesId !==
-          oldSeriesId;
-
-      }
-    );
-
-
-  events.push(
-    ...replacement
-  );
-
-
-  currentDate =
-    parseInputDate(
-      editStartDate.value
-    );
-
-
-  if (
-    activeCalendarView ===
-    "month"
-  ) {
-
-    currentDate =
-      new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth(),
-        1
-      );
-
-  }
-
-
-  if (
-    activeCalendarView ===
-    "week"
-  ) {
-
-    currentDate =
-      startOfWeek(
-        currentDate
-      );
-
-  }
-
-
-  closeEditModal();
-
-
-  renderCalendar();
+  // paste the new Supabase saveEdit() here
 
 }
 
 
+/* =========================================================
+   CANCEL EDIT
+========================================================= */
+
+document
+  .getElementById(
+    "cancelEditButton"
+  )
+  .addEventListener(
+    "click",
+    closeEditModal
+  );
 document
   .getElementById(
     "cancelEditButton"
@@ -2275,7 +2244,7 @@ function closeEditModal() {
 
 
 /* =========================================================
-   DELETE
+   DELETE BUTTON
 ========================================================= */
 
 document
@@ -2287,8 +2256,11 @@ document
     deleteSelected
   );
 
+/* =========================================================
+   DELETE PROGRAMME FROM SUPABASE
+========================================================= */
 
-function deleteSelected() {
+async function deleteSelected() {
 
   if (!selectedEventId) {
     return;
@@ -2297,12 +2269,8 @@ function deleteSelected() {
 
   const selected =
     events.find(
-      function (event) {
-
-        return event.id ===
-          selectedEventId;
-
-      }
+      event =>
+        event.id === selectedEventId
     );
 
 
@@ -2311,54 +2279,116 @@ function deleteSelected() {
   }
 
 
+  const deleteWholeSeries =
+    selected.totalSessions > 1;
+
+
   const message =
-    selected.totalSessions > 1
-      ? "Delete the entire series?"
-      : "Delete this session?";
+    deleteWholeSeries
+      ? "Delete the entire programme series?"
+      : "Delete this programme?";
 
 
-  if (
-    !confirm(
-      message
-    )
-  ) {
+  if (!confirm(message)) {
+    return;
+  }
+
+
+  if (!supabaseClient) {
+
+    alert(
+      "Supabase is not connected."
+    );
 
     return;
+  }
+
+
+  /*
+    Delete from Supabase
+  */
+
+  let query =
+    supabaseClient
+      .from("programmes")
+      .delete();
+
+
+  if (deleteWholeSeries) {
+
+    query =
+      query.eq(
+        "series_id",
+        selected.seriesId
+      );
+
+  } else {
+
+    query =
+      query.eq(
+        "id",
+        selected.id
+      );
 
   }
 
 
-  if (
-    selected.totalSessions > 1
-  ) {
+  const {
+    error
+  } = await query;
+
+
+  if (error) {
+
+    console.error(
+      "Unable to delete programme:",
+      error
+    );
+
+
+    alert(
+      `Unable to delete programme: ${error.message}`
+    );
+
+    return;
+  }
+
+
+  /*
+    Delete from the local events array
+  */
+
+  if (deleteWholeSeries) {
 
     events =
       events.filter(
-        function (event) {
-
-          return event.seriesId !==
-            selected.seriesId;
-
-        }
+        event =>
+          event.seriesId !==
+          selected.seriesId
       );
 
   } else {
 
     events =
       events.filter(
-        function (event) {
-
-          return event.id !==
-            selected.id;
-
-        }
+        event =>
+          event.id !==
+          selected.id
       );
 
   }
 
 
+  /*
+    Close the popup
+  */
+
   closeEventModal();
 
+
+  /*
+    Refresh the calendar
+  */
 
   renderCalendar();
 
@@ -3338,3 +3368,5 @@ function escapeHtml(
 initialise();
 
 testSupabaseConnection();
+
+refreshProgrammesFromSupabase();
