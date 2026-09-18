@@ -1,24 +1,3147 @@
+/* =========================================================
+   PROGRAMME CALENDAR
+   FRONTEND VERSION
+   Month / Week / Day
+========================================================= */
+
+
+/* =========================================================
+   PROGRAMME RULES
+========================================================= */
+
+const SERIES_WEEKS = {
+  "Manage Knee Health": 6,
+  "Manage Metabolic Health": 6,
+  "Function - Combat Age-Related Loss of Muscle (CALM) 1.0": 8,
+  "Function - Combat Age-Related Loss of Muscle (CALM) 2.0": 6,
+  "Strength 1.0": 8,
+  "Perform 1.0": 8
+};
+
+
+/* =========================================================
+   PAX
+========================================================= */
+
+const PAX = {
+  "Strength 1.0": 12,
+  "Strength 2.0 - Foundation Strength Workout": 14,
+  "Strength 2.0 - Functional Fitness Workout": 12,
+  "Strength 2.0 - Mobility Workout": 12,
+  "Strength 2.0 - Assessment & Check-In": 10,
+
+  "Perform 1.0": 10,
+  "Perform 2.0 - Multi-Modal Workout": 12,
+  "Perform 2.0 - AMRAP Workout": 12,
+  "Perform 2.0 - ENGINE Workout": 12,
+  "Perform 2.0 - Assessment & Check-In": 10,
+
+  "Function - Combat Age-Related Loss of Muscle (CALM) 1.0": 12,
+  "Function - Combat Age-Related Loss of Muscle (CALM) 2.0": 14,
+
+  "Manage Knee Health": 8,
+  "Manage Metabolic Health": 8,
+
+  "Body Composition Assessment": 16,
+  "Active Health Senior Interest Group": 12
+};
+
+
+/* =========================================================
+   STAFF
+========================================================= */
+
+const STAFF_LIST = [
+  "Joelle",
+  "Jireh",
+  "RJ",
+  "Clarissa",
+  "Rachael",
+  "Team Nila",
+  "APS",
+  "Other"
+];
+
+
+/* =========================================================
+   STATE
+========================================================= */
+
+let events = [];
+
+let manpower = {};
+
+let currentVenue = "HBB";
+
+let currentDate = new Date();
+
+let activeCalendarView = "month";
+
+let selectedEventId = null;
+
+let manpowerDate = null;
+
+
+/* =========================================================
+   DOM REFERENCES
+========================================================= */
+
+const programmeSelect =
+  document.getElementById("programme");
+
+const customProgrammeGroup =
+  document.getElementById("customProgrammeGroup");
+
+const customProgrammeInput =
+  document.getElementById("customProgramme");
+
+const venueSelect =
+  document.getElementById("venue");
+
+const startDateInput =
+  document.getElementById("startDate");
+
+const startTimeInput =
+  document.getElementById("startTime");
+
+const durationGroup =
+  document.getElementById("durationGroup");
+
+const durationPreset =
+  document.getElementById("durationPreset");
+
+const customDuration =
+  document.getElementById("customDuration");
+
+const remarksInput =
+  document.getElementById("remarks");
+
+const statusInput =
+  document.getElementById("status");
+
 const calendarGrid =
   document.getElementById("calendarGrid");
 
-if (calendarGrid) {
+const monthTitle =
+  document.getElementById("monthTitle");
 
-  for (let i = 1; i <= 42; i++) {
+const currentVenueLabel =
+  document.getElementById("currentVenueLabel");
+
+const calendarViewSelect =
+  document.getElementById("calendarView");
+
+const hbbSheetTab =
+  document.getElementById("hbbSheetTab");
+
+const othSheetTab =
+  document.getElementById("othSheetTab");
+
+const eventModal =
+  document.getElementById("eventModal");
+
+const editModal =
+  document.getElementById("editModal");
+
+const manpowerModal =
+  document.getElementById("manpowerModal");
+
+
+/* =========================================================
+   EDIT REFERENCES
+========================================================= */
+
+const editProgramme =
+  document.getElementById("editProgramme");
+
+const editCustomProgrammeGroup =
+  document.getElementById(
+    "editCustomProgrammeGroup"
+  );
+
+const editCustomProgramme =
+  document.getElementById(
+    "editCustomProgramme"
+  );
+
+const editVenue =
+  document.getElementById("editVenue");
+
+const editStartDate =
+  document.getElementById("editStartDate");
+
+const editStartTime =
+  document.getElementById("editStartTime");
+
+const editDurationGroup =
+  document.getElementById("editDurationGroup");
+
+const editDuration =
+  document.getElementById("editDuration");
+
+const editRemarks =
+  document.getElementById("editRemarks");
+
+const editStatus =
+  document.getElementById("editStatus");
+
+
+/* =========================================================
+   INITIAL SETUP
+========================================================= */
+
+function initialise() {
+
+  if (startDateInput) {
+    startDateInput.value =
+      formatInputDate(
+        new Date()
+      );
+  }
+
+  if (venueSelect) {
+    venueSelect.value =
+      currentVenue;
+  }
+
+  if (calendarViewSelect) {
+    calendarViewSelect.value =
+      activeCalendarView;
+  }
+
+  renderCalendar();
+
+}
+
+
+/* =========================================================
+   VIEW SELECTOR
+========================================================= */
+
+if (calendarViewSelect) {
+
+  calendarViewSelect.addEventListener(
+    "change",
+    function () {
+
+      activeCalendarView =
+        calendarViewSelect.value;
+
+
+      if (
+        activeCalendarView === "week"
+      ) {
+
+        currentDate =
+          startOfWeek(
+            currentDate
+          );
+
+      }
+
+
+      renderCalendar();
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   VENUE SWITCHING
+========================================================= */
+
+if (hbbSheetTab) {
+
+  hbbSheetTab.addEventListener(
+    "click",
+    function () {
+
+      switchVenue("HBB");
+
+    }
+  );
+
+}
+
+
+if (othSheetTab) {
+
+  othSheetTab.addEventListener(
+    "click",
+    function () {
+
+      switchVenue("OTH");
+
+    }
+  );
+
+}
+
+
+function switchVenue(
+  venue
+) {
+
+  currentVenue =
+    venue;
+
+
+  if (venueSelect) {
+
+    venueSelect.value =
+      venue;
+
+  }
+
+
+  if (hbbSheetTab) {
+
+    hbbSheetTab.classList.toggle(
+      "active",
+      venue === "HBB"
+    );
+
+  }
+
+
+  if (othSheetTab) {
+
+    othSheetTab.classList.toggle(
+      "active",
+      venue === "OTH"
+    );
+
+  }
+
+
+  if (currentVenueLabel) {
+
+    currentVenueLabel.textContent =
+      venue;
+
+  }
+
+
+  renderCalendar();
+
+}
+
+
+/* =========================================================
+   MASTER RENDER
+========================================================= */
+
+function renderCalendar() {
+
+  if (!calendarGrid) {
+    return;
+  }
+
+
+  if (
+    activeCalendarView === "week"
+  ) {
+
+    renderWeekView();
+
+    return;
+
+  }
+
+
+  if (
+    activeCalendarView === "day"
+  ) {
+
+    renderDayView();
+
+    return;
+
+  }
+
+
+  renderMonthView();
+
+}
+
+
+/* =========================================================
+   MONTH VIEW
+========================================================= */
+
+function renderMonthView() {
+
+  calendarGrid.className =
+    "calendar-grid";
+
+
+  calendarGrid.innerHTML =
+    "";
+
+
+  const header =
+    document.querySelector(
+      ".week-header"
+    );
+
+
+  if (header) {
+
+    header.className =
+      "week-header";
+
+
+    header.innerHTML = `
+
+      <div>Sun</div>
+      <div>Mon</div>
+      <div>Tue</div>
+      <div>Wed</div>
+      <div>Thu</div>
+      <div>Fri</div>
+      <div>Sat</div>
+
+    `;
+
+  }
+
+
+  const year =
+    currentDate.getFullYear();
+
+
+  const month =
+    currentDate.getMonth();
+
+
+  monthTitle.textContent =
+    currentDate.toLocaleDateString(
+      "en-SG",
+      {
+        month:
+          "long",
+
+        year:
+          "numeric"
+      }
+    );
+
+
+  const firstDay =
+    new Date(
+      year,
+      month,
+      1
+    );
+
+
+  const firstWeekday =
+    firstDay.getDay();
+
+
+  const daysInMonth =
+    new Date(
+      year,
+      month + 1,
+      0
+    ).getDate();
+
+
+  const previousMonthDays =
+    new Date(
+      year,
+      month,
+      0
+    ).getDate();
+
+
+  for (
+    let index = 0;
+    index < 42;
+    index++
+  ) {
+
+    let cellDate;
+
+    let dayNumber;
+
+    let isOtherMonth =
+      false;
+
+
+    if (
+      index <
+      firstWeekday
+    ) {
+
+      dayNumber =
+        previousMonthDays -
+        firstWeekday +
+        index +
+        1;
+
+
+      cellDate =
+        new Date(
+          year,
+          month - 1,
+          dayNumber
+        );
+
+
+      isOtherMonth =
+        true;
+
+    } else if (
+      index <
+      firstWeekday +
+      daysInMonth
+    ) {
+
+      dayNumber =
+        index -
+        firstWeekday +
+        1;
+
+
+      cellDate =
+        new Date(
+          year,
+          month,
+          dayNumber
+        );
+
+    } else {
+
+      dayNumber =
+        index -
+        firstWeekday -
+        daysInMonth +
+        1;
+
+
+      cellDate =
+        new Date(
+          year,
+          month + 1,
+          dayNumber
+        );
+
+
+      isOtherMonth =
+        true;
+
+    }
+
 
     const cell =
-      document.createElement("div");
+      document.createElement(
+        "div"
+      );
 
-    cell.textContent =
-      i;
 
-    cell.style.border =
-      "1px solid #ddd";
+    cell.className =
+      "day-cell";
 
-    cell.style.padding =
-      "10px";
 
-    calendarGrid.appendChild(cell);
+    if (
+      isOtherMonth
+    ) {
+
+      cell.classList.add(
+        "other-month"
+      );
+
+    }
+
+
+    if (
+      isSameDay(
+        cellDate,
+        new Date()
+      )
+    ) {
+
+      cell.classList.add(
+        "today"
+      );
+
+    }
+
+
+    const dateNumber =
+      document.createElement(
+        "div"
+      );
+
+
+    dateNumber.className =
+      "date-number";
+
+
+    dateNumber.textContent =
+      dayNumber;
+
+
+    cell.appendChild(
+      dateNumber
+    );
+
+
+    const dateString =
+      formatInputDate(
+        cellDate
+      );
+
+
+    getDayEvents(
+      dateString
+    ).forEach(
+      event => {
+
+        cell.appendChild(
+          createEventElement(
+            event
+          )
+        );
+
+      }
+    );
+
+
+    cell.appendChild(
+      createManpowerButton(
+        currentVenue,
+        dateString
+      )
+    );
+
+
+    calendarGrid.appendChild(
+      cell
+    );
 
   }
 
 }
+
+
+/* =========================================================
+   WEEK VIEW
+========================================================= */
+
+function renderWeekView() {
+
+  currentDate =
+    startOfWeek(
+      currentDate
+    );
+
+
+  calendarGrid.className =
+    "calendar-grid week-view";
+
+
+  calendarGrid.innerHTML =
+    "";
+
+
+  monthTitle.textContent =
+    getViewDateLabel();
+
+
+  const dates =
+    Array.from(
+      {
+        length: 7
+      },
+      function (_, index) {
+
+        return addDays(
+          currentDate,
+          index
+        );
+
+      }
+    );
+
+
+  renderFlexibleHeader(
+    dates
+  );
+
+
+  dates.forEach(
+    function (date) {
+
+      calendarGrid.appendChild(
+        renderDayColumn(
+          date
+        )
+      );
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   DAY VIEW
+========================================================= */
+
+function renderDayView() {
+
+  calendarGrid.className =
+    "calendar-grid day-view";
+
+
+  calendarGrid.innerHTML =
+    "";
+
+
+  monthTitle.textContent =
+    getViewDateLabel();
+
+
+  renderFlexibleHeader(
+    [
+      currentDate
+    ]
+  );
+
+
+  calendarGrid.appendChild(
+    renderDayColumn(
+      currentDate
+    )
+  );
+
+}
+
+
+/* =========================================================
+   WEEK / DAY HEADER
+========================================================= */
+
+function renderFlexibleHeader(
+  dates
+) {
+
+  const header =
+    document.querySelector(
+      ".week-header"
+    );
+
+
+  if (!header) {
+    return;
+  }
+
+
+  header.innerHTML =
+    "";
+
+
+  header.className =
+    activeCalendarView === "day"
+      ? "week-header day-view-header"
+      : "week-header week-view-header";
+
+
+  dates.forEach(
+    function (date) {
+
+      const button =
+        document.createElement(
+          "button"
+        );
+
+
+      button.type =
+        "button";
+
+
+      button.textContent =
+        date.toLocaleDateString(
+          "en-SG",
+          {
+            weekday:
+              "short",
+
+            day:
+              "numeric",
+
+            month:
+              "short"
+          }
+        );
+
+
+      if (
+        isSameDay(
+          date,
+          new Date()
+        )
+      ) {
+
+        button.classList.add(
+          "today-header"
+        );
+
+      }
+
+
+      if (
+        activeCalendarView === "week"
+      ) {
+
+        button.addEventListener(
+          "click",
+          function () {
+
+            currentDate =
+              new Date(
+                date
+              );
+
+
+            activeCalendarView =
+              "day";
+
+
+            calendarViewSelect.value =
+              "day";
+
+
+            renderCalendar();
+
+          }
+        );
+
+      }
+
+
+      header.appendChild(
+        button
+      );
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   DAY COLUMN
+========================================================= */
+
+function renderDayColumn(
+  date
+) {
+
+  const column =
+    document.createElement(
+      "div"
+    );
+
+
+  column.className =
+    "week-column";
+
+
+  if (
+    isSameDay(
+      date,
+      new Date()
+    )
+  ) {
+
+    column.classList.add(
+      "today-column"
+    );
+
+  }
+
+
+  const dateString =
+    formatInputDate(
+      date
+    );
+
+
+  const dayEvents =
+    getDayEvents(
+      dateString
+    );
+
+
+  if (
+    dayEvents.length === 0
+  ) {
+
+    const empty =
+      document.createElement(
+        "div"
+      );
+
+
+    empty.className =
+      "view-empty";
+
+
+    empty.textContent =
+      "No programmes";
+
+
+    column.appendChild(
+      empty
+    );
+
+  }
+
+
+  dayEvents.forEach(
+    function (event) {
+
+      const element =
+        createEventElement(
+          event
+        );
+
+
+      if (
+        activeCalendarView === "day"
+      ) {
+
+        element.classList.add(
+          "day-view-event"
+        );
+
+      } else {
+
+        element.classList.add(
+          "week-view-event"
+        );
+
+      }
+
+
+      column.appendChild(
+        element
+      );
+
+    }
+  );
+
+
+  column.appendChild(
+    createManpowerButton(
+      currentVenue,
+      dateString
+    )
+  );
+
+
+  return column;
+
+}
+
+
+/* =========================================================
+   EVENTS
+========================================================= */
+
+function getDayEvents(
+  date
+) {
+
+  return events
+    .filter(
+      function (event) {
+
+        return (
+          event.date === date &&
+          event.venue === currentVenue
+        );
+
+      }
+    )
+    .sort(
+      function (a, b) {
+
+        return a.time.localeCompare(
+          b.time
+        );
+
+      }
+    );
+
+}
+
+
+function createEventElement(
+  event
+) {
+
+  const element =
+    document.createElement(
+      "div"
+    );
+
+
+  element.className =
+    "event";
+
+
+  const endTime =
+    addMinutesToTime(
+      event.time,
+      event.duration
+    );
+
+
+  const sessionText =
+    event.totalSessions > 1
+      ? `W${event.sessionNumber} of ${event.totalSessions}`
+      : "Stand-alone";
+
+
+  const paxText =
+    event.pax !== ""
+      ? ` · ${event.pax} pax`
+      : "";
+
+
+  element.innerHTML = `
+
+    <div class="event-time">
+
+      ${escapeHtml(
+        formatTime(
+          event.time
+        )
+      )}
+
+      -
+
+      ${escapeHtml(
+        formatTime(
+          endTime
+        )
+      )}
+
+    </div>
+
+    <div class="event-name">
+
+      ${escapeHtml(
+        event.programme
+      )}
+
+    </div>
+
+    <div class="event-meta">
+
+      ${escapeHtml(
+        sessionText
+      )}
+
+      ${escapeHtml(
+        paxText
+      )}
+
+    </div>
+
+  `;
+
+
+  element.addEventListener(
+    "click",
+    function (clickEvent) {
+
+      clickEvent.stopPropagation();
+
+
+      openEventModal(
+        event
+      );
+
+    }
+  );
+
+
+  return element;
+
+}
+
+
+/* =========================================================
+   MANPOWER
+========================================================= */
+
+function manpowerKey(
+  venue,
+  date
+) {
+
+  return `${venue}__${date}`;
+
+}
+
+
+function getManpower(
+  venue,
+  date
+) {
+
+  return (
+    manpower[
+      manpowerKey(
+        venue,
+        date
+      )
+    ] || {
+
+      staff: [],
+
+      required: "",
+
+      notes: ""
+
+    }
+  );
+
+}
+
+
+function createManpowerButton(
+  venue,
+  date
+) {
+
+  const record =
+    getManpower(
+      venue,
+      date
+    );
+
+
+  const button =
+    document.createElement(
+      "button"
+    );
+
+
+  button.type =
+    "button";
+
+
+  button.className =
+    "manpower-button";
+
+
+  const present =
+    record.staff.length;
+
+
+  const required =
+    record.required === ""
+      ? null
+      : Number(
+          record.required
+        );
+
+
+  if (
+    present === 0 &&
+    required === null
+  ) {
+
+    button.textContent =
+      "👥 Set manpower";
+
+  } else if (
+    required !== null &&
+    present >= required
+  ) {
+
+    button.classList.add(
+      "good"
+    );
+
+
+    button.textContent =
+      `👥 ${present} staff / ${required} req.`;
+
+  } else {
+
+    button.classList.add(
+      "warning"
+    );
+
+
+    button.textContent =
+      `👥 ${present} staff / ${required} req.`;
+
+  }
+
+
+  button.addEventListener(
+    "click",
+    function (event) {
+
+      event.stopPropagation();
+
+
+      openManpowerModal(
+        venue,
+        date
+      );
+
+    }
+  );
+
+
+  return button;
+
+}
+
+
+/* =========================================================
+   PROGRAMME FORM
+========================================================= */
+
+programmeSelect.addEventListener(
+  "change",
+  function () {
+
+    const isOthers =
+      programmeSelect.value ===
+      "Others";
+
+
+    customProgrammeGroup.classList.toggle(
+      "hidden",
+      !isOthers
+    );
+
+
+    durationGroup.classList.toggle(
+      "hidden",
+      !isOthers
+    );
+
+
+    if (!isOthers) {
+
+      customProgrammeInput.value =
+        "";
+
+      customDuration.value =
+        "";
+
+      durationPreset.value =
+        "60";
+
+      customDuration.disabled =
+        true;
+
+    }
+
+  }
+);
+
+
+durationPreset.addEventListener(
+  "change",
+  function () {
+
+    const custom =
+      durationPreset.value ===
+      "custom";
+
+
+    customDuration.disabled =
+      !custom;
+
+
+    if (!custom) {
+
+      customDuration.value =
+        "";
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   ADD PROGRAMME
+========================================================= */
+
+document
+  .getElementById(
+    "addButton"
+  )
+  .addEventListener(
+    "click",
+    addProgramme
+  );
+
+
+function addProgramme() {
+
+  const selected =
+    programmeSelect.value;
+
+
+  if (!selected) {
+
+    alert(
+      "Please select a programme."
+    );
+
+
+    return;
+
+  }
+
+
+  let programmeName =
+    selected;
+
+
+  if (
+    selected === "Others"
+  ) {
+
+    programmeName =
+      customProgrammeInput
+        .value
+        .trim();
+
+
+    if (!programmeName) {
+
+      alert(
+        "Please enter a programme name."
+      );
+
+
+      return;
+
+    }
+
+  }
+
+
+  const venue =
+    venueSelect.value;
+
+
+  const date =
+    startDateInput.value;
+
+
+  const time =
+    startTimeInput.value;
+
+
+  if (
+    !date ||
+    !time
+  ) {
+
+    alert(
+      "Please select a date and time."
+    );
+
+
+    return;
+
+  }
+
+
+  let duration;
+
+
+  if (
+    programmeName ===
+    "Others"
+  ) {
+
+    duration =
+      durationPreset.value ===
+      "custom"
+
+        ? Number(
+            customDuration.value
+          )
+
+        : Number(
+            durationPreset.value
+          );
+
+  } else {
+
+    duration =
+      60;
+
+  }
+
+
+  if (
+    !Number.isFinite(
+      duration
+    ) ||
+    duration <= 0
+  ) {
+
+    alert(
+      "Please enter a valid duration."
+    );
+
+
+    return;
+
+  }
+
+
+  const totalSessions =
+    SERIES_WEEKS[
+      programmeName
+    ] || 1;
+
+
+  const seriesId =
+    makeId(
+      "series"
+    );
+
+
+  const newEvents =
+    [];
+
+
+  for (
+    let i = 0;
+    i < totalSessions;
+    i++
+  ) {
+
+    const sessionDate =
+      addDays(
+        parseInputDate(
+          date
+        ),
+        i * 7
+      );
+
+
+    newEvents.push({
+
+      id:
+        makeId(
+          "event"
+        ),
+
+      seriesId,
+
+      programme:
+        programmeName,
+
+      venue,
+
+      date:
+        formatInputDate(
+          sessionDate
+        ),
+
+      time,
+
+      duration,
+
+      pax:
+        getPax(
+          programmeName
+        ),
+
+      status:
+        statusInput.value,
+
+      remarks:
+        remarksInput.value.trim(),
+
+      sessionNumber:
+        totalSessions > 1
+          ? i + 1
+          : null,
+
+      totalSessions,
+
+      type:
+        totalSessions > 1
+          ? "Series"
+          : "Stand-alone"
+
+    });
+
+  }
+
+
+  events.push(
+    ...newEvents
+  );
+
+
+  currentDate =
+    parseInputDate(
+      date
+    );
+
+
+  if (
+    activeCalendarView === "month"
+  ) {
+
+    currentDate =
+      new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        1
+      );
+
+  }
+
+
+  if (
+    activeCalendarView === "week"
+  ) {
+
+    currentDate =
+      startOfWeek(
+        currentDate
+      );
+
+  }
+
+
+  renderCalendar();
+
+
+  resetProgrammeForm();
+
+}
+
+
+/* =========================================================
+   RESET PROGRAMME FORM
+========================================================= */
+
+function resetProgrammeForm() {
+
+  programmeSelect.value =
+    "";
+
+  customProgrammeInput.value =
+    "";
+
+  customProgrammeGroup.classList.add(
+    "hidden"
+  );
+
+  durationGroup.classList.add(
+    "hidden"
+  );
+
+  durationPreset.value =
+    "60";
+
+  customDuration.value =
+    "";
+
+  customDuration.disabled =
+    true;
+
+  startDateInput.value =
+    formatInputDate(
+      new Date()
+    );
+
+  startTimeInput.value =
+    "09:00";
+
+  remarksInput.value =
+    "";
+
+  statusInput.value =
+    "Uploaded (100% Created)";
+
+}
+
+
+/* =========================================================
+   EVENT MODAL
+========================================================= */
+
+function openEventModal(
+  event
+) {
+
+  selectedEventId =
+    event.id;
+
+
+  document.getElementById(
+    "modalProgramme"
+  ).textContent =
+    event.programme;
+
+
+  document.getElementById(
+    "modalVenue"
+  ).textContent =
+    event.venue;
+
+
+  document.getElementById(
+    "modalDate"
+  ).textContent =
+    formatDisplayDate(
+      event.date
+    );
+
+
+  document.getElementById(
+    "modalTime"
+  ).textContent =
+    `${formatTime(
+      event.time
+    )} - ${formatTime(
+      addMinutesToTime(
+        event.time,
+        event.duration
+      )
+    )}`;
+
+
+  document.getElementById(
+    "modalDuration"
+  ).textContent =
+    formatDuration(
+      event.duration
+    );
+
+
+  document.getElementById(
+    "modalPax"
+  ).textContent =
+    event.pax === ""
+      ? "Not specified"
+      : `${event.pax} pax`;
+
+
+  document.getElementById(
+    "modalSession"
+  ).textContent =
+    event.totalSessions > 1
+      ? `Week ${event.sessionNumber} of ${event.totalSessions}`
+      : "Stand-alone";
+
+
+  document.getElementById(
+    "modalStatus"
+  ).textContent =
+    event.status || "";
+
+
+  document.getElementById(
+    "modalRemarks"
+  ).textContent =
+    event.remarks ||
+    "—";
+
+
+  eventModal.classList.add(
+    "visible"
+  );
+
+}
+
+
+/* =========================================================
+   CLOSE EVENT MODAL
+========================================================= */
+
+document
+  .getElementById(
+    "closeButton"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      eventModal.classList.remove(
+        "visible"
+      );
+
+      selectedEventId =
+        null;
+
+    }
+  );
+
+
+/* =========================================================
+   EDIT
+========================================================= */
+
+document
+  .getElementById(
+    "editButton"
+  )
+  .addEventListener(
+    "click",
+    openEditModal
+  );
+
+
+function openEditModal() {
+
+  if (!selectedEventId) {
+    return;
+  }
+
+
+  const selected =
+    events.find(
+      function (event) {
+
+        return event.id ===
+          selectedEventId;
+
+      }
+    );
+
+
+  if (!selected) {
+    return;
+  }
+
+
+  const series =
+    events
+      .filter(
+        function (event) {
+
+          return event.seriesId ===
+            selected.seriesId;
+
+        }
+      )
+      .sort(
+        function (a, b) {
+
+          return dateTimeValue(a) -
+            dateTimeValue(b);
+
+        }
+      );
+
+
+  const first =
+    series[0];
+
+
+  const known =
+    isKnownProgramme(
+      first.programme
+    );
+
+
+  editProgramme.value =
+    known
+      ? first.programme
+      : "__CUSTOM__";
+
+
+  editCustomProgramme.value =
+    known
+      ? ""
+      : first.programme;
+
+
+  editCustomProgrammeGroup.classList.toggle(
+    "hidden",
+    known
+  );
+
+
+  editVenue.value =
+    first.venue;
+
+
+  editStartDate.value =
+    first.date;
+
+
+  editStartTime.value =
+    first.time;
+
+
+  editDuration.value =
+    first.duration;
+
+
+  editDurationGroup.classList.toggle(
+    "hidden",
+    known
+  );
+
+
+  editRemarks.value =
+    first.remarks ||
+    "";
+
+
+  editStatus.value =
+    first.status ||
+    "Uploaded (100% Created)";
+
+
+  eventModal.classList.remove(
+    "visible"
+  );
+
+
+  editModal.classList.add(
+    "visible"
+  );
+
+}
+
+
+document
+  .getElementById(
+    "saveEditButton"
+  )
+  .addEventListener(
+    "click",
+    saveEdit
+  );
+
+
+async function saveEdit() {
+
+  if (!selectedEventId) {
+    return;
+  }
+
+
+  const selected =
+    events.find(
+      function (event) {
+
+        return event.id ===
+          selectedEventId;
+
+      }
+    );
+
+
+  if (!selected) {
+    return;
+  }
+
+
+  const oldSeriesId =
+    selected.seriesId;
+
+
+  let programmeName;
+
+
+  if (
+    editProgramme.value ===
+    "__CUSTOM__"
+  ) {
+
+    programmeName =
+      editCustomProgramme
+        .value
+        .trim();
+
+  } else {
+
+    programmeName =
+      editProgramme.value;
+
+  }
+
+
+  if (!programmeName) {
+
+    alert(
+      "Please select a programme."
+    );
+
+
+    return;
+
+  }
+
+
+  const totalSessions =
+    SERIES_WEEKS[
+      programmeName
+    ] || 1;
+
+
+  const duration =
+    editProgramme.value ===
+      "__CUSTOM__"
+
+      ? Number(
+          editDuration.value
+        )
+
+      : 60;
+
+
+  if (
+    !Number.isFinite(
+      duration
+    ) ||
+    duration <= 0
+  ) {
+
+    alert(
+      "Please enter a valid duration."
+    );
+
+
+    return;
+
+  }
+
+
+  const replacement =
+    [];
+
+
+  for (
+    let i = 0;
+    i < totalSessions;
+    i++
+  ) {
+
+    const sessionDate =
+      addDays(
+        parseInputDate(
+          editStartDate.value
+        ),
+        i * 7
+      );
+
+
+    replacement.push({
+
+      id:
+        makeId(
+          "event"
+        ),
+
+      seriesId:
+        oldSeriesId,
+
+      programme:
+        programmeName,
+
+      venue:
+        editVenue.value,
+
+      date:
+        formatInputDate(
+          sessionDate
+        ),
+
+      time:
+        editStartTime.value,
+
+      duration,
+
+      pax:
+        getPax(
+          programmeName
+        ),
+
+      status:
+        editStatus.value,
+
+      remarks:
+        editRemarks.value.trim(),
+
+      sessionNumber:
+        totalSessions > 1
+          ? i + 1
+          : null,
+
+      totalSessions,
+
+      type:
+        totalSessions > 1
+          ? "Series"
+          : "Stand-alone"
+
+    });
+
+  }
+
+
+  events =
+    events.filter(
+      function (event) {
+
+        return event.seriesId !==
+          oldSeriesId;
+
+      }
+    );
+
+
+  events.push(
+    ...replacement
+  );
+
+
+  currentDate =
+    parseInputDate(
+      editStartDate.value
+    );
+
+
+  if (
+    activeCalendarView ===
+    "month"
+  ) {
+
+    currentDate =
+      new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        1
+      );
+
+  }
+
+
+  if (
+    activeCalendarView ===
+    "week"
+  ) {
+
+    currentDate =
+      startOfWeek(
+        currentDate
+      );
+
+  }
+
+
+  closeEditModal();
+
+
+  renderCalendar();
+
+}
+
+
+document
+  .getElementById(
+    "cancelEditButton"
+  )
+  .addEventListener(
+    "click",
+    closeEditModal
+  );
+
+
+function closeEditModal() {
+
+  editModal.classList.remove(
+    "visible"
+  );
+
+
+  selectedEventId =
+    null;
+
+}
+
+
+/* =========================================================
+   DELETE
+========================================================= */
+
+document
+  .getElementById(
+    "deleteButton"
+  )
+  .addEventListener(
+    "click",
+    deleteSelected
+  );
+
+
+function deleteSelected() {
+
+  if (!selectedEventId) {
+    return;
+  }
+
+
+  const selected =
+    events.find(
+      function (event) {
+
+        return event.id ===
+          selectedEventId;
+
+      }
+    );
+
+
+  if (!selected) {
+    return;
+  }
+
+
+  const message =
+    selected.totalSessions > 1
+      ? "Delete the entire series?"
+      : "Delete this session?";
+
+
+  if (
+    !confirm(
+      message
+    )
+  ) {
+
+    return;
+
+  }
+
+
+  if (
+    selected.totalSessions > 1
+  ) {
+
+    events =
+      events.filter(
+        function (event) {
+
+          return event.seriesId !==
+            selected.seriesId;
+
+        }
+      );
+
+  } else {
+
+    events =
+      events.filter(
+        function (event) {
+
+          return event.id !==
+            selected.id;
+
+        }
+      );
+
+  }
+
+
+  closeEventModal();
+
+
+  renderCalendar();
+
+}
+
+
+/* =========================================================
+   MANPOWER MODAL
+========================================================= */
+
+document
+  .getElementById(
+    "saveManpower"
+  )
+  .addEventListener(
+    "click",
+    saveManpower
+  );
+
+
+document
+  .getElementById(
+    "closeManpower"
+  )
+  .addEventListener(
+    "click",
+    closeManpowerModal
+  );
+
+
+document
+  .getElementById(
+    "selectAllStaff"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      document
+        .querySelectorAll(
+          '#staffList input[type="checkbox"]'
+        )
+        .forEach(
+          function (checkbox) {
+
+            checkbox.checked =
+              true;
+
+          }
+        );
+
+
+      updateStaffCount();
+
+    }
+  );
+
+
+document
+  .getElementById(
+    "clearAllStaff"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      document
+        .querySelectorAll(
+          '#staffList input[type="checkbox"]'
+        )
+        .forEach(
+          function (checkbox) {
+
+            checkbox.checked =
+              false;
+
+          }
+        );
+
+
+      updateStaffCount();
+
+    }
+  );
+
+
+function openManpowerModal(
+  venue,
+  date
+) {
+
+  manpowerDate =
+    date;
+
+
+  const record =
+    getManpower(
+      venue,
+      date
+    );
+
+
+  document.getElementById(
+    "manpowerVenue"
+  ).textContent =
+    venue;
+
+
+  document.getElementById(
+    "manpowerDate"
+  ).textContent =
+    formatDisplayDate(
+      date
+    );
+
+
+  document.getElementById(
+    "requiredManpower"
+  ).value =
+    record.required;
+
+
+  document.getElementById(
+    "manpowerNotes"
+  ).value =
+    record.notes;
+
+
+  renderStaffChecklist(
+    record.staff
+  );
+
+
+  updateStaffCount();
+
+
+  updateStaffStatus();
+
+
+  manpowerModal.classList.add(
+    "visible"
+  );
+
+}
+
+
+function renderStaffChecklist(
+  selected
+) {
+
+  const container =
+    document.getElementById(
+      "staffList"
+    );
+
+
+  container.innerHTML =
+    "";
+
+
+  STAFF_LIST.forEach(
+    function (name) {
+
+      const label =
+        document.createElement(
+          "label"
+        );
+
+
+      label.className =
+        "staff-option";
+
+
+      const checkbox =
+        document.createElement(
+          "input"
+        );
+
+
+      checkbox.type =
+        "checkbox";
+
+
+      checkbox.value =
+        name;
+
+
+      checkbox.checked =
+        selected.includes(
+          name
+        );
+
+
+      checkbox.addEventListener(
+        "change",
+        function () {
+
+          updateStaffCount();
+
+          updateStaffStatus();
+
+        }
+      );
+
+
+      const text =
+        document.createElement(
+          "span"
+        );
+
+
+      text.textContent =
+        name;
+
+
+      label.appendChild(
+        checkbox
+      );
+
+
+      label.appendChild(
+        text
+      );
+
+
+      container.appendChild(
+        label
+      );
+
+    }
+  );
+
+}
+
+
+function selectedStaff() {
+
+  return Array.from(
+    document.querySelectorAll(
+      '#staffList input[type="checkbox"]:checked'
+    )
+  )
+  .map(
+    function (checkbox) {
+
+      return checkbox.value;
+
+    }
+  );
+
+}
+
+
+function updateStaffCount() {
+
+  document.getElementById(
+    "presentCount"
+  ).textContent =
+    selectedStaff().length;
+
+}
+
+
+document
+  .getElementById(
+    "requiredManpower"
+  )
+  .addEventListener(
+    "input",
+    updateStaffStatus
+  );
+
+
+function updateStaffStatus() {
+
+  const status =
+    document.getElementById(
+      "staffStatus"
+    );
+
+
+  const required =
+    document.getElementById(
+      "requiredManpower"
+    ).value;
+
+
+  const present =
+    selectedStaff().length;
+
+
+  status.className =
+    "staff-status";
+
+
+  if (
+    required === ""
+  ) {
+
+    status.textContent =
+      "";
+
+    return;
+
+  }
+
+
+  if (
+    present >=
+    Number(required)
+  ) {
+
+    status.classList.add(
+      "good"
+    );
+
+
+    status.textContent =
+      "✓ Adequately staffed";
+
+  } else {
+
+    status.classList.add(
+      "warning"
+    );
+
+
+    status.textContent =
+      `⚠ Understaffed by ${Number(required) - present}`;
+
+  }
+
+}
+
+
+function saveManpower() {
+
+  if (!manpowerDate) {
+    return;
+  }
+
+
+  manpower[
+    manpowerKey(
+      currentVenue,
+      manpowerDate
+    )
+  ] = {
+
+    staff:
+      selectedStaff(),
+
+    required:
+      document.getElementById(
+        "requiredManpower"
+      ).value === ""
+        ? ""
+        : Number(
+            document.getElementById(
+              "requiredManpower"
+            ).value
+          ),
+
+    notes:
+      document.getElementById(
+        "manpowerNotes"
+      ).value.trim()
+
+  };
+
+
+  closeManpowerModal();
+
+
+  renderCalendar();
+
+}
+
+
+function closeManpowerModal() {
+
+  manpowerModal.classList.remove(
+    "visible"
+  );
+
+
+  manpowerDate =
+    null;
+
+}
+
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
+document
+  .getElementById(
+    "previousButton"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      if (
+        activeCalendarView ===
+        "day"
+      ) {
+
+        currentDate =
+          addDays(
+            currentDate,
+            -1
+          );
+
+      } else if (
+        activeCalendarView ===
+        "week"
+      ) {
+
+        currentDate =
+          addDays(
+            startOfWeek(
+              currentDate
+            ),
+            -7
+          );
+
+      } else {
+
+        currentDate =
+          new Date(
+            currentDate.getFullYear(),
+            currentDate.getMonth() - 1,
+            1
+          );
+
+      }
+
+
+      renderCalendar();
+
+    }
+  );
+
+
+document
+  .getElementById(
+    "nextButton"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      if (
+        activeCalendarView ===
+        "day"
+      ) {
+
+        currentDate =
+          addDays(
+            currentDate,
+            1
+          );
+
+      } else if (
+        activeCalendarView ===
+        "week"
+      ) {
+
+        currentDate =
+          addDays(
+            startOfWeek(
+              currentDate
+            ),
+            7
+          );
+
+      } else {
+
+        currentDate =
+          new Date(
+            currentDate.getFullYear(),
+            currentDate.getMonth() + 1,
+            1
+          );
+
+      }
+
+
+      renderCalendar();
+
+    }
+  );
+
+
+document
+  .getElementById(
+    "todayButton"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      currentDate =
+        new Date();
+
+
+      if (
+        activeCalendarView ===
+        "month"
+      ) {
+
+        currentDate =
+          new Date(
+            currentDate.getFullYear(),
+            currentDate.getMonth(),
+            1
+          );
+
+      }
+
+
+      if (
+        activeCalendarView ===
+        "week"
+      ) {
+
+        currentDate =
+          startOfWeek(
+            currentDate
+          );
+
+      }
+
+
+      renderCalendar();
+
+    }
+  );
+
+
+/* =========================================================
+   CLEAR
+========================================================= */
+
+document
+  .getElementById(
+    "clearButton"
+  )
+  .addEventListener(
+    "click",
+    function () {
+
+      if (
+        !confirm(
+          "Delete all programmes and manpower?"
+        )
+      ) {
+
+        return;
+
+      }
+
+
+      events =
+        [];
+
+
+      manpower =
+        {};
+
+
+      renderCalendar();
+
+    }
+  );
+
+
+/* =========================================================
+   UTILITIES
+========================================================= */
+
+function getPax(
+  programme
+) {
+
+  return Object.prototype.hasOwnProperty.call(
+    PAX,
+    programme
+  )
+    ? PAX[programme]
+    : "";
+
+}
+
+
+function isKnownProgramme(
+  programme
+) {
+
+  return Object.prototype.hasOwnProperty.call(
+    PAX,
+    programme
+  );
+
+}
+
+
+function parseInputDate(
+  value
+) {
+
+  const [
+    year,
+    month,
+    day
+  ] =
+    String(
+      value
+    )
+    .substring(
+      0,
+      10
+    )
+    .split("-")
+    .map(
+      Number
+    );
+
+
+  return new Date(
+    year,
+    month - 1,
+    day
+  );
+
+}
+
+
+function formatInputDate(
+  date
+) {
+
+  const year =
+    date.getFullYear();
+
+
+  const month =
+    String(
+      date.getMonth() + 1
+    )
+    .padStart(
+      2,
+      "0"
+    );
+
+
+  const day =
+    String(
+      date.getDate()
+    )
+    .padStart(
+      2,
+      "0"
+    );
+
+
+  return `${year}-${month}-${day}`;
+
+}
+
+
+function addDays(
+  date,
+  days
+) {
+
+  const result =
+    new Date(
+      date
+    );
+
+
+  result.setDate(
+    result.getDate() +
+    days
+  );
+
+
+  return result;
+
+}
+
+
+function startOfWeek(
+  date
+) {
+
+  const result =
+    new Date(
+      date
+    );
+
+
+  result.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+
+  result.setDate(
+    result.getDate() -
+    result.getDay()
+  );
+
+
+  return result;
+
+}
+
+
+function isSameDay(
+  a,
+  b
+) {
+
+  return (
+
+    a.getFullYear() ===
+      b.getFullYear()
+
+    &&
+
+    a.getMonth() ===
+      b.getMonth()
+
+    &&
+
+    a.getDate() ===
+      b.getDate()
+
+  );
+
+}
+
+
+function addMinutesToTime(
+  time,
+  minutes
+) {
+
+  const [
+    hours,
+    mins
+  ] =
+    String(
+      time
+    )
+    .split(":")
+    .map(
+      Number
+    );
+
+
+  const total =
+    hours * 60 +
+    mins +
+    Number(
+      minutes
+    );
+
+
+  const newHours =
+    Math.floor(
+      total / 60
+    ) % 24;
+
+
+  const newMinutes =
+    total % 60;
+
+
+  return `${String(
+    newHours
+  ).padStart(
+    2,
+    "0"
+  )}:${String(
+    newMinutes
+  ).padStart(
+    2,
+    "0"
+  )}`;
+
+}
+
+
+function formatTime(
+  time
+) {
+
+  const [
+    hours,
+    minutes
+  ] =
+    String(
+      time
+    )
+    .split(":")
+    .map(
+      Number
+    );
+
+
+  const date =
+    new Date();
+
+
+  date.setHours(
+    hours,
+    minutes,
+    0,
+    0
+  );
+
+
+  return date.toLocaleTimeString(
+    "en-SG",
+    {
+      hour:
+        "numeric",
+
+      minute:
+        "2-digit"
+    }
+  );
+
+}
+
+
+function formatDuration(
+  minutes
+) {
+
+  const total =
+    Number(
+      minutes
+    );
+
+
+  if (
+    total < 60
+  ) {
+
+    return `${total} min`;
+
+  }
+
+
+  const hours =
+    Math.floor(
+      total / 60
+    );
+
+
+  const remaining =
+    total % 60;
+
+
+  if (
+    remaining === 0
+  ) {
+
+    return `${hours} hour${hours === 1 ? "" : "s"}`;
+
+  }
+
+
+  return `${hours} hr ${remaining} min`;
+
+}
+
+
+function formatDisplayDate(
+  dateString
+) {
+
+  return parseInputDate(
+    dateString
+  )
+  .toLocaleDateString(
+    "en-SG",
+    {
+      weekday:
+        "short",
+
+      day:
+        "numeric",
+
+      month:
+        "short",
+
+      year:
+        "numeric"
+    }
+  );
+
+}
+
+
+function dateTimeValue(
+  event
+) {
+
+  return new Date(
+    `${event.date}T${event.time}`
+  ).getTime();
+
+}
+
+
+function makeId(
+  prefix
+) {
+
+  return (
+    prefix +
+    "_" +
+    Date.now() +
+    "_" +
+    Math.random()
+      .toString(36)
+      .slice(2)
+  );
+
+}
+
+
+function escapeHtml(
+  value
+) {
+
+  return String(
+    value
+  )
+  .replace(
+    /&/g,
+    "&amp;"
+  )
+  .replace(
+    /</g,
+    "&lt;"
+  )
+  .replace(
+    />/g,
+    "&gt;"
+  )
+  .replace(
+    /"/g,
+    "&quot;"
+  )
+  .replace(
+    /'/g,
+    "&#039;"
+  );
+
+}
+
+
+/* =========================================================
+   START
+========================================================= */
+
+initialise();
