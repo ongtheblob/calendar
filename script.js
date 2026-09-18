@@ -177,8 +177,8 @@ const customProgrammeGroup =
 const customProgrammeInput =
   document.getElementById("customProgramme");
 
-const venueSelect =
-  document.getElementById("venue");
+const editVenueSelect =
+  document.getElementById("editVenue");
 
 const startDateInput =
   document.getElementById("startDate");
@@ -1671,10 +1671,7 @@ async function addProgramme() {
 
   renderCalendar();
 
-}
-
-
-  let programmeName =
+   let programmeName =
     selected;
 
 
@@ -2601,14 +2598,6 @@ async function saveEdit() {
    CANCEL EDIT
 ========================================================= */
 
-document
-  .getElementById(
-    "cancelEditButton"
-  )
-  .addEventListener(
-    "click",
-    closeEditModal
-  );
 document
   .getElementById(
     "cancelEditButton"
