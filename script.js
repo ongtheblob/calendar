@@ -217,32 +217,59 @@ function initialise() {
 /* =========================================================
    VIEW SELECTOR
 ========================================================= */
+/* =========================================================
+   CALENDAR VIEW SELECTOR
+========================================================= */
 
-if (calendarViewSelect) {
+function changeCalendarView() {
 
-  calendarViewSelect.addEventListener(
+  const selectedView =
+    document.getElementById("calendarView").value;
+
+  activeCalendarView =
+    selectedView;
+
+  console.log(
+    "Changing calendar view to:",
+    activeCalendarView
+  );
+
+  if (
+    activeCalendarView === "week"
+  ) {
+
+    currentDate =
+      startOfWeek(
+        currentDate
+      );
+
+  }
+
+  renderCalendar();
+
+}
+
+
+const viewSelector =
+  document.getElementById("calendarView");
+
+
+if (viewSelector) {
+
+  viewSelector.addEventListener(
     "change",
-    function () {
+    changeCalendarView
+  );
 
-      activeCalendarView =
-        calendarViewSelect.value;
+  /*
+    Also listen for input.
+    This helps in environments where the browser/security
+    layer does not reliably send the normal change event.
+  */
 
-
-      if (
-        activeCalendarView === "week"
-      ) {
-
-        currentDate =
-          startOfWeek(
-            currentDate
-          );
-
-      }
-
-
-      renderCalendar();
-
-    }
+  viewSelector.addEventListener(
+    "input",
+    changeCalendarView
   );
 
 }
@@ -332,12 +359,23 @@ function switchVenue(
 /* =========================================================
    MASTER RENDER
 ========================================================= */
-
 function renderCalendar() {
 
   if (!calendarGrid) {
+
+    console.error(
+      "calendarGrid was not found."
+    );
+
     return;
+
   }
+
+
+  console.log(
+    "Rendering:",
+    activeCalendarView
+  );
 
 
   if (
