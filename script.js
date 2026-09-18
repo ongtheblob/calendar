@@ -1768,8 +1768,146 @@ async function addProgramme() {
 
     return;
 
+/* =========================================================
+   ADD PROGRAMME
+========================================================= */
+
+document
+  .getElementById("addButton")
+  .addEventListener(
+    "click",
+    addProgramme
+  );
+
+
+async function addProgramme() {
+
+  /* -------------------------------------------------------
+     1. GET FORM VALUES
+  ------------------------------------------------------- */
+
+  const selected =
+    programmeSelect.value;
+
+
+  if (!selected) {
+
+    alert(
+      "Please select a programme."
+    );
+
+    return;
+
   }
 
+
+  let programmeName =
+    selected;
+
+
+  if (
+    selected === "Others"
+  ) {
+
+    programmeName =
+      customProgrammeInput.value.trim();
+
+
+    if (!programmeName) {
+
+      alert(
+        "Please enter a programme name."
+      );
+
+      return;
+
+    }
+
+  }
+
+
+  const venue =
+    venueSelect.value;
+
+
+  const date =
+    startDateInput.value;
+
+
+  const time =
+    startTimeInput.value;
+
+
+  if (
+    !date ||
+    !time
+  ) {
+
+    alert(
+      "Please select a date and time."
+    );
+
+    return;
+
+  }
+
+
+  /* -------------------------------------------------------
+     2. DETERMINE DURATION
+  ------------------------------------------------------- */
+
+  let duration;
+
+
+  if (
+    programmeName === "Others"
+  ) {
+
+    if (
+      durationPreset.value === "custom"
+    ) {
+
+      duration =
+        Number(
+          customDuration.value
+        );
+
+    } else {
+
+      duration =
+        Number(
+          durationPreset.value
+        );
+
+    }
+
+  } else {
+
+    duration =
+      60;
+
+  }
+
+
+  if (
+    !Number.isFinite(
+      duration
+    ) ||
+    duration <= 0
+  ) {
+
+    alert(
+      "Please enter a valid duration."
+    );
+
+    return;
+
+  }
+
+
+  /* -------------------------------------------------------
+     3. DETERMINE SESSION COUNT
+  ------------------------------------------------------- */
 
   const totalSessions =
     SERIES_WEEKS[
@@ -1777,11 +1915,19 @@ async function addProgramme() {
     ] || 1;
 
 
+  /* -------------------------------------------------------
+     4. CREATE SERIES ID
+  ------------------------------------------------------- */
+
   const seriesId =
     makeId(
       "series"
     );
 
+
+  /* -------------------------------------------------------
+     5. BUILD ALL SESSIONS
+  ------------------------------------------------------- */
 
   const newEvents =
     [];
@@ -1809,21 +1955,25 @@ async function addProgramme() {
           "event"
         ),
 
-      seriesId,
+      seriesId:
+        seriesId,
 
       programme:
         programmeName,
 
-      venue,
+      venue:
+        venue,
 
       date:
         formatInputDate(
           sessionDate
         ),
 
-      time,
+      time:
+        time,
 
-      duration,
+      duration:
+        duration,
 
       pax:
         getPax(
@@ -1841,7 +1991,8 @@ async function addProgramme() {
           ? i + 1
           : null,
 
-      totalSessions,
+      totalSessions:
+        totalSessions,
 
       type:
         totalSessions > 1
@@ -1853,10 +2004,91 @@ async function addProgramme() {
   }
 
 
-  events.push(
-    ...newEvents
+  /* -------------------------------------------------------
+     6. CHECK SUPABASE
+  ------------------------------------------------------- */
+
+  if (!supabaseClient) {
+
+    alert(
+      "Supabase is not connected."
+    );
+
+    return;
+
+  }
+
+
+  /* -------------------------------------------------------
+     7. CONVERT TO DATABASE FORMAT
+  ------------------------------------------------------- */
+
+  const rows =
+    newEvents.map(
+      mapProgrammeToDatabase
+    );
+
+
+  console.log(
+    "Saving programme to Supabase:",
+    rows
   );
 
+
+  /* -------------------------------------------------------
+     8. INSERT INTO SUPABASE
+  ------------------------------------------------------- */
+
+  const {
+    data,
+    error
+  } =
+    await supabaseClient
+      .from("programmes")
+      .insert(
+        rows
+      )
+      .select();
+
+
+  /* -------------------------------------------------------
+     9. HANDLE DATABASE ERROR
+  ------------------------------------------------------- */
+
+  if (error) {
+
+    console.error(
+      "Programme insert failed:",
+      error
+    );
+
+
+    alert(
+      `Unable to save programme: ${error.message}`
+    );
+
+
+    return;
+
+  }
+
+
+  /* -------------------------------------------------------
+     10. UPDATE LOCAL APP DATA
+  ------------------------------------------------------- */
+
+  events.push(
+    ...(
+      data || []
+    ).map(
+      convertDatabaseProgramme
+    )
+  );
+
+
+  /* -------------------------------------------------------
+     11. MOVE CALENDAR TO PROGRAMME DATE
+  ------------------------------------------------------- */
 
   currentDate =
     parseInputDate(
@@ -1890,14 +2122,26 @@ async function addProgramme() {
   }
 
 
+  /* -------------------------------------------------------
+     12. REDRAW CALENDAR
+  ------------------------------------------------------- */
+
   renderCalendar();
 
 
+  /* -------------------------------------------------------
+     13. RESET FORM
+  ------------------------------------------------------- */
+
   resetProgrammeForm();
 
+
+  alert(
+    "Programme saved successfully."
+  );
+
 }
-
-
+     
 /* =========================================================
    RESET PROGRAMME FORM
 ========================================================= */
