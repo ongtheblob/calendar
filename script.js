@@ -662,7 +662,81 @@ function renderMonthView() {
 
 }
 
+/* =========================================================
+   VIEW DATE LABEL
+========================================================= */
 
+function getViewDateLabel() {
+
+  if (
+    activeCalendarView === "day"
+  ) {
+
+    return currentDate.toLocaleDateString(
+      "en-SG",
+      {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric"
+      }
+    );
+
+  }
+
+
+  if (
+    activeCalendarView === "week"
+  ) {
+
+    const start =
+      startOfWeek(
+        currentDate
+      );
+
+
+    const end =
+      addDays(
+        start,
+        6
+      );
+
+
+    const startText =
+      start.toLocaleDateString(
+        "en-SG",
+        {
+          day: "numeric",
+          month: "short"
+        }
+      );
+
+
+    const endText =
+      end.toLocaleDateString(
+        "en-SG",
+        {
+          day: "numeric",
+          month: "short",
+          year: "numeric"
+        }
+      );
+
+
+    return `${startText} - ${endText}`;
+
+  }
+
+
+  return currentDate.toLocaleDateString(
+    "en-SG",
+    {
+      month: "long",
+      year: "numeric"
+    }
+  );
+
+}
 /* =========================================================
    WEEK VIEW
 ========================================================= */
