@@ -1,4 +1,40 @@
 /* =========================================================
+   SUPABASE CONNECTION
+========================================================= */
+
+const SUPABASE_URL =
+  "https://yrhcdpaicivyxjfrfmpy.supabase.co";
+
+const SUPABASE_PUBLISHABLE_KEY =
+  "sb_publishable_jxGJEa2GF2dM8q4-bAO1eA_0SrLus17";
+
+let supabaseClient = null;
+
+if (
+  window.supabase &&
+  typeof window.supabase.createClient === "function"
+) {
+
+  supabaseClient =
+    window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_PUBLISHABLE_KEY
+    );
+
+  console.log(
+    "Supabase client initialised."
+  );
+
+} else {
+
+  console.warn(
+    "Supabase library was not loaded."
+  );
+
+}
+
+
+/* =========================================================
    PROGRAMME CALENDAR
    FRONTEND VERSION
    Month / Week / Day
