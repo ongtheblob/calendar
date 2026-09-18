@@ -660,3 +660,137 @@ textarea:focus {
   font-size: 13px;
   text-align: center;
 }
+
+/* =========================================================
+   MONTH / WEEK / DAY VIEW STYLES
+========================================================= */
+
+/* -------------------------
+   MONTH
+-------------------------- */
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+
+/* -------------------------
+   WEEK
+-------------------------- */
+
+.calendar-grid.week-view {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(150px, 1fr));
+  grid-template-rows: 1fr;
+  width: 100%;
+  min-width: 1050px;
+  min-height: 500px;
+  overflow-x: auto;
+  overflow-y: auto;
+}
+
+
+.week-header.week-view-header {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(150px, 1fr));
+  min-width: 1050px;
+}
+
+
+.week-column {
+  box-sizing: border-box;
+  min-width: 150px;
+  min-height: 500px;
+  padding: 10px;
+  border-right: 1px solid #dadce0;
+  background: #fff;
+  overflow-y: auto;
+}
+
+
+.week-column:last-child {
+  border-right: none;
+}
+
+
+.week-column.today-column {
+  background: #f8fbff;
+}
+
+
+/* -------------------------
+   DAY
+-------------------------- */
+
+.calendar-grid.day-view {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+  min-height: 500px;
+  overflow: auto;
+}
+
+
+.week-header.day-view-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+
+.day-view .week-column {
+  width: 100%;
+  min-width: 0;
+  min-height: 600px;
+  border-right: none;
+}
+
+
+/* -------------------------
+   WEEK / DAY EVENTS
+-------------------------- */
+
+.week-view-event,
+.day-view-event {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 8px;
+}
+
+
+/* -------------------------
+   EMPTY DAY
+-------------------------- */
+
+.view-empty {
+  padding: 24px 10px;
+  text-align: center;
+  color: #80868b;
+  font-size: 13px;
+}
+
+
+/* -------------------------
+   HEADER BUTTONS
+-------------------------- */
+
+.week-header button {
+  min-height: 42px;
+  border: 0;
+  border-right: 1px solid #dadce0;
+  background: #fff;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+
+.week-header button:hover {
+  background: #f8f9fa;
+}
+
+
+.week-header button.today-header {
+  color: #1a73e8;
+}
