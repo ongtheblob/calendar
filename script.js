@@ -1811,6 +1811,15 @@ async function addProgramme() {
   const time =
     startTimeInput.value;
 
+   if (!isValidHalfHourTime(time)) {
+
+  alert(
+    "Please select a start time ending in :00 or :30."
+  );
+
+  return;
+
+}
 
   if (
     !date ||
@@ -3567,7 +3576,25 @@ document
 /* =========================================================
    UTILITIES
 ========================================================= */
+function isValidHalfHourTime(time) {
 
+  if (!time) {
+    return false;
+  }
+
+  const parts =
+    time.split(":");
+
+  if (parts.length < 2) {
+    return false;
+  }
+
+  const minutes =
+    Number(parts[1]);
+
+  return minutes === 0 ||
+    minutes === 30;
+}
 function getPax(
   programme
 ) {
