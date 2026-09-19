@@ -1348,41 +1348,127 @@ function renderWeekView() {
    DAY VIEW
 ========================================================= */
 
-function renderDayView() {
+function renderDayColumn(
+  date
+) {
 
-  calendarGrid.className =
-    "calendar-grid day-view";
+  const column =
+    document.createElement(
+      "div"
+    );
 
 
-  calendarGrid.innerHTML =
-    "";
+  column.className =
+    "week-column";
 
 
   if (
-    monthTitle
+    isSameDay(
+      date,
+      new Date()
+    )
   ) {
 
-    monthTitle.textContent =
-      getViewDateLabel();
+    column.classList.add(
+      "today-column"
+    );
 
   }
 
 
-  renderFlexibleHeader(
-    [
-      currentDate
-    ]
-  );
+  const dateString =
+    formatInputDate(
+      date
+    );
 
 
-  calendarGrid.appendChild(
-    renderDayColumn(
-      currentDate
+  /* -----------------------------------------
+     MANPOWER FIRST
+  ----------------------------------------- */
+
+  column.appendChild(
+    createManpowerButton(
+      currentVenue,
+      dateString
     )
   );
 
-}
 
+  /* -----------------------------------------
+     PROGRAMMES SECOND
+  ----------------------------------------- */
+
+  const dayEvents =
+    getDayEvents(
+      dateString
+    );
+
+
+  if (
+    dayEvents.length === 0
+  ) {
+
+    const empty =
+      document.createElement(
+        "div"
+      );
+
+
+    empty.className =
+      "view-empty";
+
+
+    empty.textContent =
+      "No programmes";
+
+
+    column.appendChild(
+      empty
+    );
+
+  }
+
+
+  dayEvents.forEach(
+    function (
+      event
+    ) {
+
+      const element =
+        createEventElement(
+          event
+        );
+
+
+      if (
+        activeCalendarView ===
+        "day"
+      ) {
+
+        element.classList.add(
+          "day-view-event"
+        );
+
+      } else {
+
+        element.classList.add(
+          "week-view-event"
+        );
+
+      }
+
+
+      column.appendChild(
+        element
+      );
+
+    }
+  );
+
+
+  return column;
+
+}
 
 /* =========================================================
    WEEK / DAY HEADER
