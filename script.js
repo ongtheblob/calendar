@@ -399,6 +399,9 @@ const editCustomProgramme =
     "editCustomProgramme"
   );
 
+const editVenue =
+  document.getElementById("editVenue");
+
 const venueSelect =
   document.getElementById("venue");
 
@@ -1817,6 +1820,9 @@ async function addProgramme() {
 const time =
   `${startHour.value}:${startMinute.value}`;
 
+   const newTime =
+  `${editStartHour.value}:${editStartMinute.value}`;
+   
    if (!isValidHalfHourTime(time)) {
 
   alert(
