@@ -2271,7 +2271,6 @@ function openEventModal(
 
 }
 
-
 /* =========================================================
    CLOSE EVENT MODAL
 ========================================================= */
@@ -2279,15 +2278,10 @@ function openEventModal(
 function closeEventModal() {
 
   if (eventModal) {
-
-    eventModal.classList.remove(
-      "visible"
-    );
-
+    eventModal.classList.remove("visible");
   }
 
-  selectedEventId =
-    null;
+  selectedEventId = null;
 
 }
 
@@ -2296,14 +2290,17 @@ function closeEventModal() {
    CLOSE BUTTON
 ========================================================= */
 
-document
-  .getElementById(
-    "closeButton"
-  )
-  .addEventListener(
+const closeButton =
+  document.getElementById("closeButton");
+
+if (closeButton) {
+
+  closeButton.addEventListener(
     "click",
     closeEventModal
   );
+
+}
 
 /* =========================================================
    EDIT
