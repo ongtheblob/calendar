@@ -1830,6 +1830,81 @@ function createManpowerButton(
     "manpower-container";
 
 
+  /*
+    STAFF NAMES FIRST
+  */
+
+  if (
+    record.staff.length > 0
+  ) {
+
+    const staffHeading =
+      document.createElement(
+        "div"
+      );
+
+
+    staffHeading.className =
+      "calendar-staff-heading";
+
+
+    staffHeading.textContent =
+      "Staff on duty";
+
+
+    container.appendChild(
+      staffHeading
+    );
+
+
+    const staffList =
+      document.createElement(
+        "div"
+      );
+
+
+    staffList.className =
+      "calendar-staff-list";
+
+
+    record.staff.forEach(
+      function (
+        staffName
+      ) {
+
+        const staff =
+          document.createElement(
+            "div"
+          );
+
+
+        staff.className =
+          "calendar-staff-name";
+
+
+        staff.textContent =
+          staffName;
+
+
+        staffList.appendChild(
+          staff
+        );
+
+      }
+    );
+
+
+    container.appendChild(
+      staffList
+    );
+
+  }
+
+
+  /*
+    MANPOWER BUTTON AFTER STAFF NAMES
+  */
+
   const button =
     document.createElement(
       "button"
@@ -1907,62 +1982,10 @@ function createManpowerButton(
   );
 
 
-  /*
-    Show the names of staff assigned
-    to this particular day.
-  */
-
-  if (
-    record.staff.length > 0
-  ) {
-
-    const staffList =
-      document.createElement(
-        "div"
-      );
-
-
-    staffList.className =
-      "calendar-staff-list";
-
-
-    record.staff.forEach(
-      function (
-        staffName
-      ) {
-
-        const staff =
-          document.createElement(
-            "div"
-          );
-
-
-        staff.className =
-          "calendar-staff-name";
-
-
-        staff.textContent =
-          staffName;
-
-
-        staffList.appendChild(
-          staff
-        );
-
-      }
-    );
-
-
-    container.appendChild(
-      staffList
-    );
-
-  }
-
-
   return container;
 
 }
+
 
 
 /* =========================================================
