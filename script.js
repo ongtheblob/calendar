@@ -186,6 +186,12 @@ const startDateInput =
 const startTimeInput =
   document.getElementById("startTime");
 
+const startHour =
+  document.getElementById("startHour");
+
+const startMinute =
+  document.getElementById("startMinute");
+
 const durationGroup =
   document.getElementById("durationGroup");
 
