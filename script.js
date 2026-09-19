@@ -9,9 +9,11 @@ const SUPABASE_URL =
 const SUPABASE_PUBLISHABLE_KEY =
   "sb_publishable_jxGJEa2GF2dM8q4-bAO1eA_0SrLus17";
 
+const REQUIRED_MANPOWER = 2;
+
 
 /* =========================================================
-   SUPABASE
+   SUPABASE CONNECTION
 ========================================================= */
 
 let supabaseClient = null;
@@ -144,7 +146,7 @@ const STAFF_LIST = [
 
 
 /* =========================================================
-   STATE
+   APPLICATION STATE
 ========================================================= */
 
 let events = [];
@@ -168,7 +170,7 @@ let manpowerDate =
 
 
 /* =========================================================
-   HELPER FOR HTML ELEMENTS
+   DOM HELPER
 ========================================================= */
 
 function $(id) {
@@ -247,6 +249,9 @@ const eventModal =
 const editModal =
   $("editModal");
 
+const manpowerModal =
+  $("manpowerModal");
+
 
 /* =========================================================
    EDIT DOM REFERENCES
@@ -288,9 +293,6 @@ const editRemarks =
 const editStatus =
   $("editStatus");
 
-const manpowerModal =
-  $("manpowerModal");
-
 
 /* =========================================================
    TIME HELPERS
@@ -309,8 +311,10 @@ function isValidHalfHourTime(
 
   }
 
+
   const parts =
     time.split(":");
+
 
   if (
     parts.length <
@@ -321,10 +325,12 @@ function isValidHalfHourTime(
 
   }
 
+
   const minutes =
     Number(
       parts[1]
     );
+
 
   return (
     minutes === 0 ||
@@ -349,18 +355,20 @@ function getAddTime() {
 
   }
 
+
   if (
     startTimeInput
   ) {
 
     return String(
       startTimeInput.value
-    ).substring(
+    ).slice(
       0,
       5
     );
 
   }
+
 
   return "";
 
@@ -382,18 +390,20 @@ function getEditTime() {
 
   }
 
+
   if (
     editStartTime
   ) {
 
     return String(
       editStartTime.value
-    ).substring(
+    ).slice(
       0,
       5
     );
 
   }
+
 
   return "";
 
@@ -420,6 +430,7 @@ function getProgrammeDuration(
 
   }
 
+
   if (
     programme ===
     "Body Composition Assessment"
@@ -429,13 +440,14 @@ function getProgrammeDuration(
 
   }
 
+
   return 60;
 
 }
 
 
 /* =========================================================
-   SUPABASE TEST
+   SUPABASE CONNECTION TEST
 ========================================================= */
 
 async function testSupabaseConnection() {
@@ -483,7 +495,7 @@ async function testSupabaseConnection() {
 
 
 /* =========================================================
-   LOAD PROGRAMMES
+   LOAD PROGRAMMES FROM SUPABASE
 ========================================================= */
 
 async function loadProgrammesFromSupabase() {
@@ -545,7 +557,7 @@ async function loadProgrammesFromSupabase() {
 
 
 /* =========================================================
-   DATABASE -> APP
+   DATABASE -> APP OBJECT
 ========================================================= */
 
 function convertDatabaseProgramme(
@@ -570,7 +582,7 @@ function convertDatabaseProgramme(
       String(
         row.date ||
         ""
-      ).substring(
+      ).slice(
         0,
         10
       ),
@@ -579,7 +591,7 @@ function convertDatabaseProgramme(
       String(
         row.time ||
         "09:00"
-      ).substring(
+      ).slice(
         0,
         5
       ),
@@ -620,7 +632,7 @@ function convertDatabaseProgramme(
 
 
 /* =========================================================
-   APP -> DATABASE
+   APP OBJECT -> DATABASE
 ========================================================= */
 
 function mapProgrammeToDatabase(
@@ -843,7 +855,7 @@ function changeCalendarView() {
 
 
 /* =========================================================
-   MASTER RENDER
+   MASTER CALENDAR RENDER
 ========================================================= */
 
 function renderCalendar() {
@@ -899,6 +911,7 @@ function renderMonthView() {
   calendarGrid.className =
     "calendar-grid";
 
+
   calendarGrid.innerHTML =
     "";
 
@@ -915,6 +928,7 @@ function renderMonthView() {
 
     header.className =
       "week-header";
+
 
     header.innerHTML = `
 
@@ -933,6 +947,7 @@ function renderMonthView() {
 
   const year =
     currentDate.getFullYear();
+
 
   const month =
     currentDate.getMonth();
@@ -1169,23 +1184,22 @@ function getViewDateLabel() {
     "day"
   ) {
 
-    return currentDate
-      .toLocaleDateString(
-        "en-SG",
-        {
-          weekday:
-            "long",
+    return currentDate.toLocaleDateString(
+      "en-SG",
+      {
+        weekday:
+          "long",
 
-          day:
-            "numeric",
+        day:
+          "numeric",
 
-          month:
-            "long",
+        month:
+          "long",
 
-          year:
-            "numeric"
-        }
-      );
+        year:
+          "numeric"
+      }
+    );
 
   }
 
@@ -1244,17 +1258,16 @@ function getViewDateLabel() {
   }
 
 
-  return currentDate
-    .toLocaleDateString(
-      "en-SG",
-      {
-        month:
-          "long",
+  return currentDate.toLocaleDateString(
+    "en-SG",
+    {
+      month:
+        "long",
 
-        year:
-          "numeric"
-      }
-    );
+      year:
+        "numeric"
+    }
+  );
 
 }
 
@@ -1580,22 +1593,14 @@ function renderDayColumn(
         );
 
 
-      if (
+      element.classList.add(
         activeCalendarView ===
         "day"
-      ) {
 
-        element.classList.add(
-          "day-view-event"
-        );
+          ? "day-view-event"
 
-      } else {
-
-        element.classList.add(
-          "week-view-event"
-        );
-
-      }
+          : "week-view-event"
+      );
 
 
       column.appendChild(
@@ -1620,7 +1625,7 @@ function renderDayColumn(
 
 
 /* =========================================================
-   EVENT FILTERING
+   EVENTS
 ========================================================= */
 
 function getDayEvents(
@@ -1655,10 +1660,6 @@ function getDayEvents(
 
 }
 
-
-/* =========================================================
-   EVENT ELEMENT
-========================================================= */
 
 function createEventElement(
   event
@@ -1766,7 +1767,7 @@ function createEventElement(
 
 
 /* =========================================================
-   MANPOWER
+   MANPOWER DATA
 ========================================================= */
 
 function manpowerKey(
@@ -1796,9 +1797,11 @@ function getManpower(
 
       staff: [],
 
-      required: "",
+      required:
+        REQUIRED_MANPOWER,
 
-      notes: ""
+      notes:
+        ""
 
     }
   );
@@ -1837,45 +1840,37 @@ function createManpowerButton(
 
 
   const required =
-    record.required === ""
-
-      ? null
-
-      : Number(
-          record.required
-        );
+    REQUIRED_MANPOWER;
 
 
   if (
-    present === 0 &&
-    required === null
+    present === 0
   ) {
 
     button.textContent =
       "👥 Set manpower";
 
-  } else {
+  } else if (
+    present >= required
+  ) {
 
-    if (
-      required !== null &&
-      present >= required
-    ) {
-
-      button.classList.add(
-        "good"
-      );
-
-    } else {
-
-      button.classList.add(
-        "warning"
-      );
-
-    }
+    button.classList.add(
+      "good"
+    );
 
 
     button.textContent =
-      `👥 ${present} staff / ${required ?? "-"} req.`;
+      `👥 ${present} staff / ${required} req.`;
+
+  } else {
+
+    button.classList.add(
+      "warning"
+    );
+
+
+    button.textContent =
+      `👥 ${present} staff / ${required} req.`;
 
   }
 
@@ -2153,18 +2148,25 @@ async function addProgramme() {
     "Others"
   ) {
 
-    customValue =
+    if (
       durationPreset &&
       durationPreset.value ===
       "custom"
+    ) {
 
-        ? customDuration
-            ? customDuration.value
-            : ""
+      customValue =
+        customDuration
+          ? customDuration.value
+          : "";
 
-        : durationPreset
-            ? durationPreset.value
-            : "60";
+    } else {
+
+      customValue =
+        durationPreset
+          ? durationPreset.value
+          : "60";
+
+    }
 
   }
 
@@ -2346,8 +2348,7 @@ async function addProgramme() {
     ...(
       data ||
       []
-    )
-    .map(
+    ).map(
       convertDatabaseProgramme
     )
   );
@@ -2628,9 +2629,7 @@ function openEventModal(
   setText(
     "modalSession",
     event.totalSessions > 1
-
       ? `Week ${event.sessionNumber} of ${event.totalSessions}`
-
       : "Stand-alone"
   );
 
@@ -2643,7 +2642,8 @@ function openEventModal(
 
   setText(
     "modalRemarks",
-    event.remarks || "—"
+    event.remarks ||
+    "—"
   );
 
 
@@ -2659,10 +2659,6 @@ function openEventModal(
 
 }
 
-
-/* =========================================================
-   CLOSE EVENT MODAL
-========================================================= */
 
 function closeEventModal() {
 
@@ -2684,7 +2680,7 @@ function closeEventModal() {
 
 
 /* =========================================================
-   OPEN EDIT MODAL
+   EDIT PROGRAMME
 ========================================================= */
 
 function openEditModal() {
@@ -2835,7 +2831,8 @@ function openEditModal() {
     String(
       first.time ||
       "09:00"
-    ).split(":");
+    )
+    .split(":");
 
 
   if (
@@ -2872,7 +2869,7 @@ function openEditModal() {
       String(
         first.time ||
         "09:00"
-      ).substring(
+      ).slice(
         0,
         5
       );
@@ -2950,7 +2947,7 @@ function openEditModal() {
 
 
 /* =========================================================
-   SAVE EDIT
+   SAVE EDITED PROGRAMME
 ========================================================= */
 
 async function saveEdit() {
@@ -3032,12 +3029,24 @@ async function saveEdit() {
   }
 
 
+  let customDurationValue =
+    "60";
+
+
+  if (
+    editDuration
+  ) {
+
+    customDurationValue =
+      editDuration.value;
+
+  }
+
+
   const duration =
     getProgrammeDuration(
       programmeName,
-      editDuration
-        ? editDuration.value
-        : "60"
+      customDurationValue
     );
 
 
@@ -3205,7 +3214,7 @@ async function saveEdit() {
 
 
   /*
-    Delete old series.
+    Delete the old series first.
   */
 
   const {
@@ -3243,7 +3252,7 @@ async function saveEdit() {
 
 
   /*
-    Insert edited series.
+    Insert the edited series.
   */
 
   const {
@@ -3273,8 +3282,8 @@ async function saveEdit() {
 
 
     /*
-      Reload database so the browser
-      doesn't keep stale data.
+      Reload the database so the app reflects
+      what is actually stored.
     */
 
     await refreshProgrammesFromSupabase();
@@ -3290,7 +3299,7 @@ async function saveEdit() {
 
 
   /*
-    Replace old data in memory.
+    Replace local data.
   */
 
   events =
@@ -3319,7 +3328,7 @@ async function saveEdit() {
 
 
   /*
-    Move calendar to new date.
+    Move calendar.
   */
 
   currentDate =
@@ -3380,10 +3389,6 @@ async function saveEdit() {
 }
 
 
-/* =========================================================
-   CLOSE EDIT MODAL
-========================================================= */
-
 function closeEditModal() {
 
   if (
@@ -3442,14 +3447,14 @@ async function deleteSelected() {
   }
 
 
-  const deleteWholeSeries =
+  const wholeSeries =
     Number(
       selected.totalSessions
     ) > 1;
 
 
   const message =
-    deleteWholeSeries
+    wholeSeries
 
       ? "Delete the entire programme series?"
 
@@ -3489,7 +3494,7 @@ async function deleteSelected() {
 
 
   if (
-    deleteWholeSeries
+    wholeSeries
   ) {
 
     query =
@@ -3535,7 +3540,7 @@ async function deleteSelected() {
 
 
   if (
-    deleteWholeSeries
+    wholeSeries
   ) {
 
     events =
@@ -3634,30 +3639,35 @@ function openManpowerModal(
   }
 
 
-  const required =
+  const requiredInput =
     $("requiredManpower");
 
 
   if (
-    required
+    requiredInput
   ) {
 
-    required.value =
-      record.required;
+    requiredInput.value =
+      REQUIRED_MANPOWER;
+
+
+    requiredInput.disabled =
+      true;
 
   }
 
 
-  const notes =
+  const notesInput =
     $("manpowerNotes");
 
 
   if (
-    notes
+    notesInput
   ) {
 
-    notes.value =
-      record.notes;
+    notesInput.value =
+      record.notes ||
+      "";
 
   }
 
@@ -3668,6 +3678,7 @@ function openManpowerModal(
 
 
   updateStaffCount();
+
 
   updateStaffStatus();
 
@@ -3789,7 +3800,8 @@ function selectedStaff() {
     document.querySelectorAll(
       '#staffList input[type="checkbox"]:checked'
     )
-  ).map(
+  )
+  .map(
     function (
       checkbox
     ) {
@@ -3813,8 +3825,7 @@ function updateStaffCount() {
   ) {
 
     present.textContent =
-      selectedStaff()
-        .length;
+      selectedStaff().length;
 
   }
 
@@ -3826,13 +3837,9 @@ function updateStaffStatus() {
   const status =
     $("staffStatus");
 
-  const required =
-    $("requiredManpower");
-
 
   if (
-    !status ||
-    !required
+    !status
   ) {
 
     return;
@@ -3840,13 +3847,12 @@ function updateStaffStatus() {
   }
 
 
-  const requiredValue =
-    required.value;
-
-
   const present =
-    selectedStaff()
-      .length;
+    selectedStaff().length;
+
+
+  const required =
+    REQUIRED_MANPOWER;
 
 
   status.className =
@@ -3854,23 +3860,8 @@ function updateStaffStatus() {
 
 
   if (
-    requiredValue ===
-    ""
-  ) {
-
-    status.textContent =
-      "";
-
-    return;
-
-  }
-
-
-  if (
     present >=
-    Number(
-      requiredValue
-    )
+    required
   ) {
 
     status.classList.add(
@@ -3890,9 +3881,7 @@ function updateStaffStatus() {
 
     status.textContent =
       `⚠ Understaffed by ${
-        Number(
-          requiredValue
-        ) -
+        required -
         present
       }`;
 
@@ -3912,10 +3901,7 @@ async function saveManpower() {
   }
 
 
-  const required =
-    $("requiredManpower");
-
-  const notes =
+  const notesInput =
     $("manpowerNotes");
 
 
@@ -3923,21 +3909,30 @@ async function saveManpower() {
     selectedStaff();
 
 
-  const requiredValue =
-    required &&
-    required.value !== ""
-
-      ? Number(
-          required.value
-        )
-
-      : null;
-
-
-  const notesValue =
-    notes
-      ? notes.value.trim()
+  const notes =
+    notesInput
+      ? notesInput.value.trim()
       : "";
+
+
+  const record = {
+
+    venue:
+      currentVenue,
+
+    date:
+      manpowerDate,
+
+    staff:
+      staff,
+
+    required:
+      REQUIRED_MANPOWER,
+
+    notes:
+      notes
+
+  };
 
 
   manpower[
@@ -3948,73 +3943,61 @@ async function saveManpower() {
   ] = {
 
     staff:
-
       staff,
 
     required:
-
-      requiredValue ??
-      "",
+      REQUIRED_MANPOWER,
 
     notes:
-
-      notesValue
+      notes
 
   };
 
 
   if (
-    supabaseClient
+    !supabaseClient
   ) {
 
-    const {
-      error
-    } =
-      await supabaseClient
-        .from(
-          "manpower"
-        )
-        .upsert(
-          {
+    alert(
+      "Supabase is not connected."
+    );
 
-            venue:
-              currentVenue,
+    return;
 
-            date:
-              manpowerDate,
-
-            staff:
-              staff,
-
-            required:
-              requiredValue,
-
-            notes:
-              notesValue
-
-          },
-          {
-            onConflict:
-              "venue,date"
-          }
-        );
+  }
 
 
-    if (
-      error
-    ) {
-
-      console.error(
-        "Unable to save manpower:",
-        error
+  const {
+    error
+  } =
+    await supabaseClient
+      .from(
+        "manpower"
+      )
+      .upsert(
+        record,
+        {
+          onConflict:
+            "venue,date"
+        }
       );
 
 
-      alert(
-        `Unable to save manpower: ${error.message}`
-      );
+  if (
+    error
+  ) {
 
-    }
+    console.error(
+      "Unable to save manpower:",
+      error
+    );
+
+
+    alert(
+      `Unable to save manpower: ${error.message}`
+    );
+
+    return;
 
   }
 
@@ -4023,6 +4006,106 @@ async function saveManpower() {
 
 
   renderCalendar();
+
+
+  alert(
+    "Manpower saved successfully."
+  );
+
+}
+
+
+function loadManpowerFromSupabase() {
+
+  if (
+    !supabaseClient
+  ) {
+
+    return;
+
+  }
+
+
+  supabaseClient
+    .from(
+      "manpower"
+    )
+    .select("*")
+    .then(
+      function (
+        result
+      ) {
+
+        const data =
+          result.data;
+
+
+        const error =
+          result.error;
+
+
+        if (
+          error
+        ) {
+
+          console.error(
+            "Unable to load manpower:",
+            error
+          );
+
+          return;
+
+        }
+
+
+        manpower =
+          {};
+
+
+        (
+          data ||
+          []
+        ).forEach(
+          function (
+            row
+          ) {
+
+            manpower[
+              manpowerKey(
+                row.venue,
+                String(
+                  row.date
+                ).slice(
+                  0,
+                  10
+                )
+              )
+            ] = {
+
+              staff:
+                Array.isArray(
+                  row.staff
+                )
+                  ? row.staff
+                  : [],
+
+              required:
+                REQUIRED_MANPOWER,
+
+              notes:
+                row.notes ||
+                ""
+
+            };
+
+          }
+        );
+
+
+        renderCalendar();
+
+      }
+    );
 
 }
 
@@ -4046,96 +4129,8 @@ function closeManpowerModal() {
 }
 
 
-async function loadManpowerFromSupabase() {
-
-  if (
-    !supabaseClient
-  ) {
-
-    return;
-
-  }
-
-
-  const {
-    data,
-    error
-  } =
-    await supabaseClient
-      .from(
-        "manpower"
-      )
-      .select("*");
-
-
-  if (
-    error
-  ) {
-
-    console.error(
-      "Unable to load manpower:",
-      error
-    );
-
-    return;
-
-  }
-
-
-  manpower =
-    {};
-
-
-  (
-    data ||
-    []
-  ).forEach(
-    function (
-      row
-    ) {
-
-      manpower[
-        manpowerKey(
-          row.venue,
-          String(
-            row.date
-          ).substring(
-            0,
-            10
-          )
-        )
-      ] = {
-
-        staff:
-          Array.isArray(
-            row.staff
-          )
-
-            ? row.staff
-
-            : [],
-
-        required:
-          row.required ??
-          "",
-
-        notes:
-          row.notes ||
-          ""
-
-      };
-
-    }
-  );
-
-
-  renderCalendar();
-
-}
-
-
 /* =========================================================
-   BUTTONS
+   BUTTON SETUP
 ========================================================= */
 
 function setupButtons() {
@@ -4344,18 +4339,19 @@ function setupButtons() {
   }
 
 
-  const requiredManpower =
+  const requiredManpowerInput =
     $("requiredManpower");
 
 
   if (
-    requiredManpower
+    requiredManpowerInput
   ) {
 
-    requiredManpower.addEventListener(
-      "input",
-      updateStaffStatus
-    );
+    requiredManpowerInput.value =
+      REQUIRED_MANPOWER;
+
+    requiredManpowerInput.disabled =
+      true;
 
   }
 
@@ -4599,7 +4595,7 @@ function setupButtons() {
 
 
 /* =========================================================
-   CLEAR ALL
+   CLEAR ALL DATA
 ========================================================= */
 
 async function clearAllData() {
@@ -4694,6 +4690,11 @@ async function clearAllData() {
 
   renderCalendar();
 
+
+  alert(
+    "All data cleared."
+  );
+
 }
 
 
@@ -4745,11 +4746,13 @@ function parseInputDate(
     String(
       value
     )
-    .substring(
+    .slice(
       0,
       10
     )
-    .split("-")
+    .split(
+      "-"
+    )
     .map(
       Number
     );
@@ -4768,32 +4771,20 @@ function formatInputDate(
   date
 ) {
 
-  const year =
-    date.getFullYear();
-
-
-  const month =
-    String(
-      date.getMonth() + 1
-    )
-    .padStart(
-      2,
-      "0"
-    );
-
-
-  const day =
-    String(
-      date.getDate()
-    )
-    .padStart(
-      2,
-      "0"
-    );
-
-
   return (
-    `${year}-${month}-${day}`
+    `${date.getFullYear()}-` +
+    `${String(
+      date.getMonth() + 1
+    ).padStart(
+      2,
+      "0"
+    )}-` +
+    `${String(
+      date.getDate()
+    ).padStart(
+      2,
+      "0"
+    )}`
   );
 
 }
@@ -4887,7 +4878,9 @@ function addMinutesToTime(
     String(
       time
     )
-    .split(":")
+    .split(
+      ":"
+    )
     .map(
       Number
     );
@@ -4917,7 +4910,8 @@ function addMinutesToTime(
     ).padStart(
       2,
       "0"
-    )}:${String(
+    )}:` +
+    `${String(
       newMinutes
     ).padStart(
       2,
@@ -4939,7 +4933,9 @@ function formatTime(
     String(
       time
     )
-    .split(":")
+    .split(
+      ":"
+    )
     .map(
       Number
     );
@@ -5067,11 +5063,10 @@ function makeId(
 ) {
 
   return (
-    `${prefix}_${Date.now()}_${
-      Math.random()
-        .toString(36)
-        .slice(2)
-    }`
+    `${prefix}_${Date.now()}_` +
+    `${Math.random()
+      .toString(36)
+      .slice(2)}`
   );
 
 }
@@ -5109,7 +5104,7 @@ function escapeHtml(
 
 
 /* =========================================================
-   START APPLICATION
+   START
 ========================================================= */
 
 setupProgrammeForm();
