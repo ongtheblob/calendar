@@ -1,5 +1,6 @@
 /* =========================================================
-   SUPABASE CONNECTION
+   PROGRAMME CALENDAR
+   Supabase + Month / Week / Day
 ========================================================= */
 
 const SUPABASE_URL =
@@ -8,7 +9,13 @@ const SUPABASE_URL =
 const SUPABASE_PUBLISHABLE_KEY =
   "sb_publishable_jxGJEa2GF2dM8q4-bAO1eA_0SrLus17";
 
+
+/* =========================================================
+   SUPABASE
+========================================================= */
+
 let supabaseClient = null;
+
 
 if (
   window.supabase &&
@@ -33,71 +40,31 @@ if (
 
 }
 
-/* =========================================================
-   TEST SUPABASE CONNECTION
-========================================================= */
-
-async function testSupabaseConnection() {
-
-  if (!supabaseClient) {
-
-    console.warn(
-      "Supabase client unavailable."
-    );
-
-    return;
-
-  }
-
-
-  const {
-    data,
-    error
-  } =
-    await supabaseClient
-      .from("programmes")
-      .select("*")
-      .limit(1);
-
-
-  if (error) {
-
-    console.error(
-      "Supabase connection test failed:",
-      error
-    );
-
-    return;
-
-  }
-
-
-  console.log(
-    "Supabase connection successful.",
-    data
-  );
-
-}
-
-
-/* =========================================================
-   PROGRAMME CALENDAR
-   FRONTEND VERSION
-   Month / Week / Day
-========================================================= */
-
 
 /* =========================================================
    PROGRAMME RULES
 ========================================================= */
 
 const SERIES_WEEKS = {
-  "Manage Knee Health": 6,
-  "Manage Metabolic Health": 6,
-  "Function - Combat Age-Related Loss of Muscle (CALM) 1.0": 8,
-  "Function - Combat Age-Related Loss of Muscle (CALM) 2.0": 6,
-  "Strength 1.0": 8,
-  "Perform 1.0": 8
+
+  "Manage Knee Health":
+    6,
+
+  "Manage Metabolic Health":
+    6,
+
+  "Function - Combat Age-Related Loss of Muscle (CALM) 1.0":
+    8,
+
+  "Function - Combat Age-Related Loss of Muscle (CALM) 2.0":
+    6,
+
+  "Strength 1.0":
+    8,
+
+  "Perform 1.0":
+    8
+
 };
 
 
@@ -106,26 +73,55 @@ const SERIES_WEEKS = {
 ========================================================= */
 
 const PAX = {
-  "Strength 1.0": 12,
-  "Strength 2.0 - Foundation Strength Workout": 14,
-  "Strength 2.0 - Functional Fitness Workout": 12,
-  "Strength 2.0 - Mobility Workout": 12,
-  "Strength 2.0 - Assessment & Check-In": 10,
 
-  "Perform 1.0": 10,
-  "Perform 2.0 - Multi-Modal Workout": 12,
-  "Perform 2.0 - AMRAP Workout": 12,
-  "Perform 2.0 - ENGINE Workout": 12,
-  "Perform 2.0 - Assessment & Check-In": 10,
+  "Strength 1.0":
+    12,
 
-  "Function - Combat Age-Related Loss of Muscle (CALM) 1.0": 12,
-  "Function - Combat Age-Related Loss of Muscle (CALM) 2.0": 14,
+  "Strength 2.0 - Foundation Strength Workout":
+    14,
 
-  "Manage Knee Health": 8,
-  "Manage Metabolic Health": 8,
+  "Strength 2.0 - Functional Fitness Workout":
+    12,
 
-  "Body Composition Assessment": 16,
-  "Active Health Senior Interest Group": 12
+  "Strength 2.0 - Mobility Workout":
+    12,
+
+  "Strength 2.0 - Assessment & Check-In":
+    10,
+
+  "Perform 1.0":
+    10,
+
+  "Perform 2.0 - Multi-Modal Workout":
+    12,
+
+  "Perform 2.0 - AMRAP Workout":
+    12,
+
+  "Perform 2.0 - ENGINE Workout":
+    12,
+
+  "Perform 2.0 - Assessment & Check-In":
+    10,
+
+  "Function - Combat Age-Related Loss of Muscle (CALM) 1.0":
+    12,
+
+  "Function - Combat Age-Related Loss of Muscle (CALM) 2.0":
+    14,
+
+  "Manage Knee Health":
+    8,
+
+  "Manage Metabolic Health":
+    8,
+
+  "Body Composition Assessment":
+    16,
+
+  "Active Health Senior Interest Group":
+    12
+
 };
 
 
@@ -134,6 +130,7 @@ const PAX = {
 ========================================================= */
 
 const STAFF_LIST = [
+
   "Joelle",
   "Jireh",
   "RJ",
@@ -142,6 +139,7 @@ const STAFF_LIST = [
   "Team Nila",
   "APS",
   "Other"
+
 ];
 
 
@@ -153,15 +151,33 @@ let events = [];
 
 let manpower = {};
 
-let currentVenue = "HBB";
+let currentVenue =
+  "HBB";
 
-let currentDate = new Date();
+let currentDate =
+  new Date();
 
-let activeCalendarView = "month";
+let activeCalendarView =
+  "month";
 
-let selectedEventId = null;
+let selectedEventId =
+  null;
 
-let manpowerDate = null;
+let manpowerDate =
+  null;
+
+
+/* =========================================================
+   HELPER FOR HTML ELEMENTS
+========================================================= */
+
+function $(id) {
+
+  return document.getElementById(
+    id
+  );
+
+}
 
 
 /* =========================================================
@@ -169,82 +185,312 @@ let manpowerDate = null;
 ========================================================= */
 
 const programmeSelect =
-  document.getElementById("programme");
+  $("programme");
 
 const customProgrammeGroup =
-  document.getElementById("customProgrammeGroup");
+  $("customProgrammeGroup");
 
 const customProgrammeInput =
-  document.getElementById("customProgramme");
+  $("customProgramme");
 
-const editVenueSelect =
-  document.getElementById("editVenue");
+const venueSelect =
+  $("venue");
 
 const startDateInput =
-  document.getElementById("startDate");
+  $("startDate");
 
 const startTimeInput =
-  document.getElementById("startTime");
+  $("startTime");
 
 const startHour =
-  document.getElementById("startHour");
+  $("startHour");
 
 const startMinute =
-  document.getElementById("startMinute");
+  $("startMinute");
 
 const durationGroup =
-  document.getElementById("durationGroup");
+  $("durationGroup");
 
 const durationPreset =
-  document.getElementById("durationPreset");
+  $("durationPreset");
 
 const customDuration =
-  document.getElementById("customDuration");
+  $("customDuration");
 
 const remarksInput =
-  document.getElementById("remarks");
+  $("remarks");
 
 const statusInput =
-  document.getElementById("status");
+  $("status");
 
 const calendarGrid =
-  document.getElementById("calendarGrid");
+  $("calendarGrid");
 
 const monthTitle =
-  document.getElementById("monthTitle");
+  $("monthTitle");
 
 const currentVenueLabel =
-  document.getElementById("currentVenueLabel");
+  $("currentVenueLabel");
 
 const calendarViewSelect =
-  document.getElementById("calendarView");
+  $("calendarView");
 
 const hbbSheetTab =
-  document.getElementById("hbbSheetTab");
+  $("hbbSheetTab");
 
 const othSheetTab =
-  document.getElementById("othSheetTab");
+  $("othSheetTab");
 
 const eventModal =
-  document.getElementById("eventModal");
+  $("eventModal");
 
 const editModal =
-  document.getElementById("editModal");
+  $("editModal");
 
-const manpowerModal =
-  document.getElementById("manpowerModal");
 
 /* =========================================================
-   SUPABASE - LOAD PROGRAMMES
+   EDIT DOM REFERENCES
+========================================================= */
+
+const editProgramme =
+  $("editProgramme");
+
+const editCustomProgrammeGroup =
+  $("editCustomProgrammeGroup");
+
+const editCustomProgramme =
+  $("editCustomProgramme");
+
+const editVenue =
+  $("editVenue");
+
+const editStartDate =
+  $("editStartDate");
+
+const editStartTime =
+  $("editStartTime");
+
+const editStartHour =
+  $("editStartHour");
+
+const editStartMinute =
+  $("editStartMinute");
+
+const editDurationGroup =
+  $("editDurationGroup");
+
+const editDuration =
+  $("editDuration");
+
+const editRemarks =
+  $("editRemarks");
+
+const editStatus =
+  $("editStatus");
+
+const manpowerModal =
+  $("manpowerModal");
+
+
+/* =========================================================
+   TIME HELPERS
+========================================================= */
+
+function isValidHalfHourTime(
+  time
+) {
+
+  if (
+    !time ||
+    typeof time !== "string"
+  ) {
+
+    return false;
+
+  }
+
+  const parts =
+    time.split(":");
+
+  if (
+    parts.length <
+    2
+  ) {
+
+    return false;
+
+  }
+
+  const minutes =
+    Number(
+      parts[1]
+    );
+
+  return (
+    minutes === 0 ||
+    minutes === 30
+  );
+
+}
+
+
+function getAddTime() {
+
+  if (
+    startHour &&
+    startMinute
+  ) {
+
+    return (
+      startHour.value +
+      ":" +
+      startMinute.value
+    );
+
+  }
+
+  if (
+    startTimeInput
+  ) {
+
+    return String(
+      startTimeInput.value
+    ).substring(
+      0,
+      5
+    );
+
+  }
+
+  return "";
+
+}
+
+
+function getEditTime() {
+
+  if (
+    editStartHour &&
+    editStartMinute
+  ) {
+
+    return (
+      editStartHour.value +
+      ":" +
+      editStartMinute.value
+    );
+
+  }
+
+  if (
+    editStartTime
+  ) {
+
+    return String(
+      editStartTime.value
+    ).substring(
+      0,
+      5
+    );
+
+  }
+
+  return "";
+
+}
+
+
+/* =========================================================
+   PROGRAMME DURATION
+========================================================= */
+
+function getProgrammeDuration(
+  programme,
+  customValue
+) {
+
+  if (
+    programme ===
+    "Others"
+  ) {
+
+    return Number(
+      customValue
+    );
+
+  }
+
+  if (
+    programme ===
+    "Body Composition Assessment"
+  ) {
+
+    return 30;
+
+  }
+
+  return 60;
+
+}
+
+
+/* =========================================================
+   SUPABASE TEST
+========================================================= */
+
+async function testSupabaseConnection() {
+
+  if (
+    !supabaseClient
+  ) {
+
+    return;
+
+  }
+
+
+  const {
+    data,
+    error
+  } =
+    await supabaseClient
+      .from(
+        "programmes"
+      )
+      .select("*")
+      .limit(1);
+
+
+  if (
+    error
+  ) {
+
+    console.error(
+      "Supabase connection test failed:",
+      error
+    );
+
+  } else {
+
+    console.log(
+      "Supabase connection successful.",
+      data
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   LOAD PROGRAMMES
 ========================================================= */
 
 async function loadProgrammesFromSupabase() {
 
-  if (!supabaseClient) {
-
-    console.warn(
-      "Supabase client unavailable."
-    );
+  if (
+    !supabaseClient
+  ) {
 
     return [];
 
@@ -256,23 +502,29 @@ async function loadProgrammesFromSupabase() {
     error
   } =
     await supabaseClient
-      .from("programmes")
+      .from(
+        "programmes"
+      )
       .select("*")
       .order(
         "date",
         {
-          ascending: true
+          ascending:
+            true
         }
       )
       .order(
         "time",
         {
-          ascending: true
+          ascending:
+            true
         }
       );
 
 
-  if (error) {
+  if (
+    error
+  ) {
 
     console.error(
       "Unable to load programmes:",
@@ -284,13 +536,16 @@ async function loadProgrammesFromSupabase() {
   }
 
 
-  return data || [];
+  return (
+    data ||
+    []
+  );
 
 }
 
 
 /* =========================================================
-   CONVERT DATABASE PROGRAMME
+   DATABASE -> APP
 ========================================================= */
 
 function convertDatabaseProgramme(
@@ -313,7 +568,8 @@ function convertDatabaseProgramme(
 
     date:
       String(
-        row.date
+        row.date ||
+        ""
       ).substring(
         0,
         10
@@ -321,7 +577,8 @@ function convertDatabaseProgramme(
 
     time:
       String(
-        row.time
+        row.time ||
+        "09:00"
       ).substring(
         0,
         5
@@ -363,17 +620,84 @@ function convertDatabaseProgramme(
 
 
 /* =========================================================
+   APP -> DATABASE
+========================================================= */
+
+function mapProgrammeToDatabase(
+  event
+) {
+
+  return {
+
+    id:
+      event.id,
+
+    series_id:
+      event.seriesId,
+
+    programme:
+      event.programme,
+
+    venue:
+      event.venue,
+
+    date:
+      event.date,
+
+    time:
+      event.time,
+
+    duration:
+      Number(
+        event.duration
+      ),
+
+    pax:
+      event.pax === "" ||
+      event.pax == null
+
+        ? null
+
+        : Number(
+            event.pax
+          ),
+
+    status:
+      event.status ||
+      null,
+
+    remarks:
+      event.remarks ||
+      null,
+
+    session_number:
+      event.sessionNumber ??
+      null,
+
+    total_sessions:
+      event.totalSessions ??
+      1,
+
+    type:
+      event.type ||
+      null
+
+  };
+
+}
+
+
+/* =========================================================
    REFRESH PROGRAMMES
 ========================================================= */
 
 async function refreshProgrammesFromSupabase() {
 
-  const rows =
-    await loadProgrammesFromSupabase();
-
-
   events =
-    rows.map(
+    (
+      await loadProgrammesFromSupabase()
+    )
+    .map(
       convertDatabaseProgramme
     );
 
@@ -382,130 +706,47 @@ async function refreshProgrammesFromSupabase() {
 
 }
 
-/* =========================================================
-   EDIT REFERENCES
-========================================================= */
-
-const editProgramme =
-  document.getElementById("editProgramme");
-
-const editCustomProgrammeGroup =
-  document.getElementById(
-    "editCustomProgrammeGroup"
-  );
-
-const editCustomProgramme =
-  document.getElementById(
-    "editCustomProgramme"
-  );
-
-const editVenue =
-  document.getElementById("editVenue");
-
-const venueSelect =
-  document.getElementById("venue");
-
-const editStartDate =
-  document.getElementById("editStartDate");
-
-const editStartTime =
-  document.getElementById("editStartTime");
-
-const editDurationGroup =
-  document.getElementById("editDurationGroup");
-
-const editDuration =
-  document.getElementById("editDuration");
-
-const editRemarks =
-  document.getElementById("editRemarks");
-
-const editStatus =
-  document.getElementById("editStatus");
-
 
 /* =========================================================
-   INITIAL SETUP
+   INITIALISE
 ========================================================= */
 
 function initialise() {
 
-  if (startDateInput) {
+  if (
+    startDateInput &&
+    !startDateInput.value
+  ) {
+
     startDateInput.value =
       formatInputDate(
         new Date()
       );
+
   }
 
-  if (venueSelect) {
-    venueSelect.value =
-      currentVenue;
-  }
-
-  if (calendarViewSelect) {
-    calendarViewSelect.value =
-      activeCalendarView;
-  }
-
-  renderCalendar();
-
-}
-
-
-/* =========================================================
-   CALENDAR VIEW SELECTOR
-========================================================= */
-
-function changeCalendarView() {
-
-  const selectedView =
-    document.getElementById("calendarView").value;
-
-  activeCalendarView =
-    selectedView;
-
-  console.log(
-    "Changing calendar view to:",
-    activeCalendarView
-  );
 
   if (
-    activeCalendarView === "week"
+    venueSelect
   ) {
 
-    currentDate =
-      startOfWeek(
-        currentDate
-      );
+    venueSelect.value =
+      currentVenue;
 
   }
 
+
+  if (
+    calendarViewSelect
+  ) {
+
+    calendarViewSelect.value =
+      activeCalendarView;
+
+  }
+
+
   renderCalendar();
-
-}
-
-
-const viewSelector =
-  document.getElementById("calendarView");
-
-
-if (viewSelector) {
-
-  viewSelector.addEventListener(
-    "change",
-    changeCalendarView
-  );
-
-  /*
-    Also listen for input.
-    This helps in environments where the browser/security
-    layer does not reliably send the normal change event.
-  */
-
-  viewSelector.addEventListener(
-    "input",
-    changeCalendarView
-  );
 
 }
 
@@ -513,34 +754,6 @@ if (viewSelector) {
 /* =========================================================
    VENUE SWITCHING
 ========================================================= */
-
-if (hbbSheetTab) {
-
-  hbbSheetTab.addEventListener(
-    "click",
-    function () {
-
-      switchVenue("HBB");
-
-    }
-  );
-
-}
-
-
-if (othSheetTab) {
-
-  othSheetTab.addEventListener(
-    "click",
-    function () {
-
-      switchVenue("OTH");
-
-    }
-  );
-
-}
-
 
 function switchVenue(
   venue
@@ -550,7 +763,9 @@ function switchVenue(
     venue;
 
 
-  if (venueSelect) {
+  if (
+    venueSelect
+  ) {
 
     venueSelect.value =
       venue;
@@ -558,7 +773,9 @@ function switchVenue(
   }
 
 
-  if (hbbSheetTab) {
+  if (
+    hbbSheetTab
+  ) {
 
     hbbSheetTab.classList.toggle(
       "active",
@@ -568,7 +785,9 @@ function switchVenue(
   }
 
 
-  if (othSheetTab) {
+  if (
+    othSheetTab
+  ) {
 
     othSheetTab.classList.toggle(
       "active",
@@ -578,7 +797,9 @@ function switchVenue(
   }
 
 
-  if (currentVenueLabel) {
+  if (
+    currentVenueLabel
+  ) {
 
     currentVenueLabel.textContent =
       venue;
@@ -592,11 +813,44 @@ function switchVenue(
 
 
 /* =========================================================
+   CALENDAR VIEW
+========================================================= */
+
+function changeCalendarView() {
+
+  activeCalendarView =
+    calendarViewSelect
+      ? calendarViewSelect.value
+      : "month";
+
+
+  if (
+    activeCalendarView ===
+    "week"
+  ) {
+
+    currentDate =
+      startOfWeek(
+        currentDate
+      );
+
+  }
+
+
+  renderCalendar();
+
+}
+
+
+/* =========================================================
    MASTER RENDER
 ========================================================= */
+
 function renderCalendar() {
 
-  if (!calendarGrid) {
+  if (
+    !calendarGrid
+  ) {
 
     console.error(
       "calendarGrid was not found."
@@ -607,14 +861,9 @@ function renderCalendar() {
   }
 
 
-  console.log(
-    "Rendering:",
-    activeCalendarView
-  );
-
-
   if (
-    activeCalendarView === "week"
+    activeCalendarView ===
+    "week"
   ) {
 
     renderWeekView();
@@ -625,7 +874,8 @@ function renderCalendar() {
 
 
   if (
-    activeCalendarView === "day"
+    activeCalendarView ===
+    "day"
   ) {
 
     renderDayView();
@@ -649,7 +899,6 @@ function renderMonthView() {
   calendarGrid.className =
     "calendar-grid";
 
-
   calendarGrid.innerHTML =
     "";
 
@@ -660,11 +909,12 @@ function renderMonthView() {
     );
 
 
-  if (header) {
+  if (
+    header
+  ) {
 
     header.className =
       "week-header";
-
 
     header.innerHTML = `
 
@@ -684,22 +934,27 @@ function renderMonthView() {
   const year =
     currentDate.getFullYear();
 
-
   const month =
     currentDate.getMonth();
 
 
-  monthTitle.textContent =
-    currentDate.toLocaleDateString(
-      "en-SG",
-      {
-        month:
-          "long",
+  if (
+    monthTitle
+  ) {
 
-        year:
-          "numeric"
-      }
-    );
+    monthTitle.textContent =
+      currentDate.toLocaleDateString(
+        "en-SG",
+        {
+          month:
+            "long",
+
+          year:
+            "numeric"
+        }
+      );
+
+  }
 
 
   const firstDay =
@@ -872,7 +1127,9 @@ function renderMonthView() {
     getDayEvents(
       dateString
     ).forEach(
-      event => {
+      function (
+        event
+      ) {
 
         cell.appendChild(
           createEventElement(
@@ -900,31 +1157,42 @@ function renderMonthView() {
 
 }
 
+
 /* =========================================================
-   VIEW DATE LABEL
+   DATE LABEL
 ========================================================= */
 
 function getViewDateLabel() {
 
   if (
-    activeCalendarView === "day"
+    activeCalendarView ===
+    "day"
   ) {
 
-    return currentDate.toLocaleDateString(
-      "en-SG",
-      {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-        year: "numeric"
-      }
-    );
+    return currentDate
+      .toLocaleDateString(
+        "en-SG",
+        {
+          weekday:
+            "long",
+
+          day:
+            "numeric",
+
+          month:
+            "long",
+
+          year:
+            "numeric"
+        }
+      );
 
   }
 
 
   if (
-    activeCalendarView === "week"
+    activeCalendarView ===
+    "week"
   ) {
 
     const start =
@@ -944,8 +1212,11 @@ function getViewDateLabel() {
       start.toLocaleDateString(
         "en-SG",
         {
-          day: "numeric",
-          month: "short"
+          day:
+            "numeric",
+
+          month:
+            "short"
         }
       );
 
@@ -954,27 +1225,40 @@ function getViewDateLabel() {
       end.toLocaleDateString(
         "en-SG",
         {
-          day: "numeric",
-          month: "short",
-          year: "numeric"
+          day:
+            "numeric",
+
+          month:
+            "short",
+
+          year:
+            "numeric"
         }
       );
 
 
-    return `${startText} - ${endText}`;
+    return (
+      `${startText} - ${endText}`
+    );
 
   }
 
 
-  return currentDate.toLocaleDateString(
-    "en-SG",
-    {
-      month: "long",
-      year: "numeric"
-    }
-  );
+  return currentDate
+    .toLocaleDateString(
+      "en-SG",
+      {
+        month:
+          "long",
+
+        year:
+          "numeric"
+      }
+    );
 
 }
+
+
 /* =========================================================
    WEEK VIEW
 ========================================================= */
@@ -995,16 +1279,26 @@ function renderWeekView() {
     "";
 
 
-  monthTitle.textContent =
-    getViewDateLabel();
+  if (
+    monthTitle
+  ) {
+
+    monthTitle.textContent =
+      getViewDateLabel();
+
+  }
 
 
   const dates =
     Array.from(
       {
-        length: 7
+        length:
+          7
       },
-      function (_, index) {
+      function (
+        _,
+        index
+      ) {
 
         return addDays(
           currentDate,
@@ -1021,7 +1315,9 @@ function renderWeekView() {
 
 
   dates.forEach(
-    function (date) {
+    function (
+      date
+    ) {
 
       calendarGrid.appendChild(
         renderDayColumn(
@@ -1049,8 +1345,14 @@ function renderDayView() {
     "";
 
 
-  monthTitle.textContent =
-    getViewDateLabel();
+  if (
+    monthTitle
+  ) {
+
+    monthTitle.textContent =
+      getViewDateLabel();
+
+  }
 
 
   renderFlexibleHeader(
@@ -1083,8 +1385,12 @@ function renderFlexibleHeader(
     );
 
 
-  if (!header) {
+  if (
+    !header
+  ) {
+
     return;
+
   }
 
 
@@ -1093,13 +1399,18 @@ function renderFlexibleHeader(
 
 
   header.className =
-    activeCalendarView === "day"
+    activeCalendarView ===
+    "day"
+
       ? "week-header day-view-header"
+
       : "week-header week-view-header";
 
 
   dates.forEach(
-    function (date) {
+    function (
+      date
+    ) {
 
       const button =
         document.createElement(
@@ -1142,7 +1453,8 @@ function renderFlexibleHeader(
 
 
       if (
-        activeCalendarView === "week"
+        activeCalendarView ===
+        "week"
       ) {
 
         button.addEventListener(
@@ -1159,8 +1471,14 @@ function renderFlexibleHeader(
               "day";
 
 
-            calendarViewSelect.value =
-              "day";
+            if (
+              calendarViewSelect
+            ) {
+
+              calendarViewSelect.value =
+                "day";
+
+            }
 
 
             renderCalendar();
@@ -1226,7 +1544,8 @@ function renderDayColumn(
 
 
   if (
-    dayEvents.length === 0
+    dayEvents.length ===
+    0
   ) {
 
     const empty =
@@ -1251,7 +1570,9 @@ function renderDayColumn(
 
 
   dayEvents.forEach(
-    function (event) {
+    function (
+      event
+    ) {
 
       const element =
         createEventElement(
@@ -1260,7 +1581,8 @@ function renderDayColumn(
 
 
       if (
-        activeCalendarView === "day"
+        activeCalendarView ===
+        "day"
       ) {
 
         element.classList.add(
@@ -1298,7 +1620,7 @@ function renderDayColumn(
 
 
 /* =========================================================
-   EVENTS
+   EVENT FILTERING
 ========================================================= */
 
 function getDayEvents(
@@ -1307,7 +1629,9 @@ function getDayEvents(
 
   return events
     .filter(
-      function (event) {
+      function (
+        event
+      ) {
 
         return (
           event.date === date &&
@@ -1317,7 +1641,10 @@ function getDayEvents(
       }
     )
     .sort(
-      function (a, b) {
+      function (
+        a,
+        b
+      ) {
 
         return a.time.localeCompare(
           b.time
@@ -1328,6 +1655,10 @@ function getDayEvents(
 
 }
 
+
+/* =========================================================
+   EVENT ELEMENT
+========================================================= */
 
 function createEventElement(
   event
@@ -1351,14 +1682,19 @@ function createEventElement(
 
 
   const sessionText =
-    event.totalSessions > 1
+    event.totalSessions >
+    1
+
       ? `W${event.sessionNumber} of ${event.totalSessions}`
+
       : "Stand-alone";
 
 
   const paxText =
     event.pax !== ""
+
       ? ` · ${event.pax} pax`
+
       : "";
 
 
@@ -1382,6 +1718,7 @@ function createEventElement(
 
     </div>
 
+
     <div class="event-name">
 
       ${escapeHtml(
@@ -1389,6 +1726,7 @@ function createEventElement(
       )}
 
     </div>
+
 
     <div class="event-meta">
 
@@ -1407,7 +1745,9 @@ function createEventElement(
 
   element.addEventListener(
     "click",
-    function (clickEvent) {
+    function (
+      clickEvent
+    ) {
 
       clickEvent.stopPropagation();
 
@@ -1434,7 +1774,9 @@ function manpowerKey(
   date
 ) {
 
-  return `${venue}__${date}`;
+  return (
+    `${venue}__${date}`
+  );
 
 }
 
@@ -1496,7 +1838,9 @@ function createManpowerButton(
 
   const required =
     record.required === ""
+
       ? null
+
       : Number(
           record.required
         );
@@ -1510,35 +1854,37 @@ function createManpowerButton(
     button.textContent =
       "👥 Set manpower";
 
-  } else if (
-    required !== null &&
-    present >= required
-  ) {
-
-    button.classList.add(
-      "good"
-    );
-
-
-    button.textContent =
-      `👥 ${present} staff / ${required} req.`;
-
   } else {
 
-    button.classList.add(
-      "warning"
-    );
+    if (
+      required !== null &&
+      present >= required
+    ) {
+
+      button.classList.add(
+        "good"
+      );
+
+    } else {
+
+      button.classList.add(
+        "warning"
+      );
+
+    }
 
 
     button.textContent =
-      `👥 ${present} staff / ${required} req.`;
+      `👥 ${present} staff / ${required ?? "-"} req.`;
 
   }
 
 
   button.addEventListener(
     "click",
-    function (event) {
+    function (
+      event
+    ) {
 
       event.stopPropagation();
 
@@ -1561,192 +1907,127 @@ function createManpowerButton(
    PROGRAMME FORM
 ========================================================= */
 
-programmeSelect.addEventListener(
-  "change",
-  function () {
+function setupProgrammeForm() {
 
-    const isOthers =
-      programmeSelect.value ===
-      "Others";
+  if (
+    programmeSelect
+  ) {
+
+    programmeSelect.addEventListener(
+      "change",
+      function () {
+
+        const isOthers =
+          programmeSelect.value ===
+          "Others";
 
 
-    customProgrammeGroup.classList.toggle(
-      "hidden",
-      !isOthers
+        if (
+          customProgrammeGroup
+        ) {
+
+          customProgrammeGroup
+            .classList.toggle(
+              "hidden",
+              !isOthers
+            );
+
+        }
+
+
+        if (
+          durationGroup
+        ) {
+
+          durationGroup
+            .classList.toggle(
+              "hidden",
+              !isOthers
+            );
+
+        }
+
+
+        if (
+          !isOthers
+        ) {
+
+          if (
+            customProgrammeInput
+          ) {
+
+            customProgrammeInput.value =
+              "";
+
+          }
+
+
+          if (
+            customDuration
+          ) {
+
+            customDuration.value =
+              "";
+
+            customDuration.disabled =
+              true;
+
+          }
+
+
+          if (
+            durationPreset
+          ) {
+
+            durationPreset.value =
+              "60";
+
+          }
+
+        }
+
+      }
     );
 
+  }
 
-    durationGroup.classList.toggle(
-      "hidden",
-      !isOthers
+
+  if (
+    durationPreset
+  ) {
+
+    durationPreset.addEventListener(
+      "change",
+      function () {
+
+        const custom =
+          durationPreset.value ===
+          "custom";
+
+
+        if (
+          customDuration
+        ) {
+
+          customDuration.disabled =
+            !custom;
+
+
+          if (
+            !custom
+          ) {
+
+            customDuration.value =
+              "";
+
+          }
+
+        }
+
+      }
     );
 
-
-    if (!isOthers) {
-
-      customProgrammeInput.value =
-        "";
-
-      customDuration.value =
-        "";
-
-      durationPreset.value =
-        "60";
-
-      customDuration.disabled =
-        true;
-
-    }
-
   }
-);
-
-
-durationPreset.addEventListener(
-  "change",
-  function () {
-
-    const custom =
-      durationPreset.value ===
-      "custom";
-
-
-    customDuration.disabled =
-      !custom;
-
-
-    if (!custom) {
-
-      customDuration.value =
-        "";
-
-    }
-
-  }
-);
-
-function mapProgrammeToDatabase(
-  event
-) {
-
-  return {
-
-    id:
-      event.id,
-
-    series_id:
-      event.seriesId,
-
-    programme:
-      event.programme,
-
-    venue:
-      event.venue,
-
-    date:
-      event.date,
-
-    time:
-      event.time,
-
-    duration:
-      Number(
-        event.duration
-      ),
-
-    pax:
-      event.pax === ""
-        ? null
-        : Number(
-            event.pax
-          ),
-
-    status:
-      event.status || null,
-
-    remarks:
-      event.remarks || null,
-
-    session_number:
-      event.sessionNumber ??
-      null,
-
-    total_sessions:
-      event.totalSessions ??
-      1,
-
-    type:
-      event.type || null
-
-  };
-
-}
-
-function convertDatabaseProgramme(
-  row
-) {
-
-  return {
-
-    id:
-      row.id,
-
-    seriesId:
-      row.series_id,
-
-    programme:
-      row.programme,
-
-    venue:
-      row.venue,
-
-    date:
-      String(
-        row.date
-      ).substring(
-        0,
-        10
-      ),
-
-    time:
-      String(
-        row.time
-      ).substring(
-        0,
-        5
-      ),
-
-    duration:
-      Number(
-        row.duration ||
-        60
-      ),
-
-    pax:
-      row.pax ??
-      "",
-
-    status:
-      row.status ||
-      "",
-
-    remarks:
-      row.remarks ||
-      "",
-
-    sessionNumber:
-      row.session_number ??
-      null,
-
-    totalSessions:
-      row.total_sessions ??
-      1,
-
-    type:
-      row.type ||
-      "Stand-alone"
-
-  };
 
 }
 
@@ -1755,25 +2036,17 @@ function convertDatabaseProgramme(
    ADD PROGRAMME
 ========================================================= */
 
-document
-  .getElementById("addButton")
-  .addEventListener(
-    "click",
-    addProgramme
-  );
-
-
 async function addProgramme() {
 
-  /* -------------------------------------------------------
-     1. GET FORM VALUES
-  ------------------------------------------------------- */
-
   const selected =
-    programmeSelect.value;
+    programmeSelect
+      ? programmeSelect.value
+      : "";
 
 
-  if (!selected) {
+  if (
+    !selected
+  ) {
 
     alert(
       "Please select a programme."
@@ -1789,14 +2062,19 @@ async function addProgramme() {
 
 
   if (
-    selected === "Others"
+    selected ===
+    "Others"
   ) {
 
     programmeName =
-      customProgrammeInput.value.trim();
+      customProgrammeInput
+        ? customProgrammeInput.value.trim()
+        : "";
 
 
-    if (!programmeName) {
+    if (
+      !programmeName
+    ) {
 
       alert(
         "Please enter a programme name."
@@ -1810,36 +2088,27 @@ async function addProgramme() {
 
 
   const venue =
-    venueSelect.value;
+    venueSelect
+      ? venueSelect.value
+      : currentVenue;
 
 
   const date =
-    startDateInput.value;
+    startDateInput
+      ? startDateInput.value
+      : "";
 
 
-const time =
-  `${startHour.value}:${startMinute.value}`;
+  const time =
+    getAddTime();
 
-   const newTime =
-  `${editStartHour.value}:${editStartMinute.value}`;
-   
-   if (!isValidHalfHourTime(time)) {
-
-  alert(
-    "Please select a start time ending in :00 or :30."
-  );
-
-  return;
-
-}
 
   if (
-    !date ||
-    !time
+    !date
   ) {
 
     alert(
-      "Please select a date and time."
+      "Please select a date."
     );
 
     return;
@@ -1847,41 +2116,64 @@ const time =
   }
 
 
-  /* -------------------------------------------------------
-     2. DETERMINE DURATION
-  ------------------------------------------------------- */
+  if (
+    !time
+  ) {
 
-  let duration;
+    alert(
+      "Please select a start time."
+    );
+
+    return;
+
+  }
 
 
   if (
-    programmeName === "Others"
+    !isValidHalfHourTime(
+      time
+    )
   ) {
 
-    if (
-      durationPreset.value === "custom"
-    ) {
+    alert(
+      "Please select a start time ending in :00 or :30."
+    );
 
-      duration =
-        Number(
-          customDuration.value
-        );
-
-    } else {
-
-      duration =
-        Number(
-          durationPreset.value
-        );
-
-    }
-
-  } else {
-
-    duration =
-      60;
+    return;
 
   }
+
+
+  let customValue =
+    "60";
+
+
+  if (
+    programmeName ===
+    "Others"
+  ) {
+
+    customValue =
+      durationPreset &&
+      durationPreset.value ===
+      "custom"
+
+        ? customDuration
+            ? customDuration.value
+            : ""
+
+        : durationPreset
+            ? durationPreset.value
+            : "60";
+
+  }
+
+
+  const duration =
+    getProgrammeDuration(
+      programmeName,
+      customValue
+    );
 
 
   if (
@@ -1900,29 +2192,18 @@ const time =
   }
 
 
-  /* -------------------------------------------------------
-     3. DETERMINE SESSION COUNT
-  ------------------------------------------------------- */
-
   const totalSessions =
     SERIES_WEEKS[
       programmeName
-    ] || 1;
+    ] ||
+    1;
 
-
-  /* -------------------------------------------------------
-     4. CREATE SERIES ID
-  ------------------------------------------------------- */
 
   const seriesId =
     makeId(
       "series"
     );
 
-
-  /* -------------------------------------------------------
-     5. BUILD ALL SESSIONS
-  ------------------------------------------------------- */
 
   const newEvents =
     [];
@@ -1976,10 +2257,14 @@ const time =
         ),
 
       status:
-        statusInput.value,
+        statusInput
+          ? statusInput.value
+          : "",
 
       remarks:
-        remarksInput.value.trim(),
+        remarksInput
+          ? remarksInput.value.trim()
+          : "",
 
       sessionNumber:
         totalSessions > 1
@@ -1999,11 +2284,9 @@ const time =
   }
 
 
-  /* -------------------------------------------------------
-     6. CHECK SUPABASE
-  ------------------------------------------------------- */
-
-  if (!supabaseClient) {
+  if (
+    !supabaseClient
+  ) {
 
     alert(
       "Supabase is not connected."
@@ -2013,10 +2296,6 @@ const time =
 
   }
 
-
-  /* -------------------------------------------------------
-     7. CONVERT TO DATABASE FORMAT
-  ------------------------------------------------------- */
 
   const rows =
     newEvents.map(
@@ -2030,27 +2309,23 @@ const time =
   );
 
 
-  /* -------------------------------------------------------
-     8. INSERT INTO SUPABASE
-  ------------------------------------------------------- */
-
   const {
     data,
     error
   } =
     await supabaseClient
-      .from("programmes")
+      .from(
+        "programmes"
+      )
       .insert(
         rows
       )
       .select();
 
 
-  /* -------------------------------------------------------
-     9. HANDLE DATABASE ERROR
-  ------------------------------------------------------- */
-
-  if (error) {
+  if (
+    error
+  ) {
 
     console.error(
       "Programme insert failed:",
@@ -2062,28 +2337,21 @@ const time =
       `Unable to save programme: ${error.message}`
     );
 
-
     return;
 
   }
 
 
-  /* -------------------------------------------------------
-     10. UPDATE LOCAL APP DATA
-  ------------------------------------------------------- */
-
   events.push(
     ...(
-      data || []
-    ).map(
+      data ||
+      []
+    )
+    .map(
       convertDatabaseProgramme
     )
   );
 
-
-  /* -------------------------------------------------------
-     11. MOVE CALENDAR TO PROGRAMME DATE
-  ------------------------------------------------------- */
 
   currentDate =
     parseInputDate(
@@ -2092,7 +2360,8 @@ const time =
 
 
   if (
-    activeCalendarView === "month"
+    activeCalendarView ===
+    "month"
   ) {
 
     currentDate =
@@ -2106,7 +2375,8 @@ const time =
 
 
   if (
-    activeCalendarView === "week"
+    activeCalendarView ===
+    "week"
   ) {
 
     currentDate =
@@ -2117,18 +2387,15 @@ const time =
   }
 
 
-  /* -------------------------------------------------------
-     12. REDRAW CALENDAR
-  ------------------------------------------------------- */
+  switchVenue(
+    venue
+  );
 
-  renderCalendar();
-
-
-  /* -------------------------------------------------------
-     13. RESET FORM
-  ------------------------------------------------------- */
 
   resetProgrammeForm();
+
+
+  renderCalendar();
 
 
   alert(
@@ -2136,49 +2403,141 @@ const time =
   );
 
 }
-     
+
+
 /* =========================================================
    RESET PROGRAMME FORM
 ========================================================= */
 
 function resetProgrammeForm() {
 
-  programmeSelect.value =
-    "";
+  if (
+    programmeSelect
+  ) {
 
-  customProgrammeInput.value =
-    "";
+    programmeSelect.value =
+      "";
 
-  customProgrammeGroup.classList.add(
-    "hidden"
-  );
+  }
 
-  durationGroup.classList.add(
-    "hidden"
-  );
 
-  durationPreset.value =
-    "60";
+  if (
+    customProgrammeInput
+  ) {
 
-  customDuration.value =
-    "";
+    customProgrammeInput.value =
+      "";
 
-  customDuration.disabled =
-    true;
+  }
 
-  startDateInput.value =
-    formatInputDate(
-      new Date()
-    );
 
-  startTimeInput.value =
-    "09:00";
+  if (
+    customProgrammeGroup
+  ) {
 
-  remarksInput.value =
-    "";
+    customProgrammeGroup
+      .classList.add(
+        "hidden"
+      );
 
-  statusInput.value =
-    "Uploaded (100% Created)";
+  }
+
+
+  if (
+    durationGroup
+  ) {
+
+    durationGroup
+      .classList.add(
+        "hidden"
+      );
+
+  }
+
+
+  if (
+    durationPreset
+  ) {
+
+    durationPreset.value =
+      "60";
+
+  }
+
+
+  if (
+    customDuration
+  ) {
+
+    customDuration.value =
+      "";
+
+    customDuration.disabled =
+      true;
+
+  }
+
+
+  if (
+    startDateInput
+  ) {
+
+    startDateInput.value =
+      formatInputDate(
+        new Date()
+      );
+
+  }
+
+
+  if (
+    startHour
+  ) {
+
+    startHour.value =
+      "09";
+
+  }
+
+
+  if (
+    startMinute
+  ) {
+
+    startMinute.value =
+      "00";
+
+  }
+
+
+  if (
+    startTimeInput
+  ) {
+
+    startTimeInput.value =
+      "09:00";
+
+  }
+
+
+  if (
+    remarksInput
+  ) {
+
+    remarksInput.value =
+      "";
+
+  }
+
+
+  if (
+    statusInput
+  ) {
+
+    statusInput.value =
+      "Uploaded (100% Created)";
+
+  }
 
 }
 
@@ -2195,29 +2554,50 @@ function openEventModal(
     event.id;
 
 
-  document.getElementById(
-    "modalProgramme"
-  ).textContent =
-    event.programme;
+  const setText =
+    function (
+      id,
+      value
+    ) {
+
+      const element =
+        $(id);
 
 
-  document.getElementById(
-    "modalVenue"
-  ).textContent =
-    event.venue;
+      if (
+        element
+      ) {
+
+        element.textContent =
+          value;
+
+      }
+
+    };
 
 
-  document.getElementById(
-    "modalDate"
-  ).textContent =
+  setText(
+    "modalProgramme",
+    event.programme
+  );
+
+
+  setText(
+    "modalVenue",
+    event.venue
+  );
+
+
+  setText(
+    "modalDate",
     formatDisplayDate(
       event.date
-    );
+    )
+  );
 
 
-  document.getElementById(
-    "modalTime"
-  ).textContent =
+  setText(
+    "modalTime",
     `${formatTime(
       event.time
     )} - ${formatTime(
@@ -2225,51 +2605,60 @@ function openEventModal(
         event.time,
         event.duration
       )
-    )}`;
-
-
-  document.getElementById(
-    "modalDuration"
-  ).textContent =
-    formatDuration(
-      event.duration
-    );
-
-
-  document.getElementById(
-    "modalPax"
-  ).textContent =
-    event.pax === ""
-      ? "Not specified"
-      : `${event.pax} pax`;
-
-
-  document.getElementById(
-    "modalSession"
-  ).textContent =
-    event.totalSessions > 1
-      ? `Week ${event.sessionNumber} of ${event.totalSessions}`
-      : "Stand-alone";
-
-
-  document.getElementById(
-    "modalStatus"
-  ).textContent =
-    event.status || "";
-
-
-  document.getElementById(
-    "modalRemarks"
-  ).textContent =
-    event.remarks ||
-    "—";
-
-
-  eventModal.classList.add(
-    "visible"
+    )}`
   );
 
+
+  setText(
+    "modalDuration",
+    formatDuration(
+      event.duration
+    )
+  );
+
+
+  setText(
+    "modalPax",
+    event.pax === ""
+      ? "Not specified"
+      : `${event.pax} pax`
+  );
+
+
+  setText(
+    "modalSession",
+    event.totalSessions > 1
+
+      ? `Week ${event.sessionNumber} of ${event.totalSessions}`
+
+      : "Stand-alone"
+  );
+
+
+  setText(
+    "modalStatus",
+    event.status || ""
+  );
+
+
+  setText(
+    "modalRemarks",
+    event.remarks || "—"
+  );
+
+
+  if (
+    eventModal
+  ) {
+
+    eventModal.classList.add(
+      "visible"
+    );
+
+  }
+
 }
+
 
 /* =========================================================
    CLOSE EVENT MODAL
@@ -2277,90 +2666,106 @@ function openEventModal(
 
 function closeEventModal() {
 
-  if (eventModal) {
-    eventModal.classList.remove("visible");
+  if (
+    eventModal
+  ) {
+
+    eventModal.classList.remove(
+      "visible"
+    );
+
   }
 
-  selectedEventId = null;
+
+  selectedEventId =
+    null;
 
 }
 
 
 /* =========================================================
-   CLOSE BUTTON
+   OPEN EDIT MODAL
 ========================================================= */
-
-const closeButton =
-  document.getElementById("closeButton");
-
-if (closeButton) {
-
-  closeButton.addEventListener(
-    "click",
-    closeEventModal
-  );
-
-}
-
-/* =========================================================
-   EDIT
-========================================================= */
-
-document
-  .getElementById(
-    "editButton"
-  )
-  .addEventListener(
-    "click",
-    openEditModal
-  );
-
 
 function openEditModal() {
 
-  if (!selectedEventId) {
+  if (
+    !selectedEventId
+  ) {
+
+    alert(
+      "Please select a programme first."
+    );
+
     return;
+
   }
 
 
   const selected =
     events.find(
-      function (event) {
+      function (
+        event
+      ) {
 
-        return event.id ===
-          selectedEventId;
+        return (
+          event.id ===
+          selectedEventId
+        );
 
       }
     );
 
 
-  if (!selected) {
+  if (
+    !selected
+  ) {
+
+    alert(
+      "Programme could not be found."
+    );
+
     return;
+
   }
 
 
   const series =
     events
       .filter(
-        function (event) {
+        function (
+          event
+        ) {
 
-          return event.seriesId ===
-            selected.seriesId;
+          return (
+            event.seriesId ===
+            selected.seriesId
+          );
 
         }
       )
       .sort(
-        function (a, b) {
+        function (
+          a,
+          b
+        ) {
 
-          return dateTimeValue(a) -
-            dateTimeValue(b);
+          return (
+            dateTimeValue(
+              a
+            ) -
+            dateTimeValue(
+              b
+            )
+          );
 
         }
       );
 
 
   const first =
-    series[0];
+    series[0] ||
+    selected;
 
 
   const known =
@@ -2369,167 +2774,254 @@ function openEditModal() {
     );
 
 
-  editProgramme.value =
-    known
-      ? first.programme
-      : "__CUSTOM__";
+  if (
+    editProgramme
+  ) {
+
+    editProgramme.value =
+      known
+        ? first.programme
+        : "__CUSTOM__";
+
+  }
 
 
-  editCustomProgramme.value =
-    known
-      ? ""
-      : first.programme;
+  if (
+    editCustomProgramme
+  ) {
+
+    editCustomProgramme.value =
+      known
+        ? ""
+        : first.programme;
+
+  }
 
 
-  editCustomProgrammeGroup.classList.toggle(
-    "hidden",
-    known
-  );
+  if (
+    editCustomProgrammeGroup
+  ) {
+
+    editCustomProgrammeGroup
+      .classList.toggle(
+        "hidden",
+        known
+      );
+
+  }
 
 
-  editVenue.value =
-    first.venue;
+  if (
+    editVenue
+  ) {
+
+    editVenue.value =
+      first.venue;
+
+  }
 
 
-  editStartDate.value =
-    first.date;
+  if (
+    editStartDate
+  ) {
+
+    editStartDate.value =
+      first.date;
+
+  }
 
 
-  editStartTime.value =
-    first.time;
+  const parts =
+    String(
+      first.time ||
+      "09:00"
+    ).split(":");
 
 
-  editDuration.value =
-    first.duration;
+  if (
+    editStartHour
+  ) {
+
+    editStartHour.value =
+      parts[0] ||
+      "09";
+
+  }
 
 
-  editDurationGroup.classList.toggle(
-    "hidden",
-    known
-  );
+  if (
+    editStartMinute
+  ) {
+
+    editStartMinute.value =
+      parts[1] ===
+      "30"
+
+        ? "30"
+
+        : "00";
+
+  }
 
 
-  editRemarks.value =
-    first.remarks ||
-    "";
+  if (
+    editStartTime
+  ) {
+
+    editStartTime.value =
+      String(
+        first.time ||
+        "09:00"
+      ).substring(
+        0,
+        5
+      );
+
+  }
 
 
-  editStatus.value =
-    first.status ||
-    "Uploaded (100% Created)";
+  if (
+    editDuration
+  ) {
+
+    editDuration.value =
+      first.duration;
+
+  }
 
 
-  eventModal.classList.remove(
-    "visible"
-  );
+  if (
+    editDurationGroup
+  ) {
+
+    editDurationGroup
+      .classList.toggle(
+        "hidden",
+        known
+      );
+
+  }
 
 
-  editModal.classList.add(
-    "visible"
-  );
+  if (
+    editRemarks
+  ) {
+
+    editRemarks.value =
+      first.remarks ||
+      "";
+
+  }
+
+
+  if (
+    editStatus
+  ) {
+
+    editStatus.value =
+      first.status ||
+      "Uploaded (100% Created)";
+
+  }
+
+
+  if (
+    eventModal
+  ) {
+
+    eventModal.classList.remove(
+      "visible"
+    );
+
+  }
+
+
+  if (
+    editModal
+  ) {
+
+    editModal.classList.add(
+      "visible"
+    );
+
+  }
 
 }
 
 
-document
-  .getElementById(
-    "saveEditButton"
-  )
-  .addEventListener(
-    "click",
-    saveEdit
-  );
-
- /* =========================================================
-   SAVE EDITED PROGRAMME TO SUPABASE
-========================================================= */
-
 /* =========================================================
-   SAVE EDITED PROGRAMME TO SUPABASE
+   SAVE EDIT
 ========================================================= */
 
 async function saveEdit() {
 
-  if (!selectedEventId) {
+  if (
+    !selectedEventId
+  ) {
+
+    alert(
+      "No programme selected."
+    );
+
     return;
+
   }
 
 
   const selected =
     events.find(
-      event =>
-        event.id ===
-        selectedEventId
+      function (
+        event
+      ) {
+
+        return (
+          event.id ===
+          selectedEventId
+        );
+
+      }
     );
 
 
-  if (!selected) {
+  if (
+    !selected
+  ) {
+
+    alert(
+      "Programme could not be found."
+    );
+
     return;
+
   }
 
-
-  /*
-    All sessions belonging to this programme
-    share the same seriesId.
-  */
 
   const oldSeriesId =
     selected.seriesId;
 
 
-  /*
-    Get the original first session.
-  */
-
-  const series =
-    events
-      .filter(
-        event =>
-          event.seriesId ===
-          oldSeriesId
-      )
-      .sort(
-        (a, b) =>
-          dateTimeValue(a) -
-          dateTimeValue(b)
-      );
-
-
-  const firstEvent =
-    series[0];
-
-
-  if (!firstEvent) {
-    return;
-  }
-
-
-  /*
-    Determine programme name.
-  */
-
-  let programmeName;
+  let programmeName =
+    editProgramme
+      ? editProgramme.value
+      : "";
 
 
   if (
-    editProgramme.value ===
+    programmeName ===
     "__CUSTOM__"
   ) {
 
     programmeName =
       editCustomProgramme
-        .value
-        .trim();
-
-  } else {
-
-    programmeName =
-      editProgramme.value;
+        ? editCustomProgramme.value.trim()
+        : "";
 
   }
 
 
-  if (!programmeName) {
+  if (
+    !programmeName
+  ) {
 
     alert(
       "Please select or enter a programme."
@@ -2540,29 +3032,13 @@ async function saveEdit() {
   }
 
 
-  /*
-    Determine duration.
-  */
-
-  let duration;
-
-
-  if (
-    editProgramme.value ===
-    "__CUSTOM__"
-  ) {
-
-    duration =
-      Number(
-        editDuration.value
-      );
-
-  } else {
-
-    duration =
-      60;
-
-  }
+  const duration =
+    getProgrammeDuration(
+      programmeName,
+      editDuration
+        ? editDuration.value
+        : "60"
+    );
 
 
   if (
@@ -2581,19 +3057,58 @@ async function saveEdit() {
   }
 
 
-  /*
-    Determine number of sessions.
-  */
+  const newTime =
+    getEditTime();
+
+
+  if (
+    !newTime
+  ) {
+
+    alert(
+      "Please select a start time."
+    );
+
+    return;
+
+  }
+
+
+  if (
+    !isValidHalfHourTime(
+      newTime
+    )
+  ) {
+
+    alert(
+      "Please select a start time ending in :00 or :30."
+    );
+
+    return;
+
+  }
+
+
+  if (
+    !editStartDate ||
+    !editStartDate.value
+  ) {
+
+    alert(
+      "Please select a date."
+    );
+
+    return;
+
+  }
+
 
   const totalSessions =
     SERIES_WEEKS[
       programmeName
-    ] || 1;
+    ] ||
+    1;
 
-
-  /*
-    Build the replacement series.
-  */
 
   const replacement =
     [];
@@ -2628,7 +3143,9 @@ async function saveEdit() {
         programmeName,
 
       venue:
-        editVenue.value,
+        editVenue
+          ? editVenue.value
+          : currentVenue,
 
       date:
         formatInputDate(
@@ -2636,9 +3153,10 @@ async function saveEdit() {
         ),
 
       time:
-        editStartTime.value,
+        newTime,
 
-      duration,
+      duration:
+        duration,
 
       pax:
         getPax(
@@ -2646,17 +3164,22 @@ async function saveEdit() {
         ),
 
       status:
-        editStatus.value,
+        editStatus
+          ? editStatus.value
+          : "",
 
       remarks:
-        editRemarks.value.trim(),
+        editRemarks
+          ? editRemarks.value.trim()
+          : "",
 
       sessionNumber:
         totalSessions > 1
           ? i + 1
           : null,
 
-      totalSessions,
+      totalSessions:
+        totalSessions,
 
       type:
         totalSessions > 1
@@ -2668,11 +3191,9 @@ async function saveEdit() {
   }
 
 
-  /*
-    Make sure Supabase is connected.
-  */
-
-  if (!supabaseClient) {
+  if (
+    !supabaseClient
+  ) {
 
     alert(
       "Supabase is not connected."
@@ -2684,8 +3205,7 @@ async function saveEdit() {
 
 
   /*
-    STEP 1:
-    Delete the old series from Supabase.
+    Delete old series.
   */
 
   const {
@@ -2693,7 +3213,9 @@ async function saveEdit() {
       deleteError
   } =
     await supabaseClient
-      .from("programmes")
+      .from(
+        "programmes"
+      )
       .delete()
       .eq(
         "series_id",
@@ -2701,10 +3223,12 @@ async function saveEdit() {
       );
 
 
-  if (deleteError) {
+  if (
+    deleteError
+  ) {
 
     console.error(
-      "Unable to delete old series:",
+      "Unable to delete old programme:",
       deleteError
     );
 
@@ -2713,15 +3237,13 @@ async function saveEdit() {
       `Unable to update programme: ${deleteError.message}`
     );
 
-
     return;
 
   }
 
 
   /*
-    STEP 2:
-    Insert the edited series.
+    Insert edited series.
   */
 
   const {
@@ -2729,7 +3251,9 @@ async function saveEdit() {
     error
   } =
     await supabaseClient
-      .from("programmes")
+      .from(
+        "programmes"
+      )
       .insert(
         replacement.map(
           mapProgrammeToDatabase
@@ -2738,25 +3262,27 @@ async function saveEdit() {
       .select();
 
 
-  if (error) {
+  if (
+    error
+  ) {
 
     console.error(
-      "Unable to save edited series:",
+      "Unable to save edited programme:",
       error
     );
+
+
+    /*
+      Reload database so the browser
+      doesn't keep stale data.
+    */
+
+    await refreshProgrammesFromSupabase();
 
 
     alert(
       `Unable to save changes: ${error.message}`
     );
-
-
-    /*
-      Re-load whatever is actually in Supabase.
-    */
-
-    await refreshProgrammesFromSupabase();
-
 
     return;
 
@@ -2764,32 +3290,36 @@ async function saveEdit() {
 
 
   /*
-    STEP 3:
-    Replace the old events in memory.
+    Replace old data in memory.
   */
 
   events =
     events.filter(
-      event =>
-        event.seriesId !==
-        oldSeriesId
+      function (
+        event
+      ) {
+
+        return (
+          event.seriesId !==
+          oldSeriesId
+        );
+
+      }
     );
 
 
   events.push(
     ...(
-      data || []
-    )
-    .map(
+      data ||
+      []
+    ).map(
       convertDatabaseProgramme
     )
   );
 
 
   /*
-    STEP 4:
-    Move the calendar to the edited
-    programme's first session.
+    Move calendar to new date.
   */
 
   currentDate =
@@ -2810,7 +3340,10 @@ async function saveEdit() {
         1
       );
 
-  } else if (
+  }
+
+
+  if (
     activeCalendarView ===
     "week"
   ) {
@@ -2823,42 +3356,45 @@ async function saveEdit() {
   }
 
 
-  /*
-    STEP 5:
-    Close modal and redraw.
-  */
+  const newVenue =
+    editVenue
+      ? editVenue.value
+      : currentVenue;
+
 
   closeEditModal();
 
 
   switchVenue(
-    editVenue.value
+    newVenue
   );
 
 
   renderCalendar();
 
-}
 
-/* =========================================================
-   CANCEL EDIT
-========================================================= */
-
-document
-  .getElementById(
-    "cancelEditButton"
-  )
-  .addEventListener(
-    "click",
-    closeEditModal
+  alert(
+    "Programme updated successfully."
   );
 
+}
+
+
+/* =========================================================
+   CLOSE EDIT MODAL
+========================================================= */
 
 function closeEditModal() {
 
-  editModal.classList.remove(
-    "visible"
-  );
+  if (
+    editModal
+  ) {
+
+    editModal.classList.remove(
+      "visible"
+    );
+
+  }
 
 
   selectedEventId =
@@ -2868,77 +3404,93 @@ function closeEditModal() {
 
 
 /* =========================================================
-   DELETE BUTTON
-========================================================= */
-
-document
-  .getElementById(
-    "deleteButton"
-  )
-  .addEventListener(
-    "click",
-    deleteSelected
-  );
-
-/* =========================================================
-   DELETE PROGRAMME FROM SUPABASE
+   DELETE PROGRAMME
 ========================================================= */
 
 async function deleteSelected() {
 
-  if (!selectedEventId) {
+  if (
+    !selectedEventId
+  ) {
+
     return;
+
   }
 
 
   const selected =
     events.find(
-      event =>
-        event.id === selectedEventId
+      function (
+        event
+      ) {
+
+        return (
+          event.id ===
+          selectedEventId
+        );
+
+      }
     );
 
 
-  if (!selected) {
+  if (
+    !selected
+  ) {
+
     return;
+
   }
 
 
   const deleteWholeSeries =
-    selected.totalSessions > 1;
+    Number(
+      selected.totalSessions
+    ) > 1;
 
 
   const message =
     deleteWholeSeries
+
       ? "Delete the entire programme series?"
+
       : "Delete this programme?";
 
 
-  if (!confirm(message)) {
+  if (
+    !confirm(
+      message
+    )
+  ) {
+
     return;
+
   }
 
 
-  if (!supabaseClient) {
+  if (
+    !supabaseClient
+  ) {
 
     alert(
       "Supabase is not connected."
     );
 
     return;
+
   }
 
 
-  /*
-    Delete from Supabase
-  */
-
   let query =
     supabaseClient
-      .from("programmes")
+      .from(
+        "programmes"
+      )
       .delete();
 
 
-  if (deleteWholeSeries) {
+  if (
+    deleteWholeSeries
+  ) {
 
     query =
       query.eq(
@@ -2959,10 +3511,13 @@ async function deleteSelected() {
 
   const {
     error
-  } = await query;
+  } =
+    await query;
 
 
-  if (error) {
+  if (
+    error
+  ) {
 
     console.error(
       "Unable to delete programme:",
@@ -2975,129 +3530,63 @@ async function deleteSelected() {
     );
 
     return;
+
   }
 
 
-  /*
-    Delete from the local events array
-  */
-
-  if (deleteWholeSeries) {
+  if (
+    deleteWholeSeries
+  ) {
 
     events =
       events.filter(
-        event =>
-          event.seriesId !==
-          selected.seriesId
+        function (
+          event
+        ) {
+
+          return (
+            event.seriesId !==
+            selected.seriesId
+          );
+
+        }
       );
 
   } else {
 
     events =
       events.filter(
-        event =>
-          event.id !==
-          selected.id
+        function (
+          event
+        ) {
+
+          return (
+            event.id !==
+            selected.id
+          );
+
+        }
       );
 
   }
 
 
-  /*
-    Close the popup
-  */
-
   closeEventModal();
 
 
-  /*
-    Refresh the calendar
-  */
-
   renderCalendar();
+
+
+  alert(
+    "Programme deleted successfully."
+  );
 
 }
 
 
 /* =========================================================
-   MANPOWER MODAL
+   MANPOWER
 ========================================================= */
-
-document
-  .getElementById(
-    "saveManpower"
-  )
-  .addEventListener(
-    "click",
-    saveManpower
-  );
-
-
-document
-  .getElementById(
-    "closeManpower"
-  )
-  .addEventListener(
-    "click",
-    closeManpowerModal
-  );
-
-
-document
-  .getElementById(
-    "selectAllStaff"
-  )
-  .addEventListener(
-    "click",
-    function () {
-
-      document
-        .querySelectorAll(
-          '#staffList input[type="checkbox"]'
-        )
-        .forEach(
-          function (checkbox) {
-
-            checkbox.checked =
-              true;
-
-          }
-        );
-
-
-      updateStaffCount();
-
-    }
-  );
-
-
-document
-  .getElementById(
-    "clearAllStaff"
-  )
-  .addEventListener(
-    "click",
-    function () {
-
-      document
-        .querySelectorAll(
-          '#staffList input[type="checkbox"]'
-        )
-        .forEach(
-          function (checkbox) {
-
-            checkbox.checked =
-              false;
-
-          }
-        );
-
-
-      updateStaffCount();
-
-    }
-  );
-
 
 function openManpowerModal(
   venue,
@@ -3115,30 +3604,62 @@ function openManpowerModal(
     );
 
 
-  document.getElementById(
-    "manpowerVenue"
-  ).textContent =
-    venue;
+  const venueDisplay =
+    $("manpowerVenue");
 
 
-  document.getElementById(
-    "manpowerDate"
-  ).textContent =
-    formatDisplayDate(
-      date
-    );
+  if (
+    venueDisplay
+  ) {
+
+    venueDisplay.textContent =
+      venue;
+
+  }
 
 
-  document.getElementById(
-    "requiredManpower"
-  ).value =
-    record.required;
+  const dateDisplay =
+    $("manpowerDate");
 
 
-  document.getElementById(
-    "manpowerNotes"
-  ).value =
-    record.notes;
+  if (
+    dateDisplay
+  ) {
+
+    dateDisplay.textContent =
+      formatDisplayDate(
+        date
+      );
+
+  }
+
+
+  const required =
+    $("requiredManpower");
+
+
+  if (
+    required
+  ) {
+
+    required.value =
+      record.required;
+
+  }
+
+
+  const notes =
+    $("manpowerNotes");
+
+
+  if (
+    notes
+  ) {
+
+    notes.value =
+      record.notes;
+
+  }
 
 
   renderStaffChecklist(
@@ -3148,13 +3669,18 @@ function openManpowerModal(
 
   updateStaffCount();
 
-
   updateStaffStatus();
 
 
-  manpowerModal.classList.add(
-    "visible"
-  );
+  if (
+    manpowerModal
+  ) {
+
+    manpowerModal.classList.add(
+      "visible"
+    );
+
+  }
 
 }
 
@@ -3164,9 +3690,16 @@ function renderStaffChecklist(
 ) {
 
   const container =
-    document.getElementById(
-      "staffList"
-    );
+    $("staffList");
+
+
+  if (
+    !container
+  ) {
+
+    return;
+
+  }
 
 
   container.innerHTML =
@@ -3174,7 +3707,9 @@ function renderStaffChecklist(
 
 
   STAFF_LIST.forEach(
-    function (name) {
+    function (
+      name
+    ) {
 
       const label =
         document.createElement(
@@ -3254,9 +3789,10 @@ function selectedStaff() {
     document.querySelectorAll(
       '#staffList input[type="checkbox"]:checked'
     )
-  )
-  .map(
-    function (checkbox) {
+  ).map(
+    function (
+      checkbox
+    ) {
 
       return checkbox.value;
 
@@ -3268,40 +3804,49 @@ function selectedStaff() {
 
 function updateStaffCount() {
 
-  document.getElementById(
-    "presentCount"
-  ).textContent =
-    selectedStaff().length;
+  const present =
+    $("presentCount");
+
+
+  if (
+    present
+  ) {
+
+    present.textContent =
+      selectedStaff()
+        .length;
+
+  }
 
 }
-
-
-document
-  .getElementById(
-    "requiredManpower"
-  )
-  .addEventListener(
-    "input",
-    updateStaffStatus
-  );
 
 
 function updateStaffStatus() {
 
   const status =
-    document.getElementById(
-      "staffStatus"
-    );
-
+    $("staffStatus");
 
   const required =
-    document.getElementById(
-      "requiredManpower"
-    ).value;
+    $("requiredManpower");
+
+
+  if (
+    !status ||
+    !required
+  ) {
+
+    return;
+
+  }
+
+
+  const requiredValue =
+    required.value;
 
 
   const present =
-    selectedStaff().length;
+    selectedStaff()
+      .length;
 
 
   status.className =
@@ -3309,7 +3854,8 @@ function updateStaffStatus() {
 
 
   if (
-    required === ""
+    requiredValue ===
+    ""
   ) {
 
     status.textContent =
@@ -3322,7 +3868,9 @@ function updateStaffStatus() {
 
   if (
     present >=
-    Number(required)
+    Number(
+      requiredValue
+    )
   ) {
 
     status.classList.add(
@@ -3341,18 +3889,55 @@ function updateStaffStatus() {
 
 
     status.textContent =
-      `⚠ Understaffed by ${Number(required) - present}`;
+      `⚠ Understaffed by ${
+        Number(
+          requiredValue
+        ) -
+        present
+      }`;
 
   }
 
 }
 
 
-function saveManpower() {
+async function saveManpower() {
 
-  if (!manpowerDate) {
+  if (
+    !manpowerDate
+  ) {
+
     return;
+
   }
+
+
+  const required =
+    $("requiredManpower");
+
+  const notes =
+    $("manpowerNotes");
+
+
+  const staff =
+    selectedStaff();
+
+
+  const requiredValue =
+    required &&
+    required.value !== ""
+
+      ? Number(
+          required.value
+        )
+
+      : null;
+
+
+  const notesValue =
+    notes
+      ? notes.value.trim()
+      : "";
 
 
   manpower[
@@ -3363,25 +3948,75 @@ function saveManpower() {
   ] = {
 
     staff:
-      selectedStaff(),
+
+      staff,
 
     required:
-      document.getElementById(
-        "requiredManpower"
-      ).value === ""
-        ? ""
-        : Number(
-            document.getElementById(
-              "requiredManpower"
-            ).value
-          ),
+
+      requiredValue ??
+      "",
 
     notes:
-      document.getElementById(
-        "manpowerNotes"
-      ).value.trim()
+
+      notesValue
 
   };
+
+
+  if (
+    supabaseClient
+  ) {
+
+    const {
+      error
+    } =
+      await supabaseClient
+        .from(
+          "manpower"
+        )
+        .upsert(
+          {
+
+            venue:
+              currentVenue,
+
+            date:
+              manpowerDate,
+
+            staff:
+              staff,
+
+            required:
+              requiredValue,
+
+            notes:
+              notesValue
+
+          },
+          {
+            onConflict:
+              "venue,date"
+          }
+        );
+
+
+    if (
+      error
+    ) {
+
+      console.error(
+        "Unable to save manpower:",
+        error
+      );
+
+
+      alert(
+        `Unable to save manpower: ${error.message}`
+      );
+
+    }
+
+  }
 
 
   closeManpowerModal();
@@ -3394,9 +4029,15 @@ function saveManpower() {
 
 function closeManpowerModal() {
 
-  manpowerModal.classList.remove(
-    "visible"
-  );
+  if (
+    manpowerModal
+  ) {
+
+    manpowerModal.classList.remove(
+      "visible"
+    );
+
+  }
 
 
   manpowerDate =
@@ -3405,225 +4046,676 @@ function closeManpowerModal() {
 }
 
 
-/* =========================================================
-   NAVIGATION
-========================================================= */
+async function loadManpowerFromSupabase() {
 
-document
-  .getElementById(
-    "previousButton"
-  )
-  .addEventListener(
-    "click",
-    function () {
+  if (
+    !supabaseClient
+  ) {
 
-      if (
-        activeCalendarView ===
-        "day"
-      ) {
+    return;
 
-        currentDate =
-          addDays(
-            currentDate,
-            -1
-          );
-
-      } else if (
-        activeCalendarView ===
-        "week"
-      ) {
-
-        currentDate =
-          addDays(
-            startOfWeek(
-              currentDate
-            ),
-            -7
-          );
-
-      } else {
-
-        currentDate =
-          new Date(
-            currentDate.getFullYear(),
-            currentDate.getMonth() - 1,
-            1
-          );
-
-      }
+  }
 
 
-      renderCalendar();
-
-    }
-  );
-
-
-document
-  .getElementById(
-    "nextButton"
-  )
-  .addEventListener(
-    "click",
-    function () {
-
-      if (
-        activeCalendarView ===
-        "day"
-      ) {
-
-        currentDate =
-          addDays(
-            currentDate,
-            1
-          );
-
-      } else if (
-        activeCalendarView ===
-        "week"
-      ) {
-
-        currentDate =
-          addDays(
-            startOfWeek(
-              currentDate
-            ),
-            7
-          );
-
-      } else {
-
-        currentDate =
-          new Date(
-            currentDate.getFullYear(),
-            currentDate.getMonth() + 1,
-            1
-          );
-
-      }
+  const {
+    data,
+    error
+  } =
+    await supabaseClient
+      .from(
+        "manpower"
+      )
+      .select("*");
 
 
-      renderCalendar();
+  if (
+    error
+  ) {
 
-    }
-  );
+    console.error(
+      "Unable to load manpower:",
+      error
+    );
 
+    return;
 
-document
-  .getElementById(
-    "todayButton"
-  )
-  .addEventListener(
-    "click",
-    function () {
-
-      currentDate =
-        new Date();
+  }
 
 
-      if (
-        activeCalendarView ===
-        "month"
-      ) {
-
-        currentDate =
-          new Date(
-            currentDate.getFullYear(),
-            currentDate.getMonth(),
-            1
-          );
-
-      }
+  manpower =
+    {};
 
 
-      if (
-        activeCalendarView ===
-        "week"
-      ) {
+  (
+    data ||
+    []
+  ).forEach(
+    function (
+      row
+    ) {
 
-        currentDate =
-          startOfWeek(
-            currentDate
-          );
-
-      }
-
-
-      renderCalendar();
-
-    }
-  );
-
-
-/* =========================================================
-   CLEAR
-========================================================= */
-
-document
-  .getElementById(
-    "clearButton"
-  )
-  .addEventListener(
-    "click",
-    function () {
-
-      if (
-        !confirm(
-          "Delete all programmes and manpower?"
+      manpower[
+        manpowerKey(
+          row.venue,
+          String(
+            row.date
+          ).substring(
+            0,
+            10
+          )
         )
-      ) {
+      ] = {
 
-        return;
+        staff:
+          Array.isArray(
+            row.staff
+          )
 
-      }
+            ? row.staff
 
+            : [],
 
-      events =
-        [];
+        required:
+          row.required ??
+          "",
 
+        notes:
+          row.notes ||
+          ""
 
-      manpower =
-        {};
-
-
-      renderCalendar();
+      };
 
     }
   );
 
 
-/* =========================================================
-   UTILITIES
-========================================================= */
-function isValidHalfHourTime(time) {
+  renderCalendar();
 
-  if (!time) {
-    return false;
-  }
-
-  const parts =
-    time.split(":");
-
-  if (parts.length < 2) {
-    return false;
-  }
-
-  const minutes =
-    Number(parts[1]);
-
-  return minutes === 0 ||
-    minutes === 30;
 }
+
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+function setupButtons() {
+
+  const addButton =
+    $("addButton");
+
+
+  if (
+    addButton
+  ) {
+
+    addButton.addEventListener(
+      "click",
+      addProgramme
+    );
+
+  }
+
+
+  const editButton =
+    $("editButton");
+
+
+  if (
+    editButton
+  ) {
+
+    editButton.addEventListener(
+      "click",
+      openEditModal
+    );
+
+  }
+
+
+  const saveEditButton =
+    $("saveEditButton");
+
+
+  if (
+    saveEditButton
+  ) {
+
+    saveEditButton.addEventListener(
+      "click",
+      saveEdit
+    );
+
+  }
+
+
+  const deleteButton =
+    $("deleteButton");
+
+
+  if (
+    deleteButton
+  ) {
+
+    deleteButton.addEventListener(
+      "click",
+      deleteSelected
+    );
+
+  }
+
+
+  const closeButton =
+    $("closeButton");
+
+
+  if (
+    closeButton
+  ) {
+
+    closeButton.addEventListener(
+      "click",
+      closeEventModal
+    );
+
+  }
+
+
+  const cancelEditButton =
+    $("cancelEditButton");
+
+
+  if (
+    cancelEditButton
+  ) {
+
+    cancelEditButton.addEventListener(
+      "click",
+      closeEditModal
+    );
+
+  }
+
+
+  const saveManpowerButton =
+    $("saveManpower");
+
+
+  if (
+    saveManpowerButton
+  ) {
+
+    saveManpowerButton.addEventListener(
+      "click",
+      saveManpower
+    );
+
+  }
+
+
+  const closeManpowerButton =
+    $("closeManpower");
+
+
+  if (
+    closeManpowerButton
+  ) {
+
+    closeManpowerButton.addEventListener(
+      "click",
+      closeManpowerModal
+    );
+
+  }
+
+
+  const selectAllStaff =
+    $("selectAllStaff");
+
+
+  if (
+    selectAllStaff
+  ) {
+
+    selectAllStaff.addEventListener(
+      "click",
+      function () {
+
+        document
+          .querySelectorAll(
+            '#staffList input[type="checkbox"]'
+          )
+          .forEach(
+            function (
+              checkbox
+            ) {
+
+              checkbox.checked =
+                true;
+
+            }
+          );
+
+
+        updateStaffCount();
+
+        updateStaffStatus();
+
+      }
+    );
+
+  }
+
+
+  const clearAllStaff =
+    $("clearAllStaff");
+
+
+  if (
+    clearAllStaff
+  ) {
+
+    clearAllStaff.addEventListener(
+      "click",
+      function () {
+
+        document
+          .querySelectorAll(
+            '#staffList input[type="checkbox"]'
+          )
+          .forEach(
+            function (
+              checkbox
+            ) {
+
+              checkbox.checked =
+                false;
+
+            }
+          );
+
+
+        updateStaffCount();
+
+        updateStaffStatus();
+
+      }
+    );
+
+  }
+
+
+  const requiredManpower =
+    $("requiredManpower");
+
+
+  if (
+    requiredManpower
+  ) {
+
+    requiredManpower.addEventListener(
+      "input",
+      updateStaffStatus
+    );
+
+  }
+
+
+  const previousButton =
+    $("previousButton");
+
+
+  if (
+    previousButton
+  ) {
+
+    previousButton.addEventListener(
+      "click",
+      function () {
+
+        if (
+          activeCalendarView ===
+          "day"
+        ) {
+
+          currentDate =
+            addDays(
+              currentDate,
+              -1
+            );
+
+        } else if (
+          activeCalendarView ===
+          "week"
+        ) {
+
+          currentDate =
+            addDays(
+              startOfWeek(
+                currentDate
+              ),
+              -7
+            );
+
+        } else {
+
+          currentDate =
+            new Date(
+              currentDate.getFullYear(),
+              currentDate.getMonth() -
+                1,
+              1
+            );
+
+        }
+
+
+        renderCalendar();
+
+      }
+    );
+
+  }
+
+
+  const nextButton =
+    $("nextButton");
+
+
+  if (
+    nextButton
+  ) {
+
+    nextButton.addEventListener(
+      "click",
+      function () {
+
+        if (
+          activeCalendarView ===
+          "day"
+        ) {
+
+          currentDate =
+            addDays(
+              currentDate,
+              1
+            );
+
+        } else if (
+          activeCalendarView ===
+          "week"
+        ) {
+
+          currentDate =
+            addDays(
+              startOfWeek(
+                currentDate
+              ),
+              7
+            );
+
+        } else {
+
+          currentDate =
+            new Date(
+              currentDate.getFullYear(),
+              currentDate.getMonth() +
+                1,
+              1
+            );
+
+        }
+
+
+        renderCalendar();
+
+      }
+    );
+
+  }
+
+
+  const todayButton =
+    $("todayButton");
+
+
+  if (
+    todayButton
+  ) {
+
+    todayButton.addEventListener(
+      "click",
+      function () {
+
+        currentDate =
+          new Date();
+
+
+        if (
+          activeCalendarView ===
+          "month"
+        ) {
+
+          currentDate =
+            new Date(
+              currentDate.getFullYear(),
+              currentDate.getMonth(),
+              1
+            );
+
+        }
+
+
+        if (
+          activeCalendarView ===
+          "week"
+        ) {
+
+          currentDate =
+            startOfWeek(
+              currentDate
+            );
+
+        }
+
+
+        renderCalendar();
+
+      }
+    );
+
+  }
+
+
+  const clearButton =
+    $("clearButton");
+
+
+  if (
+    clearButton
+  ) {
+
+    clearButton.addEventListener(
+      "click",
+      clearAllData
+    );
+
+  }
+
+
+  if (
+    calendarViewSelect
+  ) {
+
+    calendarViewSelect.addEventListener(
+      "change",
+      changeCalendarView
+    );
+
+
+    calendarViewSelect.addEventListener(
+      "input",
+      changeCalendarView
+    );
+
+  }
+
+
+  if (
+    hbbSheetTab
+  ) {
+
+    hbbSheetTab.addEventListener(
+      "click",
+      function () {
+
+        switchVenue(
+          "HBB"
+        );
+
+      }
+    );
+
+  }
+
+
+  if (
+    othSheetTab
+  ) {
+
+    othSheetTab.addEventListener(
+      "click",
+      function () {
+
+        switchVenue(
+          "OTH"
+        );
+
+      }
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   CLEAR ALL
+========================================================= */
+
+async function clearAllData() {
+
+  if (
+    !confirm(
+      "Delete all programmes and manpower?"
+    )
+  ) {
+
+    return;
+
+  }
+
+
+  if (
+    !supabaseClient
+  ) {
+
+    alert(
+      "Supabase is not connected."
+    );
+
+    return;
+
+  }
+
+
+  const {
+    error:
+      programmeError
+  } =
+    await supabaseClient
+      .from(
+        "programmes"
+      )
+      .delete()
+      .neq(
+        "id",
+        "__never__"
+      );
+
+
+  if (
+    programmeError
+  ) {
+
+    alert(
+      `Unable to clear programmes: ${programmeError.message}`
+    );
+
+    return;
+
+  }
+
+
+  const {
+    error:
+      manpowerError
+  } =
+    await supabaseClient
+      .from(
+        "manpower"
+      )
+      .delete()
+      .neq(
+        "venue",
+        "__never__"
+      );
+
+
+  if (
+    manpowerError
+  ) {
+
+    alert(
+      `Unable to clear manpower: ${manpowerError.message}`
+    );
+
+    return;
+
+  }
+
+
+  events =
+    [];
+
+
+  manpower =
+    {};
+
+
+  renderCalendar();
+
+}
+
+
+/* =========================================================
+   UTILITY FUNCTIONS
+========================================================= */
+
 function getPax(
   programme
 ) {
 
-  return Object.prototype.hasOwnProperty.call(
-    PAX,
-    programme
-  )
-    ? PAX[programme]
-    : "";
+  return Object.prototype
+    .hasOwnProperty.call(
+      PAX,
+      programme
+    )
+
+      ? PAX[
+          programme
+        ]
+
+      : "";
 
 }
 
@@ -3632,10 +4724,11 @@ function isKnownProgramme(
   programme
 ) {
 
-  return Object.prototype.hasOwnProperty.call(
-    PAX,
-    programme
-  );
+  return Object.prototype
+    .hasOwnProperty.call(
+      PAX,
+      programme
+    );
 
 }
 
@@ -3699,7 +4792,9 @@ function formatInputDate(
     );
 
 
-  return `${year}-${month}-${day}`;
+  return (
+    `${year}-${month}-${day}`
+  );
 
 }
 
@@ -3816,17 +4911,19 @@ function addMinutesToTime(
     total % 60;
 
 
-  return `${String(
-    newHours
-  ).padStart(
-    2,
-    "0"
-  )}:${String(
-    newMinutes
-  ).padStart(
-    2,
-    "0"
-  )}`;
+  return (
+    `${String(
+      newHours
+    ).padStart(
+      2,
+      "0"
+    )}:${String(
+      newMinutes
+    ).padStart(
+      2,
+      "0"
+    )}`
+  );
 
 }
 
@@ -3888,7 +4985,9 @@ function formatDuration(
     total < 60
   ) {
 
-    return `${total} min`;
+    return (
+      `${total} min`
+    );
 
   }
 
@@ -3907,12 +5006,20 @@ function formatDuration(
     remaining === 0
   ) {
 
-    return `${hours} hour${hours === 1 ? "" : "s"}`;
+    return (
+      `${hours} hour${
+        hours === 1
+          ? ""
+          : "s"
+      }`
+    );
 
   }
 
 
-  return `${hours} hr ${remaining} min`;
+  return (
+    `${hours} hr ${remaining} min`
+  );
 
 }
 
@@ -3960,13 +5067,11 @@ function makeId(
 ) {
 
   return (
-    prefix +
-    "_" +
-    Date.now() +
-    "_" +
-    Math.random()
-      .toString(36)
-      .slice(2)
+    `${prefix}_${Date.now()}_${
+      Math.random()
+        .toString(36)
+        .slice(2)
+    }`
   );
 
 }
@@ -4004,11 +5109,17 @@ function escapeHtml(
 
 
 /* =========================================================
-   START
+   START APPLICATION
 ========================================================= */
+
+setupProgrammeForm();
+
+setupButtons();
 
 initialise();
 
 testSupabaseConnection();
 
 refreshProgrammesFromSupabase();
+
+loadManpowerFromSupabase();
