@@ -1808,8 +1808,8 @@ async function addProgramme() {
     startDateInput.value;
 
 
-  const time =
-    startTimeInput.value;
+const time =
+  `${startHour.value}:${startMinute.value};
 
    if (!isValidHalfHourTime(time)) {
 
