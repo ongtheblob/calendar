@@ -3,21 +3,30 @@
    Supabase + Month / Week / Day
 ========================================================= */
 
+
+/* =========================================================
+   SUPABASE CONFIG
+========================================================= */
+
 const SUPABASE_URL =
   "https://yrhcdpaicivyxjfrfmpy.supabase.co";
 
 const SUPABASE_PUBLISHABLE_KEY =
   "sb_publishable_jxGJEa2GF2dM8q4-bAO1eA_0SrLus17";
 
+
+/* =========================================================
+   SETTINGS
+========================================================= */
+
 const REQUIRED_MANPOWER = 2;
 
 
 /* =========================================================
-   SUPABASE CONNECTION
+   SUPABASE CLIENT
 ========================================================= */
 
 let supabaseClient = null;
-
 
 if (
   window.supabase &&
@@ -36,7 +45,7 @@ if (
 
 } else {
 
-  console.warn(
+  console.error(
     "Supabase library was not loaded."
   );
 
@@ -132,7 +141,6 @@ const PAX = {
 ========================================================= */
 
 const STAFF_LIST = [
-
   "Joelle",
   "Jireh",
   "RJ",
@@ -141,7 +149,6 @@ const STAFF_LIST = [
   "Team Nila",
   "APS",
   "Other"
-
 ];
 
 
@@ -153,24 +160,199 @@ let events = [];
 
 let manpower = {};
 
-let currentVenue =
-  "HBB";
+let currentVenue = "HBB";
 
-let currentDate =
-  new Date();
+let currentDate = new Date();
 
-let activeCalendarView =
-  "month";
+let activeCalendarView = "month";
 
-let selectedEventId =
-  null;
+let selectedEventId = null;
 
-let manpowerDate =
-  null;
+let manpowerDate = null;
 
 
 /* =========================================================
-   DOM HELPER
+   DOM REFERENCES
+========================================================= */
+
+const programmeSelect =
+  document.getElementById(
+    "programme"
+  );
+
+const customProgrammeGroup =
+  document.getElementById(
+    "customProgrammeGroup"
+  );
+
+const customProgrammeInput =
+  document.getElementById(
+    "customProgramme"
+  );
+
+const venueSelect =
+  document.getElementById(
+    "venue"
+  );
+
+const startDateInput =
+  document.getElementById(
+    "startDate"
+  );
+
+const startTimeInput =
+  document.getElementById(
+    "startTime"
+  );
+
+const startHour =
+  document.getElementById(
+    "startHour"
+  );
+
+const startMinute =
+  document.getElementById(
+    "startMinute"
+  );
+
+const durationGroup =
+  document.getElementById(
+    "durationGroup"
+  );
+
+const durationPreset =
+  document.getElementById(
+    "durationPreset"
+  );
+
+const customDuration =
+  document.getElementById(
+    "customDuration"
+  );
+
+const remarksInput =
+  document.getElementById(
+    "remarks"
+  );
+
+const statusInput =
+  document.getElementById(
+    "status"
+  );
+
+const calendarGrid =
+  document.getElementById(
+    "calendarGrid"
+  );
+
+const monthTitle =
+  document.getElementById(
+    "monthTitle"
+  );
+
+const currentVenueLabel =
+  document.getElementById(
+    "currentVenueLabel"
+  );
+
+const calendarViewSelect =
+  document.getElementById(
+    "calendarView"
+  );
+
+const hbbSheetTab =
+  document.getElementById(
+    "hbbSheetTab"
+  );
+
+const othSheetTab =
+  document.getElementById(
+    "othSheetTab"
+  );
+
+const eventModal =
+  document.getElementById(
+    "eventModal"
+  );
+
+const editModal =
+  document.getElementById(
+    "editModal"
+  );
+
+const manpowerModal =
+  document.getElementById(
+    "manpowerModal"
+  );
+
+
+/* =========================================================
+   EDIT REFERENCES
+========================================================= */
+
+const editProgramme =
+  document.getElementById(
+    "editProgramme"
+  );
+
+const editCustomProgrammeGroup =
+  document.getElementById(
+    "editCustomProgrammeGroup"
+  );
+
+const editCustomProgramme =
+  document.getElementById(
+    "editCustomProgramme"
+  );
+
+const editVenue =
+  document.getElementById(
+    "editVenue"
+  );
+
+const editStartDate =
+  document.getElementById(
+    "editStartDate"
+  );
+
+const editStartTime =
+  document.getElementById(
+    "editStartTime"
+  );
+
+const editStartHour =
+  document.getElementById(
+    "editStartHour"
+  );
+
+const editStartMinute =
+  document.getElementById(
+    "editStartMinute"
+  );
+
+const editDurationGroup =
+  document.getElementById(
+    "editDurationGroup"
+  );
+
+const editDuration =
+  document.getElementById(
+    "editDuration"
+  );
+
+const editRemarks =
+  document.getElementById(
+    "editRemarks"
+  );
+
+const editStatus =
+  document.getElementById(
+    "editStatus"
+  );
+
+
+/* =========================================================
+   GENERIC HELPERS
 ========================================================= */
 
 function $(id) {
@@ -180,118 +362,6 @@ function $(id) {
   );
 
 }
-
-
-/* =========================================================
-   DOM REFERENCES
-========================================================= */
-
-const programmeSelect =
-  $("programme");
-
-const customProgrammeGroup =
-  $("customProgrammeGroup");
-
-const customProgrammeInput =
-  $("customProgramme");
-
-const venueSelect =
-  $("venue");
-
-const startDateInput =
-  $("startDate");
-
-const startTimeInput =
-  $("startTime");
-
-const startHour =
-  $("startHour");
-
-const startMinute =
-  $("startMinute");
-
-const durationGroup =
-  $("durationGroup");
-
-const durationPreset =
-  $("durationPreset");
-
-const customDuration =
-  $("customDuration");
-
-const remarksInput =
-  $("remarks");
-
-const statusInput =
-  $("status");
-
-const calendarGrid =
-  $("calendarGrid");
-
-const monthTitle =
-  $("monthTitle");
-
-const currentVenueLabel =
-  $("currentVenueLabel");
-
-const calendarViewSelect =
-  $("calendarView");
-
-const hbbSheetTab =
-  $("hbbSheetTab");
-
-const othSheetTab =
-  $("othSheetTab");
-
-const eventModal =
-  $("eventModal");
-
-const editModal =
-  $("editModal");
-
-const manpowerModal =
-  $("manpowerModal");
-
-
-/* =========================================================
-   EDIT DOM REFERENCES
-========================================================= */
-
-const editProgramme =
-  $("editProgramme");
-
-const editCustomProgrammeGroup =
-  $("editCustomProgrammeGroup");
-
-const editCustomProgramme =
-  $("editCustomProgramme");
-
-const editVenue =
-  $("editVenue");
-
-const editStartDate =
-  $("editStartDate");
-
-const editStartTime =
-  $("editStartTime");
-
-const editStartHour =
-  $("editStartHour");
-
-const editStartMinute =
-  $("editStartMinute");
-
-const editDurationGroup =
-  $("editDurationGroup");
-
-const editDuration =
-  $("editDuration");
-
-const editRemarks =
-  $("editRemarks");
-
-const editStatus =
-  $("editStatus");
 
 
 /* =========================================================
@@ -317,8 +387,7 @@ function isValidHalfHourTime(
 
 
   if (
-    parts.length <
-    2
+    parts.length < 2
   ) {
 
     return false;
@@ -348,9 +417,19 @@ function getAddTime() {
   ) {
 
     return (
-      startHour.value +
+      String(
+        startHour.value
+      ).padStart(
+        2,
+        "0"
+      ) +
       ":" +
-      startMinute.value
+      String(
+        startMinute.value
+      ).padStart(
+        2,
+        "0"
+      )
     );
 
   }
@@ -362,7 +441,7 @@ function getAddTime() {
 
     return String(
       startTimeInput.value
-    ).slice(
+    ).substring(
       0,
       5
     );
@@ -383,9 +462,19 @@ function getEditTime() {
   ) {
 
     return (
-      editStartHour.value +
+      String(
+        editStartHour.value
+      ).padStart(
+        2,
+        "0"
+      ) +
       ":" +
-      editStartMinute.value
+      String(
+        editStartMinute.value
+      ).padStart(
+        2,
+        "0"
+      )
     );
 
   }
@@ -397,7 +486,7 @@ function getEditTime() {
 
     return String(
       editStartTime.value
-    ).slice(
+    ).substring(
       0,
       5
     );
@@ -411,25 +500,39 @@ function getEditTime() {
 
 
 /* =========================================================
-   PROGRAMME DURATION
+   PROGRAMME HELPERS
 ========================================================= */
+
+function getPax(
+  programme
+) {
+
+  return Object.prototype.hasOwnProperty.call(
+    PAX,
+    programme
+  )
+    ? PAX[programme]
+    : "";
+
+}
+
+
+function isKnownProgramme(
+  programme
+) {
+
+  return Object.prototype.hasOwnProperty.call(
+    PAX,
+    programme
+  );
+
+}
+
 
 function getProgrammeDuration(
   programme,
-  customValue
+  durationValue
 ) {
-
-  if (
-    programme ===
-    "Others"
-  ) {
-
-    return Number(
-      customValue
-    );
-
-  }
-
 
   if (
     programme ===
@@ -441,62 +544,534 @@ function getProgrammeDuration(
   }
 
 
+  if (
+    programme ===
+    "Others"
+  ) {
+
+    return Number(
+      durationValue
+    );
+
+  }
+
+
   return 60;
 
 }
 
 
 /* =========================================================
-   SUPABASE CONNECTION TEST
+   DATE HELPERS
 ========================================================= */
 
-async function testSupabaseConnection() {
+function parseInputDate(
+  value
+) {
 
-  if (
-    !supabaseClient
-  ) {
-
-    return;
-
-  }
-
-
-  const {
-    data,
-    error
-  } =
-    await supabaseClient
-      .from(
-        "programmes"
-      )
-      .select("*")
-      .limit(1);
-
-
-  if (
-    error
-  ) {
-
-    console.error(
-      "Supabase connection test failed:",
-      error
+  const parts =
+    String(
+      value
+    )
+    .substring(
+      0,
+      10
+    )
+    .split(
+      "-"
+    )
+    .map(
+      Number
     );
 
-  } else {
 
-    console.log(
-      "Supabase connection successful.",
-      data
+  return new Date(
+    parts[0],
+    parts[1] - 1,
+    parts[2]
+  );
+
+}
+
+
+function formatInputDate(
+  date
+) {
+
+  const year =
+    date.getFullYear();
+
+
+  const month =
+    String(
+      date.getMonth() + 1
+    ).padStart(
+      2,
+      "0"
     );
 
-  }
+
+  const day =
+    String(
+      date.getDate()
+    ).padStart(
+      2,
+      "0"
+    );
+
+
+  return (
+    `${year}-${month}-${day}`
+  );
+
+}
+
+
+function addDays(
+  date,
+  days
+) {
+
+  const result =
+    new Date(
+      date
+    );
+
+
+  result.setDate(
+    result.getDate() +
+    days
+  );
+
+
+  return result;
+
+}
+
+
+function startOfWeek(
+  date
+) {
+
+  const result =
+    new Date(
+      date
+    );
+
+
+  result.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+
+  result.setDate(
+    result.getDate() -
+    result.getDay()
+  );
+
+
+  return result;
+
+}
+
+
+function isSameDay(
+  a,
+  b
+) {
+
+  return (
+    a.getFullYear() ===
+      b.getFullYear()
+
+    &&
+
+    a.getMonth() ===
+      b.getMonth()
+
+    &&
+
+    a.getDate() ===
+      b.getDate()
+  );
 
 }
 
 
 /* =========================================================
-   LOAD PROGRAMMES FROM SUPABASE
+   TIME DISPLAY
 ========================================================= */
+
+function addMinutesToTime(
+  time,
+  minutes
+) {
+
+  const parts =
+    String(
+      time
+    )
+    .split(":")
+    .map(
+      Number
+    );
+
+
+  const total =
+    parts[0] * 60 +
+    parts[1] +
+    Number(
+      minutes
+    );
+
+
+  const newHours =
+    Math.floor(
+      total / 60
+    ) % 24;
+
+
+  const newMinutes =
+    total % 60;
+
+
+  return (
+    `${String(
+      newHours
+    ).padStart(
+      2,
+      "0"
+    )}:` +
+    `${String(
+      newMinutes
+    ).padStart(
+      2,
+      "0"
+    )}`
+  );
+
+}
+
+
+function formatTime(
+  time
+) {
+
+  const parts =
+    String(
+      time
+    )
+    .split(":")
+    .map(
+      Number
+    );
+
+
+  const date =
+    new Date();
+
+
+  date.setHours(
+    parts[0],
+    parts[1],
+    0,
+    0
+  );
+
+
+  return date.toLocaleTimeString(
+    "en-SG",
+    {
+      hour:
+        "numeric",
+
+      minute:
+        "2-digit"
+    }
+  );
+
+}
+
+
+function formatDuration(
+  minutes
+) {
+
+  const total =
+    Number(
+      minutes
+    );
+
+
+  if (
+    total < 60
+  ) {
+
+    return (
+      `${total} min`
+    );
+
+  }
+
+
+  const hours =
+    Math.floor(
+      total / 60
+    );
+
+
+  const remaining =
+    total % 60;
+
+
+  if (
+    remaining === 0
+  ) {
+
+    return (
+      `${hours} hour${
+        hours === 1
+          ? ""
+          : "s"
+      }`
+    );
+
+  }
+
+
+  return (
+    `${hours} hr ${remaining} min`
+  );
+
+}
+
+
+function formatDisplayDate(
+  dateString
+) {
+
+  return parseInputDate(
+    dateString
+  )
+  .toLocaleDateString(
+    "en-SG",
+    {
+      weekday:
+        "short",
+
+      day:
+        "numeric",
+
+      month:
+        "short",
+
+      year:
+        "numeric"
+    }
+  );
+
+}
+
+
+/* =========================================================
+   GENERAL HELPERS
+========================================================= */
+
+function dateTimeValue(
+  event
+) {
+
+  return new Date(
+    `${event.date}T${event.time}`
+  ).getTime();
+
+}
+
+
+function makeId(
+  prefix
+) {
+
+  return (
+    `${prefix}_${Date.now()}_` +
+    Math.random()
+      .toString(36)
+      .substring(2)
+  );
+
+}
+
+
+function escapeHtml(
+  value
+) {
+
+  return String(
+    value
+  )
+  .replace(
+    /&/g,
+    "&amp;"
+  )
+  .replace(
+    /</g,
+    "&lt;"
+  )
+  .replace(
+    />/g,
+    "&gt;"
+  )
+  .replace(
+    /"/g,
+    "&quot;"
+  )
+  .replace(
+    /'/g,
+    "&#039;"
+  );
+
+}
+
+
+/* =========================================================
+   SUPABASE PROGRAMMES
+========================================================= */
+
+function mapProgrammeToDatabase(
+  event
+) {
+
+  return {
+
+    id:
+      event.id,
+
+    series_id:
+      event.seriesId,
+
+    programme:
+      event.programme,
+
+    venue:
+      event.venue,
+
+    date:
+      event.date,
+
+    time:
+      event.time,
+
+    duration:
+      Number(
+        event.duration
+      ),
+
+    pax:
+      event.pax === "" ||
+      event.pax == null
+        ? null
+        : Number(
+            event.pax
+          ),
+
+    status:
+      event.status ||
+      null,
+
+    remarks:
+      event.remarks ||
+      null,
+
+    session_number:
+      event.sessionNumber ??
+      null,
+
+    total_sessions:
+      event.totalSessions ??
+      1,
+
+    type:
+      event.type ||
+      null
+
+  };
+
+}
+
+
+function convertDatabaseProgramme(
+  row
+) {
+
+  return {
+
+    id:
+      row.id,
+
+    seriesId:
+      row.series_id,
+
+    programme:
+      row.programme,
+
+    venue:
+      row.venue,
+
+    date:
+      String(
+        row.date ||
+        ""
+      ).substring(
+        0,
+        10
+      ),
+
+    time:
+      String(
+        row.time ||
+        "09:00"
+      ).substring(
+        0,
+        5
+      ),
+
+    duration:
+      Number(
+        row.duration ||
+        60
+      ),
+
+    pax:
+      row.pax ??
+      "",
+
+    status:
+      row.status ||
+      "",
+
+    remarks:
+      row.remarks ||
+      "",
+
+    sessionNumber:
+      row.session_number ??
+      null,
+
+    totalSessions:
+      row.total_sessions ??
+      1,
+
+    type:
+      row.type ||
+      "Stand-alone"
+
+  };
+
+}
+
 
 async function loadProgrammesFromSupabase() {
 
@@ -556,153 +1131,6 @@ async function loadProgrammesFromSupabase() {
 }
 
 
-/* =========================================================
-   DATABASE -> APP OBJECT
-========================================================= */
-
-function convertDatabaseProgramme(
-  row
-) {
-
-  return {
-
-    id:
-      row.id,
-
-    seriesId:
-      row.series_id,
-
-    programme:
-      row.programme,
-
-    venue:
-      row.venue,
-
-    date:
-      String(
-        row.date ||
-        ""
-      ).slice(
-        0,
-        10
-      ),
-
-    time:
-      String(
-        row.time ||
-        "09:00"
-      ).slice(
-        0,
-        5
-      ),
-
-    duration:
-      Number(
-        row.duration ||
-        60
-      ),
-
-    pax:
-      row.pax ??
-      "",
-
-    status:
-      row.status ||
-      "",
-
-    remarks:
-      row.remarks ||
-      "",
-
-    sessionNumber:
-      row.session_number ??
-      null,
-
-    totalSessions:
-      row.total_sessions ??
-      1,
-
-    type:
-      row.type ||
-      "Stand-alone"
-
-  };
-
-}
-
-
-/* =========================================================
-   APP OBJECT -> DATABASE
-========================================================= */
-
-function mapProgrammeToDatabase(
-  event
-) {
-
-  return {
-
-    id:
-      event.id,
-
-    series_id:
-      event.seriesId,
-
-    programme:
-      event.programme,
-
-    venue:
-      event.venue,
-
-    date:
-      event.date,
-
-    time:
-      event.time,
-
-    duration:
-      Number(
-        event.duration
-      ),
-
-    pax:
-      event.pax === "" ||
-      event.pax == null
-
-        ? null
-
-        : Number(
-            event.pax
-          ),
-
-    status:
-      event.status ||
-      null,
-
-    remarks:
-      event.remarks ||
-      null,
-
-    session_number:
-      event.sessionNumber ??
-      null,
-
-    total_sessions:
-      event.totalSessions ??
-      1,
-
-    type:
-      event.type ||
-      null
-
-  };
-
-}
-
-
-/* =========================================================
-   REFRESH PROGRAMMES
-========================================================= */
-
 async function refreshProgrammesFromSupabase() {
 
   events =
@@ -720,153 +1148,52 @@ async function refreshProgrammesFromSupabase() {
 
 
 /* =========================================================
-   INITIALISE
-========================================================= */
-
-function initialise() {
-
-  if (
-    startDateInput &&
-    !startDateInput.value
-  ) {
-
-    startDateInput.value =
-      formatInputDate(
-        new Date()
-      );
-
-  }
-
-
-  if (
-    venueSelect
-  ) {
-
-    venueSelect.value =
-      currentVenue;
-
-  }
-
-
-  if (
-    calendarViewSelect
-  ) {
-
-    calendarViewSelect.value =
-      activeCalendarView;
-
-  }
-
-
-  renderCalendar();
-
-}
-
-
-/* =========================================================
-   VENUE SWITCHING
-========================================================= */
-
-function switchVenue(
-  venue
-) {
-
-  currentVenue =
-    venue;
-
-
-  if (
-    venueSelect
-  ) {
-
-    venueSelect.value =
-      venue;
-
-  }
-
-
-  if (
-    hbbSheetTab
-  ) {
-
-    hbbSheetTab.classList.toggle(
-      "active",
-      venue === "HBB"
-    );
-
-  }
-
-
-  if (
-    othSheetTab
-  ) {
-
-    othSheetTab.classList.toggle(
-      "active",
-      venue === "OTH"
-    );
-
-  }
-
-
-  if (
-    currentVenueLabel
-  ) {
-
-    currentVenueLabel.textContent =
-      venue;
-
-  }
-
-
-  renderCalendar();
-
-}
-
-
-/* =========================================================
    CALENDAR VIEW
 ========================================================= */
 
-function changeCalendarView() {
+function getDayEvents(
+  date
+) {
 
-  activeCalendarView =
-    calendarViewSelect
-      ? calendarViewSelect.value
-      : "month";
+  return events
+    .filter(
+      function (
+        event
+      ) {
 
+        return (
+          event.date ===
+            date
 
-  if (
-    activeCalendarView ===
-    "week"
-  ) {
+          &&
 
-    currentDate =
-      startOfWeek(
-        currentDate
-      );
+          event.venue ===
+            currentVenue
+        );
 
-  }
+      }
+    )
+    .sort(
+      function (
+        a,
+        b
+      ) {
 
+        return a.time.localeCompare(
+          b.time
+        );
 
-  renderCalendar();
+      }
+    );
 
 }
 
-
-/* =========================================================
-   MASTER CALENDAR RENDER
-========================================================= */
 
 function renderCalendar() {
 
   if (
     !calendarGrid
   ) {
-
-    console.error(
-      "calendarGrid was not found."
-    );
 
     return;
 
@@ -1139,6 +1466,19 @@ function renderMonthView() {
       );
 
 
+    /*
+      IMPORTANT:
+      Staff/manpower is added BEFORE programmes.
+    */
+
+    cell.appendChild(
+      createManpowerSection(
+        currentVenue,
+        dateString
+      )
+    );
+
+
     getDayEvents(
       dateString
     ).forEach(
@@ -1156,118 +1496,11 @@ function renderMonthView() {
     );
 
 
-    cell.appendChild(
-      createManpowerButton(
-        currentVenue,
-        dateString
-      )
-    );
-
-
     calendarGrid.appendChild(
       cell
     );
 
   }
-
-}
-
-
-/* =========================================================
-   DATE LABEL
-========================================================= */
-
-function getViewDateLabel() {
-
-  if (
-    activeCalendarView ===
-    "day"
-  ) {
-
-    return currentDate.toLocaleDateString(
-      "en-SG",
-      {
-        weekday:
-          "long",
-
-        day:
-          "numeric",
-
-        month:
-          "long",
-
-        year:
-          "numeric"
-      }
-    );
-
-  }
-
-
-  if (
-    activeCalendarView ===
-    "week"
-  ) {
-
-    const start =
-      startOfWeek(
-        currentDate
-      );
-
-
-    const end =
-      addDays(
-        start,
-        6
-      );
-
-
-    const startText =
-      start.toLocaleDateString(
-        "en-SG",
-        {
-          day:
-            "numeric",
-
-          month:
-            "short"
-        }
-      );
-
-
-    const endText =
-      end.toLocaleDateString(
-        "en-SG",
-        {
-          day:
-            "numeric",
-
-          month:
-            "short",
-
-          year:
-            "numeric"
-        }
-      );
-
-
-    return (
-      `${startText} - ${endText}`
-    );
-
-  }
-
-
-  return currentDate.toLocaleDateString(
-    "en-SG",
-    {
-      month:
-        "long",
-
-      year:
-        "numeric"
-    }
-  );
 
 }
 
@@ -1348,130 +1581,149 @@ function renderWeekView() {
    DAY VIEW
 ========================================================= */
 
-function renderDayColumn(
-  date
-) {
+function renderDayView() {
 
-  const column =
-    document.createElement(
-      "div"
-    );
+  calendarGrid.className =
+    "calendar-grid day-view";
 
 
-  column.className =
-    "week-column";
+  calendarGrid.innerHTML =
+    "";
 
 
   if (
-    isSameDay(
-      date,
-      new Date()
-    )
+    monthTitle
   ) {
 
-    column.classList.add(
-      "today-column"
-    );
+    monthTitle.textContent =
+      getViewDateLabel();
 
   }
 
 
-  const dateString =
-    formatInputDate(
-      date
-    );
-
-
-  /* -----------------------------------------
-     MANPOWER FIRST
-  ----------------------------------------- */
-
-  column.appendChild(
-    createManpowerButton(
-      currentVenue,
-      dateString
-    )
+  renderFlexibleHeader(
+    [
+      currentDate
+    ]
   );
 
 
-  /* -----------------------------------------
-     PROGRAMMES SECOND
-  ----------------------------------------- */
-
-  const dayEvents =
-    getDayEvents(
-      dateString
+  const dayColumn =
+    renderDayColumn(
+      currentDate
     );
 
 
-  if (
-    dayEvents.length === 0
-  ) {
-
-    const empty =
-      document.createElement(
-        "div"
-      );
-
-
-    empty.className =
-      "view-empty";
-
-
-    empty.textContent =
-      "No programmes";
-
-
-    column.appendChild(
-      empty
-    );
-
-  }
-
-
-  dayEvents.forEach(
-    function (
-      event
-    ) {
-
-      const element =
-        createEventElement(
-          event
-        );
-
-
-      if (
-        activeCalendarView ===
-        "day"
-      ) {
-
-        element.classList.add(
-          "day-view-event"
-        );
-
-      } else {
-
-        element.classList.add(
-          "week-view-event"
-        );
-
-      }
-
-
-      column.appendChild(
-        element
-      );
-
-    }
+  calendarGrid.appendChild(
+    dayColumn
   );
-
-
-  return column;
 
 }
 
+
 /* =========================================================
-   WEEK / DAY HEADER
+   VIEW DATE LABEL
+========================================================= */
+
+function getViewDateLabel() {
+
+  if (
+    activeCalendarView ===
+    "day"
+  ) {
+
+    return currentDate
+      .toLocaleDateString(
+        "en-SG",
+        {
+          weekday:
+            "long",
+
+          day:
+            "numeric",
+
+          month:
+            "long",
+
+          year:
+            "numeric"
+        }
+      );
+
+  }
+
+
+  if (
+    activeCalendarView ===
+    "week"
+  ) {
+
+    const start =
+      startOfWeek(
+        currentDate
+      );
+
+
+    const end =
+      addDays(
+        start,
+        6
+      );
+
+
+    const startText =
+      start.toLocaleDateString(
+        "en-SG",
+        {
+          day:
+            "numeric",
+
+          month:
+            "short"
+        }
+      );
+
+
+    const endText =
+      end.toLocaleDateString(
+        "en-SG",
+        {
+          day:
+            "numeric",
+
+          month:
+            "short",
+
+          year:
+            "numeric"
+        }
+      );
+
+
+    return (
+      `${startText} - ${endText}`
+    );
+
+  }
+
+
+  return currentDate
+    .toLocaleDateString(
+      "en-SG",
+      {
+        month:
+          "long",
+
+        year:
+          "numeric"
+      }
+    );
+
+}
+
+
+/* =========================================================
+   FLEXIBLE HEADER
 ========================================================= */
 
 function renderFlexibleHeader(
@@ -1636,6 +1888,19 @@ function renderDayColumn(
     );
 
 
+  /*
+    IMPORTANT:
+    Manpower is always inserted BEFORE programmes.
+  */
+
+  column.appendChild(
+    createManpowerSection(
+      currentVenue,
+      dateString
+    )
+  );
+
+
   const dayEvents =
     getDayEvents(
       dateString
@@ -1673,35 +1938,13 @@ function renderDayColumn(
       event
     ) {
 
-      const element =
+      column.appendChild(
         createEventElement(
           event
-        );
-
-
-      element.classList.add(
-        activeCalendarView ===
-        "day"
-
-          ? "day-view-event"
-
-          : "week-view-event"
-      );
-
-
-      column.appendChild(
-        element
+        )
       );
 
     }
-  );
-
-
-  column.appendChild(
-    createManpowerButton(
-      currentVenue,
-      dateString
-    )
   );
 
 
@@ -1711,41 +1954,8 @@ function renderDayColumn(
 
 
 /* =========================================================
-   EVENTS
+   EVENT ELEMENT
 ========================================================= */
-
-function getDayEvents(
-  date
-) {
-
-  return events
-    .filter(
-      function (
-        event
-      ) {
-
-        return (
-          event.date === date &&
-          event.venue === currentVenue
-        );
-
-      }
-    )
-    .sort(
-      function (
-        a,
-        b
-      ) {
-
-        return a.time.localeCompare(
-          b.time
-        );
-
-      }
-    );
-
-}
-
 
 function createEventElement(
   event
@@ -1769,8 +1979,7 @@ function createEventElement(
 
 
   const sessionText =
-    event.totalSessions >
-    1
+    event.totalSessions > 1
 
       ? `W${event.sessionNumber} of ${event.totalSessions}`
 
@@ -1853,7 +2062,7 @@ function createEventElement(
 
 
 /* =========================================================
-   MANPOWER DATA
+   MANPOWER STORAGE
 ========================================================= */
 
 function manpowerKey(
@@ -1894,7 +2103,12 @@ function getManpower(
 
 }
 
-function createManpowerButton(
+
+/* =========================================================
+   MANPOWER DISPLAY
+========================================================= */
+
+function createManpowerSection(
   venue,
   date
 ) {
@@ -1917,29 +2131,30 @@ function createManpowerButton(
 
 
   /*
-    STAFF NAMES FIRST
+    STAFF ON DUTY
   */
 
   if (
+    record.staff &&
     record.staff.length > 0
   ) {
 
-    const staffHeading =
+    const heading =
       document.createElement(
         "div"
       );
 
 
-    staffHeading.className =
+    heading.className =
       "calendar-staff-heading";
 
 
-    staffHeading.textContent =
+    heading.textContent =
       "Staff on duty";
 
 
     container.appendChild(
-      staffHeading
+      heading
     );
 
 
@@ -1988,7 +2203,7 @@ function createManpowerButton(
 
 
   /*
-    MANPOWER BUTTON AFTER STAFF NAMES
+    MANPOWER BUTTON
   */
 
   const button =
@@ -2006,7 +2221,9 @@ function createManpowerButton(
 
 
   const present =
-    record.staff.length;
+    record.staff
+      ? record.staff.length
+      : 0;
 
 
   const required =
@@ -2071,7 +2288,6 @@ function createManpowerButton(
   return container;
 
 }
-
 
 
 /* =========================================================
@@ -2183,15 +2399,16 @@ function setupProgrammeForm() {
           customDuration.disabled =
             !custom;
 
+        }
 
-          if (
-            !custom
-          ) {
 
-            customDuration.value =
-              "";
+        if (
+          !custom &&
+          customDuration
+        ) {
 
-          }
+          customDuration.value =
+            "";
 
         }
 
@@ -2209,10 +2426,17 @@ function setupProgrammeForm() {
 
 async function addProgramme() {
 
+  if (
+    !programmeSelect
+  ) {
+
+    return;
+
+  }
+
+
   const selected =
-    programmeSelect
-      ? programmeSelect.value
-      : "";
+    programmeSelect.value;
 
 
   if (
@@ -2315,12 +2539,12 @@ async function addProgramme() {
   }
 
 
-  let customValue =
+  let durationValue =
     "60";
 
 
   if (
-    programmeName ===
+    selected ===
     "Others"
   ) {
 
@@ -2330,14 +2554,14 @@ async function addProgramme() {
       "custom"
     ) {
 
-      customValue =
+      durationValue =
         customDuration
           ? customDuration.value
           : "";
 
     } else {
 
-      customValue =
+      durationValue =
         durationPreset
           ? durationPreset.value
           : "60";
@@ -2350,7 +2574,7 @@ async function addProgramme() {
   const duration =
     getProgrammeDuration(
       programmeName,
-      customValue
+      durationValue
     );
 
 
@@ -2482,7 +2706,7 @@ async function addProgramme() {
 
 
   console.log(
-    "Saving programme to Supabase:",
+    "Saving programme:",
     rows
   );
 
@@ -2564,13 +2788,31 @@ async function addProgramme() {
   }
 
 
-  switchVenue(
-    venue
-  );
+  currentVenue =
+    venue;
+
+
+  if (
+    venueSelect
+  ) {
+
+    venueSelect.value =
+      venue;
+
+  }
+
+
+  if (
+    currentVenueLabel
+  ) {
+
+    currentVenueLabel.textContent =
+      venue;
+
+  }
 
 
   resetProgrammeForm();
-
 
   renderCalendar();
 
@@ -2812,7 +3054,8 @@ function openEventModal(
 
   setText(
     "modalStatus",
-    event.status || ""
+    event.status ||
+    ""
   );
 
 
@@ -2856,7 +3099,7 @@ function closeEventModal() {
 
 
 /* =========================================================
-   EDIT PROGRAMME
+   OPEN EDIT MODAL
 ========================================================= */
 
 function openEditModal() {
@@ -3003,12 +3246,13 @@ function openEditModal() {
   }
 
 
-  const parts =
+  const timeParts =
     String(
       first.time ||
       "09:00"
-    )
-    .split(":");
+    ).split(
+      ":"
+    );
 
 
   if (
@@ -3016,7 +3260,7 @@ function openEditModal() {
   ) {
 
     editStartHour.value =
-      parts[0] ||
+      timeParts[0] ||
       "09";
 
   }
@@ -3027,7 +3271,7 @@ function openEditModal() {
   ) {
 
     editStartMinute.value =
-      parts[1] ===
+      timeParts[1] ===
       "30"
 
         ? "30"
@@ -3045,7 +3289,7 @@ function openEditModal() {
       String(
         first.time ||
         "09:00"
-      ).slice(
+      ).substring(
         0,
         5
       );
@@ -3098,15 +3342,7 @@ function openEditModal() {
   }
 
 
-  if (
-    eventModal
-  ) {
-
-    eventModal.classList.remove(
-      "visible"
-    );
-
-  }
+  closeEventModal();
 
 
   if (
@@ -3123,7 +3359,7 @@ function openEditModal() {
 
 
 /* =========================================================
-   SAVE EDITED PROGRAMME
+   SAVE EDIT
 ========================================================= */
 
 async function saveEdit() {
@@ -3205,24 +3441,12 @@ async function saveEdit() {
   }
 
 
-  let customDurationValue =
-    "60";
-
-
-  if (
-    editDuration
-  ) {
-
-    customDurationValue =
-      editDuration.value;
-
-  }
-
-
   const duration =
     getProgrammeDuration(
       programmeName,
-      customDurationValue
+      editDuration
+        ? editDuration.value
+        : "60"
     );
 
 
@@ -3235,6 +3459,20 @@ async function saveEdit() {
 
     alert(
       "Please enter a valid duration."
+    );
+
+    return;
+
+  }
+
+
+  if (
+    !editStartDate ||
+    !editStartDate.value
+  ) {
+
+    alert(
+      "Please select a date."
     );
 
     return;
@@ -3274,18 +3512,10 @@ async function saveEdit() {
   }
 
 
-  if (
-    !editStartDate ||
-    !editStartDate.value
-  ) {
-
-    alert(
-      "Please select a date."
-    );
-
-    return;
-
-  }
+  const newVenue =
+    editVenue
+      ? editVenue.value
+      : currentVenue;
 
 
   const totalSessions =
@@ -3328,9 +3558,7 @@ async function saveEdit() {
         programmeName,
 
       venue:
-        editVenue
-          ? editVenue.value
-          : currentVenue,
+        newVenue,
 
       date:
         formatInputDate(
@@ -3390,7 +3618,7 @@ async function saveEdit() {
 
 
   /*
-    Delete the old series first.
+    Delete original series.
   */
 
   const {
@@ -3428,7 +3656,7 @@ async function saveEdit() {
 
 
   /*
-    Insert the edited series.
+    Insert edited series.
   */
 
   const {
@@ -3457,11 +3685,6 @@ async function saveEdit() {
     );
 
 
-    /*
-      Reload the database so the app reflects
-      what is actually stored.
-    */
-
     await refreshProgrammesFromSupabase();
 
 
@@ -3475,7 +3698,7 @@ async function saveEdit() {
 
 
   /*
-    Replace local data.
+    Update local events.
   */
 
   events =
@@ -3541,19 +3764,31 @@ async function saveEdit() {
   }
 
 
-  const newVenue =
-    editVenue
-      ? editVenue.value
-      : currentVenue;
+  currentVenue =
+    newVenue;
+
+
+  if (
+    venueSelect
+  ) {
+
+    venueSelect.value =
+      newVenue;
+
+  }
+
+
+  if (
+    currentVenueLabel
+  ) {
+
+    currentVenueLabel.textContent =
+      newVenue;
+
+  }
 
 
   closeEditModal();
-
-
-  switchVenue(
-    newVenue
-  );
-
 
   renderCalendar();
 
@@ -3564,6 +3799,10 @@ async function saveEdit() {
 
 }
 
+
+/* =========================================================
+   CLOSE EDIT MODAL
+========================================================= */
 
 function closeEditModal() {
 
@@ -3629,7 +3868,7 @@ async function deleteSelected() {
     ) > 1;
 
 
-  const message =
+  const confirmation =
     wholeSeries
 
       ? "Delete the entire programme series?"
@@ -3639,7 +3878,7 @@ async function deleteSelected() {
 
   if (
     !confirm(
-      message
+      confirmation
     )
   ) {
 
@@ -3754,7 +3993,6 @@ async function deleteSelected() {
 
   closeEventModal();
 
-
   renderCalendar();
 
 
@@ -3769,115 +4007,14 @@ async function deleteSelected() {
    MANPOWER
 ========================================================= */
 
-function openManpowerModal(
-  venue,
-  date
-) {
-
-  manpowerDate =
-    date;
-
-
-  const record =
-    getManpower(
-      venue,
-      date
-    );
-
-
-  const venueDisplay =
-    $("manpowerVenue");
-
-
-  if (
-    venueDisplay
-  ) {
-
-    venueDisplay.textContent =
-      venue;
-
-  }
-
-
-  const dateDisplay =
-    $("manpowerDate");
-
-
-  if (
-    dateDisplay
-  ) {
-
-    dateDisplay.textContent =
-      formatDisplayDate(
-        date
-      );
-
-  }
-
-
-  const requiredInput =
-    $("requiredManpower");
-
-
-  if (
-    requiredInput
-  ) {
-
-    requiredInput.value =
-      REQUIRED_MANPOWER;
-
-
-    requiredInput.disabled =
-      true;
-
-  }
-
-
-  const notesInput =
-    $("manpowerNotes");
-
-
-  if (
-    notesInput
-  ) {
-
-    notesInput.value =
-      record.notes ||
-      "";
-
-  }
-
-
-  renderStaffChecklist(
-    record.staff
-  );
-
-
-  updateStaffCount();
-
-
-  updateStaffStatus();
-
-
-  if (
-    manpowerModal
-  ) {
-
-    manpowerModal.classList.add(
-      "visible"
-    );
-
-  }
-
-}
-
-
 function renderStaffChecklist(
   selected
 ) {
 
   const container =
-    $("staffList");
+    document.getElementById(
+      "staffList"
+    );
 
 
   if (
@@ -3992,15 +4129,15 @@ function selectedStaff() {
 
 function updateStaffCount() {
 
-  const present =
+  const count =
     $("presentCount");
 
 
   if (
-    present
+    count
   ) {
 
-    present.textContent =
+    count.textContent =
       selectedStaff().length;
 
   }
@@ -4036,8 +4173,7 @@ function updateStaffStatus() {
 
 
   if (
-    present >=
-    required
+    present >= required
   ) {
 
     status.classList.add(
@@ -4066,6 +4202,108 @@ function updateStaffStatus() {
 }
 
 
+function openManpowerModal(
+  venue,
+  date
+) {
+
+  manpowerDate =
+    date;
+
+
+  const record =
+    getManpower(
+      venue,
+      date
+    );
+
+
+  const venueDisplay =
+    $("manpowerVenue");
+
+
+  if (
+    venueDisplay
+  ) {
+
+    venueDisplay.textContent =
+      venue;
+
+  }
+
+
+  const dateDisplay =
+    $("manpowerDate");
+
+
+  if (
+    dateDisplay
+  ) {
+
+    dateDisplay.textContent =
+      formatDisplayDate(
+        date
+      );
+
+  }
+
+
+  const requiredInput =
+    $("requiredManpower");
+
+
+  if (
+    requiredInput
+  ) {
+
+    requiredInput.value =
+      REQUIRED_MANPOWER;
+
+    requiredInput.disabled =
+      true;
+
+  }
+
+
+  const notesInput =
+    $("manpowerNotes");
+
+
+  if (
+    notesInput
+  ) {
+
+    notesInput.value =
+      record.notes ||
+      "";
+
+  }
+
+
+  renderStaffChecklist(
+    record.staff ||
+    []
+  );
+
+
+  updateStaffCount();
+
+  updateStaffStatus();
+
+
+  if (
+    manpowerModal
+  ) {
+
+    manpowerModal.classList.add(
+      "visible"
+    );
+
+  }
+
+}
+
+
 async function saveManpower() {
 
   if (
@@ -4077,12 +4315,12 @@ async function saveManpower() {
   }
 
 
-  const notesInput =
-    $("manpowerNotes");
-
-
   const staff =
     selectedStaff();
+
+
+  const notesInput =
+    $("manpowerNotes");
 
 
   const notes =
@@ -4091,24 +4329,8 @@ async function saveManpower() {
       : "";
 
 
-  const record = {
-
-    venue:
-      currentVenue,
-
-    date:
-      manpowerDate,
-
-    staff:
-      staff,
-
-    required:
-      REQUIRED_MANPOWER,
-
-    notes:
-      notes
-
-  };
+  const required =
+    REQUIRED_MANPOWER;
 
 
   manpower[
@@ -4122,7 +4344,7 @@ async function saveManpower() {
       staff,
 
     required:
-      REQUIRED_MANPOWER,
+      required,
 
     notes:
       notes
@@ -4151,7 +4373,24 @@ async function saveManpower() {
         "manpower"
       )
       .upsert(
-        record,
+        {
+
+          venue:
+            currentVenue,
+
+          date:
+            manpowerDate,
+
+          staff:
+            staff,
+
+          required:
+            required,
+
+          notes:
+            notes
+
+        },
         {
           onConflict:
             "venue,date"
@@ -4180,108 +4419,7 @@ async function saveManpower() {
 
   closeManpowerModal();
 
-
   renderCalendar();
-
-
-  alert(
-    "Manpower saved successfully."
-  );
-
-}
-
-
-function loadManpowerFromSupabase() {
-
-  if (
-    !supabaseClient
-  ) {
-
-    return;
-
-  }
-
-
-  supabaseClient
-    .from(
-      "manpower"
-    )
-    .select("*")
-    .then(
-      function (
-        result
-      ) {
-
-        const data =
-          result.data;
-
-
-        const error =
-          result.error;
-
-
-        if (
-          error
-        ) {
-
-          console.error(
-            "Unable to load manpower:",
-            error
-          );
-
-          return;
-
-        }
-
-
-        manpower =
-          {};
-
-
-        (
-          data ||
-          []
-        ).forEach(
-          function (
-            row
-          ) {
-
-            manpower[
-              manpowerKey(
-                row.venue,
-                String(
-                  row.date
-                ).slice(
-                  0,
-                  10
-                )
-              )
-            ] = {
-
-              staff:
-                Array.isArray(
-                  row.staff
-                )
-                  ? row.staff
-                  : [],
-
-              required:
-                REQUIRED_MANPOWER,
-
-              notes:
-                row.notes ||
-                ""
-
-            };
-
-          }
-        );
-
-
-        renderCalendar();
-
-      }
-    );
 
 }
 
@@ -4305,8 +4443,393 @@ function closeManpowerModal() {
 }
 
 
+async function loadManpowerFromSupabase() {
+
+  if (
+    !supabaseClient
+  ) {
+
+    return;
+
+  }
+
+
+  const {
+    data,
+    error
+  } =
+    await supabaseClient
+      .from(
+        "manpower"
+      )
+      .select("*");
+
+
+  if (
+    error
+  ) {
+
+    console.warn(
+      "Unable to load manpower:",
+      error
+    );
+
+    return;
+
+  }
+
+
+  manpower =
+    {};
+
+
+  (
+    data ||
+    []
+  ).forEach(
+    function (
+      row
+    ) {
+
+      const date =
+        String(
+          row.date ||
+          ""
+        ).substring(
+          0,
+          10
+        );
+
+
+      manpower[
+        manpowerKey(
+          row.venue,
+          date
+        )
+      ] = {
+
+        staff:
+          Array.isArray(
+            row.staff
+          )
+
+            ? row.staff
+
+            : [],
+
+        required:
+          REQUIRED_MANPOWER,
+
+        notes:
+          row.notes ||
+          ""
+
+      };
+
+    }
+  );
+
+
+  renderCalendar();
+
+}
+
+
 /* =========================================================
-   BUTTON SETUP
+   VENUE SWITCHING
+========================================================= */
+
+function switchVenue(
+  venue
+) {
+
+  currentVenue =
+    venue;
+
+
+  if (
+    venueSelect
+  ) {
+
+    venueSelect.value =
+      venue;
+
+  }
+
+
+  if (
+    hbbSheetTab
+  ) {
+
+    hbbSheetTab.classList.toggle(
+      "active",
+      venue ===
+      "HBB"
+    );
+
+  }
+
+
+  if (
+    othSheetTab
+  ) {
+
+    othSheetTab.classList.toggle(
+      "active",
+      venue ===
+      "OTH"
+    );
+
+  }
+
+
+  if (
+    currentVenueLabel
+  ) {
+
+    currentVenueLabel.textContent =
+      venue;
+
+  }
+
+
+  renderCalendar();
+
+}
+
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
+function goPrevious() {
+
+  if (
+    activeCalendarView ===
+    "day"
+  ) {
+
+    currentDate =
+      addDays(
+        currentDate,
+        -1
+      );
+
+  } else if (
+    activeCalendarView ===
+    "week"
+  ) {
+
+    currentDate =
+      addDays(
+        startOfWeek(
+          currentDate
+        ),
+        -7
+      );
+
+  } else {
+
+    currentDate =
+      new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth() -
+          1,
+        1
+      );
+
+  }
+
+
+  renderCalendar();
+
+}
+
+
+function goNext() {
+
+  if (
+    activeCalendarView ===
+    "day"
+  ) {
+
+    currentDate =
+      addDays(
+        currentDate,
+        1
+      );
+
+  } else if (
+    activeCalendarView ===
+    "week"
+  ) {
+
+    currentDate =
+      addDays(
+        startOfWeek(
+          currentDate
+        ),
+        7
+      );
+
+  } else {
+
+    currentDate =
+      new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth() +
+          1,
+        1
+      );
+
+  }
+
+
+  renderCalendar();
+
+}
+
+
+function goToday() {
+
+  currentDate =
+    new Date();
+
+
+  if (
+    activeCalendarView ===
+    "month"
+  ) {
+
+    currentDate =
+      new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        1
+      );
+
+  }
+
+
+  if (
+    activeCalendarView ===
+    "week"
+  ) {
+
+    currentDate =
+      startOfWeek(
+        currentDate
+      );
+
+  }
+
+
+  renderCalendar();
+
+}
+
+
+/* =========================================================
+   CLEAR ALL
+========================================================= */
+
+async function clearAllData() {
+
+  if (
+    !confirm(
+      "Delete all programmes and manpower?"
+    )
+  ) {
+
+    return;
+
+  }
+
+
+  if (
+    !supabaseClient
+  ) {
+
+    alert(
+      "Supabase is not connected."
+    );
+
+    return;
+
+  }
+
+
+  const {
+    error:
+      programmeError
+  } =
+    await supabaseClient
+      .from(
+        "programmes"
+      )
+      .delete()
+      .neq(
+        "id",
+        "__never__"
+      );
+
+
+  if (
+    programmeError
+  ) {
+
+    alert(
+      `Unable to clear programmes: ${programmeError.message}`
+    );
+
+    return;
+
+  }
+
+
+  const {
+    error:
+      manpowerError
+  } =
+    await supabaseClient
+      .from(
+        "manpower"
+      )
+      .delete()
+      .neq(
+        "venue",
+        "__never__"
+      );
+
+
+  if (
+    manpowerError
+  ) {
+
+    alert(
+      `Unable to clear manpower: ${manpowerError.message}`
+    );
+
+    return;
+
+  }
+
+
+  events =
+    [];
+
+
+  manpower =
+    {};
+
+
+  renderCalendar();
+
+}
+
+
+/* =========================================================
+   BUTTON INITIALISATION
 ========================================================= */
 
 function setupButtons() {
@@ -4359,6 +4882,22 @@ function setupButtons() {
   }
 
 
+  const cancelEditButton =
+    $("cancelEditButton");
+
+
+  if (
+    cancelEditButton
+  ) {
+
+    cancelEditButton.addEventListener(
+      "click",
+      closeEditModal
+    );
+
+  }
+
+
   const deleteButton =
     $("deleteButton");
 
@@ -4386,22 +4925,6 @@ function setupButtons() {
     closeButton.addEventListener(
       "click",
       closeEventModal
-    );
-
-  }
-
-
-  const cancelEditButton =
-    $("cancelEditButton");
-
-
-  if (
-    cancelEditButton
-  ) {
-
-    cancelEditButton.addEventListener(
-      "click",
-      closeEditModal
     );
 
   }
@@ -4515,23 +5038,6 @@ function setupButtons() {
   }
 
 
-  const requiredManpowerInput =
-    $("requiredManpower");
-
-
-  if (
-    requiredManpowerInput
-  ) {
-
-    requiredManpowerInput.value =
-      REQUIRED_MANPOWER;
-
-    requiredManpowerInput.disabled =
-      true;
-
-  }
-
-
   const previousButton =
     $("previousButton");
 
@@ -4542,48 +5048,7 @@ function setupButtons() {
 
     previousButton.addEventListener(
       "click",
-      function () {
-
-        if (
-          activeCalendarView ===
-          "day"
-        ) {
-
-          currentDate =
-            addDays(
-              currentDate,
-              -1
-            );
-
-        } else if (
-          activeCalendarView ===
-          "week"
-        ) {
-
-          currentDate =
-            addDays(
-              startOfWeek(
-                currentDate
-              ),
-              -7
-            );
-
-        } else {
-
-          currentDate =
-            new Date(
-              currentDate.getFullYear(),
-              currentDate.getMonth() -
-                1,
-              1
-            );
-
-        }
-
-
-        renderCalendar();
-
-      }
+      goPrevious
     );
 
   }
@@ -4599,48 +5064,7 @@ function setupButtons() {
 
     nextButton.addEventListener(
       "click",
-      function () {
-
-        if (
-          activeCalendarView ===
-          "day"
-        ) {
-
-          currentDate =
-            addDays(
-              currentDate,
-              1
-            );
-
-        } else if (
-          activeCalendarView ===
-          "week"
-        ) {
-
-          currentDate =
-            addDays(
-              startOfWeek(
-                currentDate
-              ),
-              7
-            );
-
-        } else {
-
-          currentDate =
-            new Date(
-              currentDate.getFullYear(),
-              currentDate.getMonth() +
-                1,
-              1
-            );
-
-        }
-
-
-        renderCalendar();
-
-      }
+      goNext
     );
 
   }
@@ -4656,43 +5080,7 @@ function setupButtons() {
 
     todayButton.addEventListener(
       "click",
-      function () {
-
-        currentDate =
-          new Date();
-
-
-        if (
-          activeCalendarView ===
-          "month"
-        ) {
-
-          currentDate =
-            new Date(
-              currentDate.getFullYear(),
-              currentDate.getMonth(),
-              1
-            );
-
-        }
-
-
-        if (
-          activeCalendarView ===
-          "week"
-        ) {
-
-          currentDate =
-            startOfWeek(
-              currentDate
-            );
-
-        }
-
-
-        renderCalendar();
-
-      }
+      goToday
     );
 
   }
@@ -4722,7 +5110,6 @@ function setupButtons() {
       "change",
       changeCalendarView
     );
-
 
     calendarViewSelect.addEventListener(
       "input",
@@ -4771,516 +5158,95 @@ function setupButtons() {
 
 
 /* =========================================================
-   CLEAR ALL DATA
+   CALENDAR VIEW CHANGE
 ========================================================= */
 
-async function clearAllData() {
+function changeCalendarView() {
 
   if (
-    !confirm(
-      "Delete all programmes and manpower?"
-    )
+    calendarViewSelect
   ) {
 
-    return;
+    activeCalendarView =
+      calendarViewSelect.value;
 
   }
 
 
   if (
-    !supabaseClient
+    activeCalendarView ===
+    "week"
   ) {
 
-    alert(
-      "Supabase is not connected."
-    );
-
-    return;
-
-  }
-
-
-  const {
-    error:
-      programmeError
-  } =
-    await supabaseClient
-      .from(
-        "programmes"
-      )
-      .delete()
-      .neq(
-        "id",
-        "__never__"
+    currentDate =
+      startOfWeek(
+        currentDate
       );
 
-
-  if (
-    programmeError
-  ) {
-
-    alert(
-      `Unable to clear programmes: ${programmeError.message}`
-    );
-
-    return;
-
   }
-
-
-  const {
-    error:
-      manpowerError
-  } =
-    await supabaseClient
-      .from(
-        "manpower"
-      )
-      .delete()
-      .neq(
-        "venue",
-        "__never__"
-      );
-
-
-  if (
-    manpowerError
-  ) {
-
-    alert(
-      `Unable to clear manpower: ${manpowerError.message}`
-    );
-
-    return;
-
-  }
-
-
-  events =
-    [];
-
-
-  manpower =
-    {};
 
 
   renderCalendar();
 
-
-  alert(
-    "All data cleared."
-  );
-
 }
 
 
 /* =========================================================
-   UTILITY FUNCTIONS
+   INITIALISE
 ========================================================= */
 
-function getPax(
-  programme
-) {
-
-  return Object.prototype
-    .hasOwnProperty.call(
-      PAX,
-      programme
-    )
-
-      ? PAX[
-          programme
-        ]
-
-      : "";
-
-}
-
-
-function isKnownProgramme(
-  programme
-) {
-
-  return Object.prototype
-    .hasOwnProperty.call(
-      PAX,
-      programme
-    );
-
-}
-
-
-function parseInputDate(
-  value
-) {
-
-  const [
-    year,
-    month,
-    day
-  ] =
-    String(
-      value
-    )
-    .slice(
-      0,
-      10
-    )
-    .split(
-      "-"
-    )
-    .map(
-      Number
-    );
-
-
-  return new Date(
-    year,
-    month - 1,
-    day
-  );
-
-}
-
-
-function formatInputDate(
-  date
-) {
-
-  return (
-    `${date.getFullYear()}-` +
-    `${String(
-      date.getMonth() + 1
-    ).padStart(
-      2,
-      "0"
-    )}-` +
-    `${String(
-      date.getDate()
-    ).padStart(
-      2,
-      "0"
-    )}`
-  );
-
-}
-
-
-function addDays(
-  date,
-  days
-) {
-
-  const result =
-    new Date(
-      date
-    );
-
-
-  result.setDate(
-    result.getDate() +
-    days
-  );
-
-
-  return result;
-
-}
-
-
-function startOfWeek(
-  date
-) {
-
-  const result =
-    new Date(
-      date
-    );
-
-
-  result.setHours(
-    0,
-    0,
-    0,
-    0
-  );
-
-
-  result.setDate(
-    result.getDate() -
-    result.getDay()
-  );
-
-
-  return result;
-
-}
-
-
-function isSameDay(
-  a,
-  b
-) {
-
-  return (
-
-    a.getFullYear() ===
-      b.getFullYear()
-
-    &&
-
-    a.getMonth() ===
-      b.getMonth()
-
-    &&
-
-    a.getDate() ===
-      b.getDate()
-
-  );
-
-}
-
-
-function addMinutesToTime(
-  time,
-  minutes
-) {
-
-  const [
-    hours,
-    mins
-  ] =
-    String(
-      time
-    )
-    .split(
-      ":"
-    )
-    .map(
-      Number
-    );
-
-
-  const total =
-    hours * 60 +
-    mins +
-    Number(
-      minutes
-    );
-
-
-  const newHours =
-    Math.floor(
-      total / 60
-    ) % 24;
-
-
-  const newMinutes =
-    total % 60;
-
-
-  return (
-    `${String(
-      newHours
-    ).padStart(
-      2,
-      "0"
-    )}:` +
-    `${String(
-      newMinutes
-    ).padStart(
-      2,
-      "0"
-    )}`
-  );
-
-}
-
-
-function formatTime(
-  time
-) {
-
-  const [
-    hours,
-    minutes
-  ] =
-    String(
-      time
-    )
-    .split(
-      ":"
-    )
-    .map(
-      Number
-    );
-
-
-  const date =
-    new Date();
-
-
-  date.setHours(
-    hours,
-    minutes,
-    0,
-    0
-  );
-
-
-  return date.toLocaleTimeString(
-    "en-SG",
-    {
-      hour:
-        "numeric",
-
-      minute:
-        "2-digit"
-    }
-  );
-
-}
-
-
-function formatDuration(
-  minutes
-) {
-
-  const total =
-    Number(
-      minutes
-    );
-
+function initialise() {
 
   if (
-    total < 60
+    startDateInput &&
+    !startDateInput.value
   ) {
 
-    return (
-      `${total} min`
-    );
+    startDateInput.value =
+      formatInputDate(
+        new Date()
+      );
 
   }
 
 
-  const hours =
-    Math.floor(
-      total / 60
-    );
-
-
-  const remaining =
-    total % 60;
-
-
   if (
-    remaining === 0
+    venueSelect
   ) {
 
-    return (
-      `${hours} hour${
-        hours === 1
-          ? ""
-          : "s"
-      }`
-    );
+    venueSelect.value =
+      currentVenue;
 
   }
 
 
-  return (
-    `${hours} hr ${remaining} min`
-  );
+  if (
+    currentVenueLabel
+  ) {
 
-}
+    currentVenueLabel.textContent =
+      currentVenue;
 
-
-function formatDisplayDate(
-  dateString
-) {
-
-  return parseInputDate(
-    dateString
-  )
-  .toLocaleDateString(
-    "en-SG",
-    {
-      weekday:
-        "short",
-
-      day:
-        "numeric",
-
-      month:
-        "short",
-
-      year:
-        "numeric"
-    }
-  );
-
-}
+  }
 
 
-function dateTimeValue(
-  event
-) {
+  if (
+    calendarViewSelect
+  ) {
 
-  return new Date(
-    `${event.date}T${event.time}`
-  ).getTime();
+    calendarViewSelect.value =
+      activeCalendarView;
 
-}
-
-
-function makeId(
-  prefix
-) {
-
-  return (
-    `${prefix}_${Date.now()}_` +
-    `${Math.random()
-      .toString(36)
-      .slice(2)}`
-  );
-
-}
+  }
 
 
-function escapeHtml(
-  value
-) {
-
-  return String(
-    value
-  )
-  .replace(
-    /&/g,
-    "&amp;"
-  )
-  .replace(
-    /</g,
-    "&lt;"
-  )
-  .replace(
-    />/g,
-    "&gt;"
-  )
-  .replace(
-    /"/g,
-    "&quot;"
-  )
-  .replace(
-    /'/g,
-    "&#039;"
-  );
+  renderCalendar();
 
 }
 
 
 /* =========================================================
-   START
+   START APPLICATION
 ========================================================= */
 
 setupProgrammeForm();
