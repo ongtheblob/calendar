@@ -2276,24 +2276,34 @@ function openEventModal(
    CLOSE EVENT MODAL
 ========================================================= */
 
+function closeEventModal() {
+
+  if (eventModal) {
+
+    eventModal.classList.remove(
+      "visible"
+    );
+
+  }
+
+  selectedEventId =
+    null;
+
+}
+
+
+/* =========================================================
+   CLOSE BUTTON
+========================================================= */
+
 document
   .getElementById(
     "closeButton"
   )
   .addEventListener(
     "click",
-    function () {
-
-      eventModal.classList.remove(
-        "visible"
-      );
-
-      selectedEventId =
-        null;
-
-    }
+    closeEventModal
   );
-
 
 /* =========================================================
    EDIT
