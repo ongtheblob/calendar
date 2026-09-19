@@ -1808,7 +1808,6 @@ function getManpower(
 
 }
 
-
 function createManpowerButton(
   venue,
   date
@@ -1819,6 +1818,16 @@ function createManpowerButton(
       venue,
       date
     );
+
+
+  const container =
+    document.createElement(
+      "div"
+    );
+
+
+  container.className =
+    "manpower-container";
 
 
   const button =
@@ -1893,7 +1902,65 @@ function createManpowerButton(
   );
 
 
-  return button;
+  container.appendChild(
+    button
+  );
+
+
+  /*
+    Show the names of staff assigned
+    to this particular day.
+  */
+
+  if (
+    record.staff.length > 0
+  ) {
+
+    const staffList =
+      document.createElement(
+        "div"
+      );
+
+
+    staffList.className =
+      "calendar-staff-list";
+
+
+    record.staff.forEach(
+      function (
+        staffName
+      ) {
+
+        const staff =
+          document.createElement(
+            "div"
+          );
+
+
+        staff.className =
+          "calendar-staff-name";
+
+
+        staff.textContent =
+          staffName;
+
+
+        staffList.appendChild(
+          staff
+        );
+
+      }
+    );
+
+
+    container.appendChild(
+      staffList
+    );
+
+  }
+
+
+  return container;
 
 }
 
