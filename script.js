@@ -1809,7 +1809,7 @@ async function addProgramme() {
 
 
 const time =
-  `${startHour.value}:${startMinute.value};
+  `${startHour.value}:${startMinute.value}`;
 
    if (!isValidHalfHourTime(time)) {
 
