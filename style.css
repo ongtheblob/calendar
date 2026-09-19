@@ -8,7 +8,12 @@
 
 body {
   margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
+
+  font-family:
+    Arial,
+    Helvetica,
+    sans-serif;
+
   color: #202124;
   background: #f8f9fa;
 }
@@ -27,7 +32,9 @@ textarea {
 
 .app {
   display: flex;
+
   height: 100vh;
+
   overflow: hidden;
 }
 
@@ -39,16 +46,26 @@ textarea {
 .sidebar {
   width: 330px;
   min-width: 330px;
+
   background: #ffffff;
+
   border-right: 1px solid #dadce0;
+
   padding: 18px;
+
   overflow-y: auto;
 }
 
 .sidebar h2 {
   margin: 0 0 18px;
+
   font-size: 20px;
 }
+
+
+/* =========================================================
+   FORM
+========================================================= */
 
 .form-group {
   margin-bottom: 14px;
@@ -60,7 +77,9 @@ textarea {
 
 label {
   display: block;
+
   margin-bottom: 5px;
+
   font-size: 13px;
   font-weight: 600;
 }
@@ -69,52 +88,98 @@ input,
 select,
 textarea {
   width: 100%;
+
   border: 1px solid #dadce0;
   border-radius: 6px;
+
   padding: 9px 10px;
-  background: #fff;
+
+  background: #ffffff;
   color: #202124;
+
   font-size: 14px;
 }
 
 textarea {
   min-height: 65px;
+
   resize: vertical;
 }
 
 input:focus,
 select:focus,
 textarea:focus {
-  outline: 2px solid rgba(26,115,232,.18);
+  outline: 2px solid rgba(26, 115, 232, 0.18);
+
   border-color: #1a73e8;
 }
 
 .duration-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+
+  grid-template-columns:
+    1fr 1fr;
+
   gap: 8px;
 }
 
 .hint {
   color: #5f6368;
+
   font-size: 11px;
+
   line-height: 1.4;
+
   margin-top: 5px;
 }
 
+
+/* =========================================================
+   TIME SELECTOR
+========================================================= */
+
+.time-select {
+  display: flex;
+
+  align-items: center;
+
+  gap: 6px;
+}
+
+.time-select select {
+  width: auto;
+
+  min-width: 80px;
+}
+
+.time-select span {
+  font-weight: 600;
+}
+
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
 .btn {
   width: 100%;
+
   border: none;
   border-radius: 6px;
+
   padding: 10px 12px;
+
   margin-top: 7px;
+
   font-size: 14px;
   font-weight: 600;
+
   cursor: pointer;
 }
 
 .btn-primary {
   background: #1a73e8;
+
   color: white;
 }
 
@@ -124,6 +189,7 @@ textarea:focus {
 
 .btn-secondary {
   background: #f1f3f4;
+
   color: #202124;
 }
 
@@ -133,16 +199,28 @@ textarea:focus {
 
 .btn-danger {
   background: #d93025;
+
   color: white;
 }
 
+
+/* =========================================================
+   RULES / INFORMATION
+========================================================= */
+
 .rules {
   margin-top: 18px;
+
   padding: 12px;
+
   border-radius: 8px;
+
   background: #f8f9fa;
+
   color: #5f6368;
+
   font-size: 12px;
+
   line-height: 1.5;
 }
 
@@ -157,37 +235,60 @@ textarea:focus {
 
 .main {
   flex: 1;
+
   min-width: 0;
+
   display: flex;
+
   flex-direction: column;
+
   background: white;
 }
+
+
+/* =========================================================
+   TOOLBAR
+========================================================= */
 
 .toolbar {
   height: 68px;
   min-height: 68px;
+
   display: flex;
+
   align-items: center;
+
   justify-content: space-between;
+
   padding: 0 16px;
+
   border-bottom: 1px solid #dadce0;
 }
 
 .toolbar-left,
 .toolbar-right {
   display: flex;
+
   align-items: center;
+
   gap: 8px;
 }
 
 .toolbar-btn {
   width: auto;
+
   padding: 8px 12px;
+
   border: 1px solid #dadce0;
+
   border-radius: 6px;
+
   background: white;
+
   color: #202124;
+
   cursor: pointer;
+
   font-weight: 600;
 }
 
@@ -197,57 +298,102 @@ textarea:focus {
 
 .month-title {
   margin-left: 8px;
+
   font-size: 21px;
+
   font-weight: 500;
 }
 
 .current-calendar {
   color: #5f6368;
+
   font-size: 13px;
 }
 
 
 /* =========================================================
-   CALENDAR
+   CALENDAR WRAPPER
 ========================================================= */
 
 .calendar {
   flex: 1;
+
   min-height: 0;
+
   display: flex;
+
   flex-direction: column;
 }
 
+
+/* =========================================================
+   CALENDAR HEADER
+========================================================= */
+
 .week-header {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+
+  grid-template-columns:
+    repeat(7, minmax(0, 1fr));
+
   border-bottom: 1px solid #dadce0;
 }
 
 .week-header div {
   padding: 9px 4px;
+
   text-align: center;
+
   color: #5f6368;
+
   font-size: 12px;
+
   font-weight: 700;
 }
 
+
+/* =========================================================
+   CALENDAR GRID
+========================================================= */
+
 .calendar-grid {
   flex: 1;
+
   min-height: 0;
+
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  grid-template-rows: repeat(6, minmax(95px, 1fr));
+
+  grid-template-columns:
+    repeat(7, minmax(0, 1fr));
+
+  grid-template-rows:
+    repeat(6, minmax(95px, 1fr));
+
   overflow: auto;
 }
 
+
+/* =========================================================
+   CALENDAR DAY CELL
+========================================================= */
+
 .day-cell {
   min-width: 0;
+
   min-height: 0;
+
   padding: 6px;
+
   overflow: auto;
+
+  display: flex;
+
+  flex-direction: column;
+
   border-right: 1px solid #dadce0;
+
   border-bottom: 1px solid #dadce0;
+
   background: white;
 }
 
@@ -259,89 +405,113 @@ textarea:focus {
   background: #fafafa;
 }
 
+
+/* =========================================================
+   DATE NUMBER
+========================================================= */
+
 .date-number {
+  order: 0;
+
+  flex-shrink: 0;
+
   width: 27px;
+
   height: 27px;
+
   display: flex;
+
   align-items: center;
+
   justify-content: center;
+
   border-radius: 50%;
-  margin-bottom: 4px;
+
+  margin-bottom: 6px;
+
   font-size: 13px;
 }
 
 .today .date-number {
   background: #1a73e8;
+
   color: white;
+
   font-weight: 700;
 }
 
 
 /* =========================================================
-   PROGRAMME EVENT
+   STAFF / MANPOWER SECTION
 ========================================================= */
 
-.event {
-  padding: 5px 6px;
-  margin-bottom: 4px;
-  border-left: 3px solid #1a73e8;
-  border-radius: 4px;
-  background: #e8f0fe;
-  cursor: pointer;
-  font-size: 11px;
-  line-height: 1.25;
+.manpower-container {
+  order: 1;
+
+  width: 100%;
+
+  flex-shrink: 0;
+
+  margin: 0 0 8px 0;
 }
 
-.event:hover {
-  filter: brightness(.97);
-}
 
-.event-time {
-  font-weight: 700;
-}
+/* Staff heading */
 
-.time-select {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
+.calendar-staff-heading {
+  margin: 0 0 3px 0;
 
-.time-select select {
-  width: auto;
-  min-width: 80px;
-}
-
-.time-select span {
-  font-weight: 600;
-}
-
-.event-name {
-  margin-top: 2px;
-  font-weight: 600;
-}
-
-.event-meta {
-  margin-top: 2px;
-  color: #5f6368;
   font-size: 10px;
+
+  font-weight: 700;
+
+  color: #202124;
 }
 
 
-/* =========================================================
-   MANPOWER DAY BUTTON
-========================================================= */
+/* Staff names */
+
+.calendar-staff-list {
+  margin: 0 0 5px 0;
+
+  font-size: 11px;
+
+  line-height: 1.4;
+
+  color: #202124;
+}
+
+
+/* Individual staff member */
+
+.calendar-staff-name {
+  padding: 1px 0;
+}
+
+
+/* Manpower button */
 
 .manpower-button {
   width: 100%;
+
   padding: 5px 6px;
-  margin-top: 6px;
+
+  margin: 3px 0 0 0;
+
   border: none;
+
   border-radius: 5px;
+
   background: #f1f3f4;
+
   color: #5f6368;
+
   font-size: 10px;
+
   font-weight: 600;
+
   text-align: left;
+
   cursor: pointer;
 }
 
@@ -351,12 +521,63 @@ textarea:focus {
 
 .manpower-button.good {
   background: #e6f4ea;
+
   color: #188038;
 }
 
 .manpower-button.warning {
   background: #fef7e0;
+
   color: #b06000;
+}
+
+
+/* =========================================================
+   PROGRAMME EVENTS
+========================================================= */
+
+.event {
+  order: 2;
+
+  flex-shrink: 0;
+
+  padding: 5px 6px;
+
+  margin-bottom: 4px;
+
+  border-left: 3px solid #1a73e8;
+
+  border-radius: 4px;
+
+  background: #e8f0fe;
+
+  cursor: pointer;
+
+  font-size: 11px;
+
+  line-height: 1.25;
+}
+
+.event:hover {
+  filter: brightness(0.97);
+}
+
+.event-time {
+  font-weight: 700;
+}
+
+.event-name {
+  margin-top: 2px;
+
+  font-weight: 600;
+}
+
+.event-meta {
+  margin-top: 2px;
+
+  color: #5f6368;
+
+  font-size: 10px;
 }
 
 
@@ -367,23 +588,38 @@ textarea:focus {
 .sheet-tabs {
   height: 44px;
   min-height: 44px;
+
   display: flex;
+
   align-items: flex-end;
+
   gap: 2px;
+
   padding: 0 10px;
+
   background: #f1f3f4;
+
   border-top: 1px solid #dadce0;
 }
 
 .sheet-tab {
   position: relative;
+
   width: 110px;
+
   height: 38px;
+
   border: none;
-  border-radius: 8px 8px 0 0;
+
+  border-radius:
+    8px 8px 0 0;
+
   background: #e0e0e0;
+
   color: #5f6368;
+
   font-weight: 700;
+
   cursor: pointer;
 }
 
@@ -393,16 +629,23 @@ textarea:focus {
 
 .sheet-tab.active {
   background: white;
+
   color: #202124;
 }
 
 .sheet-tab.active::after {
   content: "";
+
   position: absolute;
+
   left: 0;
+
   right: 0;
+
   bottom: 0;
+
   height: 3px;
+
   background: #1a73e8;
 }
 
@@ -413,12 +656,18 @@ textarea:focus {
 
 .modal-overlay {
   display: none;
+
   position: fixed;
+
   inset: 0;
+
   z-index: 1000;
+
   align-items: center;
+
   justify-content: center;
-  background: rgba(0,0,0,.35);
+
+  background: rgba(0, 0, 0, 0.35);
 }
 
 .modal-overlay.visible {
@@ -426,17 +675,29 @@ textarea:focus {
 }
 
 .modal {
-  width: min(520px, 92vw);
+  width: min(
+    520px,
+    92vw
+  );
+
   max-height: 90vh;
+
   overflow-y: auto;
+
   padding: 20px;
+
   border-radius: 10px;
+
   background: white;
-  box-shadow: 0 15px 50px rgba(0,0,0,.25);
+
+  box-shadow:
+    0 15px 50px
+    rgba(0, 0, 0, 0.25);
 }
 
 .modal h3 {
   margin: 0 0 18px;
+
   font-size: 20px;
 }
 
@@ -446,45 +707,71 @@ textarea:focus {
 
 .modal-label {
   margin-bottom: 3px;
+
   color: #5f6368;
+
   font-size: 11px;
 }
 
 .modal-value {
   font-size: 14px;
+
   font-weight: 500;
+
   overflow-wrap: anywhere;
 }
 
 .modal-actions {
   display: flex;
+
   justify-content: flex-end;
+
   gap: 8px;
+
   margin-top: 18px;
 }
 
 .modal-actions .btn {
   width: auto;
+
   min-width: 90px;
+
   margin-top: 0;
 }
 
+
+/* =========================================================
+   STAFF MODAL
+========================================================= */
+
 .staff-list {
   max-height: 280px;
+
   overflow-y: auto;
+
   padding: 8px;
+
   border: 1px solid #dadce0;
+
   border-radius: 8px;
+
   background: #fafafa;
 }
 
 .staff-option {
   display: flex;
+
   align-items: center;
+
   gap: 9px;
+
   padding: 8px 4px;
-  border-bottom: 1px solid #eeeeee;
+
+  border-bottom:
+    1px solid #eeeeee;
+
   cursor: pointer;
+
   font-size: 14px;
 }
 
@@ -494,23 +781,33 @@ textarea:focus {
 
 .staff-option input {
   width: 17px;
+
   height: 17px;
+
   margin: 0;
 }
 
 .staff-toolbar {
   display: flex;
+
   gap: 8px;
+
   margin-bottom: 10px;
 }
 
 .small-btn {
   width: auto;
+
   padding: 7px 10px;
+
   border: 1px solid #dadce0;
+
   border-radius: 6px;
+
   background: white;
+
   font-weight: 600;
+
   cursor: pointer;
 }
 
@@ -520,13 +817,17 @@ textarea:focus {
 
 .count-box {
   margin: 10px 0 14px;
+
   font-size: 14px;
 }
 
 .staff-status {
   min-height: 18px;
+
   margin-top: 5px;
+
   font-size: 13px;
+
   font-weight: 700;
 }
 
@@ -542,86 +843,6 @@ textarea:focus {
   color: #5f6368;
 }
 
-@media (max-width: 850px) {
-  .sidebar {
-    width: 290px;
-    min-width: 290px;
-  }
-
-  .toolbar-right {
-    display: none;
-  }
-}
-
-@media (max-width: 650px) {
-  .app {
-    flex-direction: column;
-  }
-
-  .sidebar {
-    width: 100%;
-    min-width: 0;
-    max-height: 46vh;
-    border-right: none;
-    border-bottom: 1px solid #dadce0;
-  }
-
-  .calendar-grid {
-    grid-template-rows: repeat(6, 115px);
-  }
-}
-
-.calendar-staff-list {
-  margin-top: 6px;
-  font-size: 11px;
-  line-height: 1.4;
-}
-
-.calendar-staff-name {
-  padding: 1px 0;
-}
-
-.calendar-staff-heading {
-  margin-top: 6px;
-  margin-bottom: 2px;
-  font-size: 10px;
-  font-weight: 700;
-}
-
-.calendar-staff-list {
-  margin-bottom: 5px;
-  font-size: 11px;
-  line-height: 1.4;
-}
-
-.calendar-staff-name {
-  padding: 1px 0;
-}
-
-.manpower-container {
-  margin-bottom: 8px;
-}
-
-.calendar-staff-heading {
-  margin-top: 4px;
-  margin-bottom: 3px;
-  font-size: 10px;
-  font-weight: 700;
-}
-
-.calendar-staff-list {
-  margin-bottom: 5px;
-  font-size: 11px;
-  line-height: 1.4;
-}
-
-.calendar-staff-name {
-  padding: 1px 0;
-}
-
-.manpower-button {
-  margin-top: 3px;
-}
 
 /* =========================================================
    CALENDAR VIEW SELECTOR
@@ -629,87 +850,119 @@ textarea:focus {
 
 .view-select {
   width: auto;
+
   min-width: 105px;
+
   padding: 8px 10px;
+
   border: 1px solid #dadce0;
+
   border-radius: 6px;
+
   background: white;
+
   color: #202124;
+
   font-size: 13px;
+
   font-weight: 600;
+
   cursor: pointer;
 }
 
 .view-select:focus {
-  outline: 2px solid rgba(26,115,232,.18);
+  outline:
+    2px solid
+    rgba(26, 115, 232, 0.18);
+
   border-color: #1a73e8;
 }
 
 
 /* =========================================================
-   WEEK / DAY VIEWS
+   WEEK VIEW
 ========================================================= */
 
 .calendar-grid.week-view {
-  grid-template-columns: repeat(7, minmax(150px, 1fr));
-  grid-template-rows: 1fr;
-  overflow-x: auto;
-  overflow-y: auto;
-}
+  display: grid;
 
-.calendar-grid.day-view {
-  grid-template-columns: minmax(320px, 1fr);
-  grid-template-rows: 1fr;
-  overflow: auto;
+  grid-template-columns:
+    repeat(
+      7,
+      minmax(150px, 1fr)
+    );
+
+  grid-template-rows:
+    1fr;
+
+  width: 100%;
+
+  min-width: 1050px;
+
+  min-height: 500px;
+
+  overflow-x: auto;
+
+  overflow-y: auto;
 }
 
 .week-header.week-view-header {
-  grid-template-columns: repeat(7, minmax(150px, 1fr));
-  overflow-x: auto;
-}
+  display: grid;
 
-.week-header.day-view-header {
-  grid-template-columns: minmax(320px, 1fr);
-}
+  grid-template-columns:
+    repeat(
+      7,
+      minmax(150px, 1fr)
+    );
 
-.week-header button {
-  border: 0;
-  border-right: 1px solid #dadce0;
-  background: white;
-  padding: 10px 8px;
-  color: #5f6368;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.week-header button:hover {
-  background: #f8f9fa;
-}
-
-.week-header button.today-header {
-  color: #1a73e8;
+  min-width: 1050px;
 }
 
 .week-column {
+  box-sizing: border-box;
+
   min-width: 150px;
-  min-height: 0;
-  padding: 8px;
+
+  min-height: 500px;
+
+  padding: 10px;
+
+  border-right:
+    1px solid #dadce0;
+
+  background: #ffffff;
+
   overflow-y: auto;
-  border-right: 1px solid #dadce0;
-  background: white;
+
+  display: flex;
+
+  flex-direction: column;
 }
 
 .week-column:last-child {
   border-right: none;
 }
 
-.day-view .week-column {
-  min-width: 320px;
-}
-
 .week-column.today-column {
   background: #f8fbff;
+}
+
+
+/* =========================================================
+   WEEK / DAY EVENTS
+========================================================= */
+
+.week-view-event,
+.day-view-event {
+  display: block;
+
+  width: 100%;
+
+  box-sizing: border-box;
+
+  margin-bottom: 8px;
+
+  order: 2;
 }
 
 .week-view-event {
@@ -718,146 +971,156 @@ textarea:focus {
 
 .day-view-event {
   font-size: 13px;
+
   padding: 8px 10px;
 }
 
-.view-empty {
-  padding: 18px 8px;
-  color: #80868b;
-  font-size: 13px;
-  text-align: center;
-}
 
 /* =========================================================
-   MONTH / WEEK / DAY VIEW STYLES
+   DAY VIEW
 ========================================================= */
-
-/* -------------------------
-   MONTH
--------------------------- */
-
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-}
-
-
-/* -------------------------
-   WEEK
--------------------------- */
-
-.calendar-grid.week-view {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(150px, 1fr));
-  grid-template-rows: 1fr;
-  width: 100%;
-  min-width: 1050px;
-  min-height: 500px;
-  overflow-x: auto;
-  overflow-y: auto;
-}
-
-
-.week-header.week-view-header {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(150px, 1fr));
-  min-width: 1050px;
-}
-
-
-.week-column {
-  box-sizing: border-box;
-  min-width: 150px;
-  min-height: 500px;
-  padding: 10px;
-  border-right: 1px solid #dadce0;
-  background: #fff;
-  overflow-y: auto;
-}
-
-
-.week-column:last-child {
-  border-right: none;
-}
-
-
-.week-column.today-column {
-  background: #f8fbff;
-}
-
-
-/* -------------------------
-   DAY
--------------------------- */
 
 .calendar-grid.day-view {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+
+  grid-template-columns:
+    minmax(0, 1fr);
+
+  grid-template-rows:
+    1fr;
+
   width: 100%;
+
   min-height: 500px;
+
   overflow: auto;
 }
 
-
 .week-header.day-view-header {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-}
 
+  grid-template-columns:
+    minmax(0, 1fr);
+}
 
 .day-view .week-column {
   width: 100%;
+
   min-width: 0;
+
   min-height: 600px;
+
   border-right: none;
 }
 
 
-/* -------------------------
-   WEEK / DAY EVENTS
--------------------------- */
-
-.week-view-event,
-.day-view-event {
-  display: block;
-  width: 100%;
-  box-sizing: border-box;
-  margin-bottom: 8px;
-}
-
-
-/* -------------------------
-   EMPTY DAY
--------------------------- */
-
-.view-empty {
-  padding: 24px 10px;
-  text-align: center;
-  color: #80868b;
-  font-size: 13px;
-}
-
-
-/* -------------------------
-   HEADER BUTTONS
--------------------------- */
+/* =========================================================
+   WEEK / DAY HEADER BUTTONS
+========================================================= */
 
 .week-header button {
   min-height: 42px;
+
   border: 0;
-  border-right: 1px solid #dadce0;
-  background: #fff;
+
+  border-right:
+    1px solid #dadce0;
+
+  background: #ffffff;
+
   cursor: pointer;
+
   font-size: 12px;
+
   font-weight: 700;
 }
-
 
 .week-header button:hover {
   background: #f8f9fa;
 }
 
-
 .week-header button.today-header {
   color: #1a73e8;
+}
+
+
+/* =========================================================
+   EMPTY VIEW
+========================================================= */
+
+.view-empty {
+  padding: 18px 8px;
+
+  color: #80868b;
+
+  font-size: 13px;
+
+  text-align: center;
+
+  order: 2;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (
+  max-width: 850px
+) {
+
+  .sidebar {
+    width: 290px;
+
+    min-width: 290px;
+  }
+
+  .toolbar-right {
+    display: none;
+  }
+
+}
+
+
+@media (
+  max-width: 650px
+) {
+
+  .app {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+
+    min-width: 0;
+
+    max-height: 46vh;
+
+    border-right: none;
+
+    border-bottom:
+      1px solid #dadce0;
+  }
+
+  .calendar-grid {
+    grid-template-rows:
+      repeat(
+        6,
+        115px
+      );
+  }
+
+  .calendar-staff-heading {
+    font-size: 9px;
+  }
+
+  .calendar-staff-list {
+    font-size: 10px;
+  }
+
+  .manpower-button {
+    font-size: 9px;
+  }
+
 }
