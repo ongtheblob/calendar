@@ -598,6 +598,31 @@ textarea:focus {
   padding: 1px 0;
 }
 
+.manpower-container {
+  margin-bottom: 8px;
+}
+
+.calendar-staff-heading {
+  margin-top: 4px;
+  margin-bottom: 3px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.calendar-staff-list {
+  margin-bottom: 5px;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.calendar-staff-name {
+  padding: 1px 0;
+}
+
+.manpower-button {
+  margin-top: 3px;
+}
+
 /* =========================================================
    CALENDAR VIEW SELECTOR
 ========================================================= */
