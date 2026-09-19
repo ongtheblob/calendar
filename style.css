@@ -581,6 +581,23 @@ textarea:focus {
   padding: 1px 0;
 }
 
+.calendar-staff-heading {
+  margin-top: 6px;
+  margin-bottom: 2px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.calendar-staff-list {
+  margin-bottom: 5px;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.calendar-staff-name {
+  padding: 1px 0;
+}
+
 /* =========================================================
    CALENDAR VIEW SELECTOR
 ========================================================= */
