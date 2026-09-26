@@ -1,11 +1,12 @@
 /* =========================================================
    PROGRAMME CALENDAR
    Supabase + Month / Week / Day
+   Monthly Programme Summary
 ========================================================= */
 
 
 /* =========================================================
-   SUPABASE CONFIG
+   SUPABASE
 ========================================================= */
 
 const SUPABASE_URL =
@@ -15,18 +16,8 @@ const SUPABASE_PUBLISHABLE_KEY =
   "sb_publishable_jxGJEa2GF2dM8q4-bAO1eA_0SrLus17";
 
 
-/* =========================================================
-   SETTINGS
-========================================================= */
-
-const REQUIRED_MANPOWER = 2;
-
-
-/* =========================================================
-   SUPABASE CLIENT
-========================================================= */
-
 let supabaseClient = null;
+
 
 if (
   window.supabase &&
@@ -53,8 +44,17 @@ if (
 
 
 /* =========================================================
-   PROGRAMME RULES
+   SETTINGS
 ========================================================= */
+
+const REQUIRED_MANPOWER = 2;
+
+
+/*
+  Normal series length.
+
+  These are consecutive weekly sessions.
+*/
 
 const SERIES_WEEKS = {
 
@@ -79,9 +79,28 @@ const SERIES_WEEKS = {
 };
 
 
-/* =========================================================
-   PAX
-========================================================= */
+/*
+  Additional Week 14 session.
+
+  This means these programmes have:
+
+  Week 1
+  Week 2
+  Week 3
+  Week 4
+  Week 5
+  Week 6
+  Week 14
+*/
+
+const WEEK_14_PROGRAMMES = [
+
+  "Manage Knee Health",
+
+  "Manage Metabolic Health"
+
+];
+
 
 const PAX = {
 
@@ -136,11 +155,8 @@ const PAX = {
 };
 
 
-/* =========================================================
-   STAFF
-========================================================= */
-
 const STAFF_LIST = [
+
   "Joelle",
   "Jireh",
   "RJ",
@@ -149,6 +165,7 @@ const STAFF_LIST = [
   "Team Nila",
   "APS",
   "Other"
+
 ];
 
 
@@ -160,199 +177,35 @@ let events = [];
 
 let manpower = {};
 
-let currentVenue = "HBB";
+let currentVenue =
+  "HBB";
 
-let currentDate = new Date();
+let currentDate =
+  new Date();
 
-let activeCalendarView = "month";
+let activeCalendarView =
+  "month";
 
-let selectedEventId = null;
+let selectedEventId =
+  null;
 
-let manpowerDate = null;
+let manpowerDate =
+  null;
 
 
-/* =========================================================
-   DOM REFERENCES
-========================================================= */
+/*
+  Summary state.
+*/
 
-const programmeSelect =
-  document.getElementById(
-    "programme"
-  );
+let showingSummary =
+  false;
 
-const customProgrammeGroup =
-  document.getElementById(
-    "customProgrammeGroup"
-  );
-
-const customProgrammeInput =
-  document.getElementById(
-    "customProgramme"
-  );
-
-const venueSelect =
-  document.getElementById(
-    "venue"
-  );
-
-const startDateInput =
-  document.getElementById(
-    "startDate"
-  );
-
-const startTimeInput =
-  document.getElementById(
-    "startTime"
-  );
-
-const startHour =
-  document.getElementById(
-    "startHour"
-  );
-
-const startMinute =
-  document.getElementById(
-    "startMinute"
-  );
-
-const durationGroup =
-  document.getElementById(
-    "durationGroup"
-  );
-
-const durationPreset =
-  document.getElementById(
-    "durationPreset"
-  );
-
-const customDuration =
-  document.getElementById(
-    "customDuration"
-  );
-
-const remarksInput =
-  document.getElementById(
-    "remarks"
-  );
-
-const statusInput =
-  document.getElementById(
-    "status"
-  );
-
-const calendarGrid =
-  document.getElementById(
-    "calendarGrid"
-  );
-
-const monthTitle =
-  document.getElementById(
-    "monthTitle"
-  );
-
-const currentVenueLabel =
-  document.getElementById(
-    "currentVenueLabel"
-  );
-
-const calendarViewSelect =
-  document.getElementById(
-    "calendarView"
-  );
-
-const hbbSheetTab =
-  document.getElementById(
-    "hbbSheetTab"
-  );
-
-const othSheetTab =
-  document.getElementById(
-    "othSheetTab"
-  );
-
-const eventModal =
-  document.getElementById(
-    "eventModal"
-  );
-
-const editModal =
-  document.getElementById(
-    "editModal"
-  );
-
-const manpowerModal =
-  document.getElementById(
-    "manpowerModal"
-  );
+let summaryDate =
+  new Date();
 
 
 /* =========================================================
-   EDIT REFERENCES
-========================================================= */
-
-const editProgramme =
-  document.getElementById(
-    "editProgramme"
-  );
-
-const editCustomProgrammeGroup =
-  document.getElementById(
-    "editCustomProgrammeGroup"
-  );
-
-const editCustomProgramme =
-  document.getElementById(
-    "editCustomProgramme"
-  );
-
-const editVenue =
-  document.getElementById(
-    "editVenue"
-  );
-
-const editStartDate =
-  document.getElementById(
-    "editStartDate"
-  );
-
-const editStartTime =
-  document.getElementById(
-    "editStartTime"
-  );
-
-const editStartHour =
-  document.getElementById(
-    "editStartHour"
-  );
-
-const editStartMinute =
-  document.getElementById(
-    "editStartMinute"
-  );
-
-const editDurationGroup =
-  document.getElementById(
-    "editDurationGroup"
-  );
-
-const editDuration =
-  document.getElementById(
-    "editDuration"
-  );
-
-const editRemarks =
-  document.getElementById(
-    "editRemarks"
-  );
-
-const editStatus =
-  document.getElementById(
-    "editStatus"
-  );
-
-
-/* =========================================================
-   GENERIC HELPERS
+   DOM HELPER
 ========================================================= */
 
 function $(id) {
@@ -365,7 +218,278 @@ function $(id) {
 
 
 /* =========================================================
-   TIME HELPERS
+   DOM REFERENCES
+========================================================= */
+
+const programmeSelect =
+  $("programme");
+
+const customProgrammeGroup =
+  $("customProgrammeGroup");
+
+const customProgrammeInput =
+  $("customProgramme");
+
+const venueSelect =
+  $("venue");
+
+const startDateInput =
+  $("startDate");
+
+const startTimeInput =
+  $("startTime");
+
+const startHour =
+  $("startHour");
+
+const startMinute =
+  $("startMinute");
+
+const durationGroup =
+  $("durationGroup");
+
+const durationPreset =
+  $("durationPreset");
+
+const customDuration =
+  $("customDuration");
+
+const remarksInput =
+  $("remarks");
+
+const statusInput =
+  $("status");
+
+const calendarGrid =
+  $("calendarGrid");
+
+const monthTitle =
+  $("monthTitle");
+
+const currentVenueLabel =
+  $("currentVenueLabel");
+
+const calendarViewSelect =
+  $("calendarView");
+
+const hbbSheetTab =
+  $("hbbSheetTab");
+
+const othSheetTab =
+  $("othSheetTab");
+
+const eventModal =
+  $("eventModal");
+
+const editModal =
+  $("editModal");
+
+const manpowerModal =
+  $("manpowerModal");
+
+
+/* =========================================================
+   EDIT REFERENCES
+========================================================= */
+
+const editProgramme =
+  $("editProgramme");
+
+const editCustomProgrammeGroup =
+  $("editCustomProgrammeGroup");
+
+const editCustomProgramme =
+  $("editCustomProgramme");
+
+const editVenue =
+  $("editVenue");
+
+const editStartDate =
+  $("editStartDate");
+
+const editStartTime =
+  $("editStartTime");
+
+const editStartHour =
+  $("editStartHour");
+
+const editStartMinute =
+  $("editStartMinute");
+
+const editDurationGroup =
+  $("editDurationGroup");
+
+const editDuration =
+  $("editDuration");
+
+const editRemarks =
+  $("editRemarks");
+
+const editStatus =
+  $("editStatus");
+
+
+/* =========================================================
+   SUMMARY REFERENCES
+========================================================= */
+
+const summarySheetTab =
+  $("summarySheetTab");
+
+const summaryPanel =
+  $("summaryPanel");
+
+const summaryMonth =
+  $("summaryMonth");
+
+const summarySubtitle =
+  $("summarySubtitle");
+
+const summaryTableBody =
+  $("summaryTableBody");
+
+const summaryTotal =
+  $("summaryTotal");
+
+const summaryPreviousMonth =
+  $("summaryPreviousMonth");
+
+const summaryNextMonth =
+  $("summaryNextMonth");
+
+
+/* =========================================================
+   DATE FUNCTIONS
+========================================================= */
+
+function parseInputDate(
+  value
+) {
+
+  const parts =
+    String(
+      value
+    )
+    .substring(
+      0,
+      10
+    )
+    .split(
+      "-"
+    )
+    .map(
+      Number
+    );
+
+
+  return new Date(
+    parts[0],
+    parts[1] - 1,
+    parts[2]
+  );
+
+}
+
+
+function formatInputDate(
+  date
+) {
+
+  return (
+    `${date.getFullYear()}-` +
+    `${String(
+      date.getMonth() + 1
+    ).padStart(
+      2,
+      "0"
+    )}-` +
+    `${String(
+      date.getDate()
+    ).padStart(
+      2,
+      "0"
+    )}`
+  );
+
+}
+
+
+function addDays(
+  date,
+  days
+) {
+
+  const result =
+    new Date(
+      date
+    );
+
+
+  result.setDate(
+    result.getDate() +
+    days
+  );
+
+
+  return result;
+
+}
+
+
+function startOfWeek(
+  date
+) {
+
+  const result =
+    new Date(
+      date
+    );
+
+
+  result.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+
+  result.setDate(
+    result.getDate() -
+    result.getDay()
+  );
+
+
+  return result;
+
+}
+
+
+function isSameDay(
+  a,
+  b
+) {
+
+  return (
+    a.getFullYear() ===
+      b.getFullYear()
+
+    &&
+
+    a.getMonth() ===
+      b.getMonth()
+
+    &&
+
+    a.getDate() ===
+      b.getDate()
+  );
+
+}
+
+
+/* =========================================================
+   TIME FUNCTIONS
 ========================================================= */
 
 function isValidHalfHourTime(
@@ -374,7 +498,8 @@ function isValidHalfHourTime(
 
   if (
     !time ||
-    typeof time !== "string"
+    typeof time !==
+      "string"
   ) {
 
     return false;
@@ -499,212 +624,6 @@ function getEditTime() {
 }
 
 
-/* =========================================================
-   PROGRAMME HELPERS
-========================================================= */
-
-function getPax(
-  programme
-) {
-
-  return Object.prototype.hasOwnProperty.call(
-    PAX,
-    programme
-  )
-    ? PAX[programme]
-    : "";
-
-}
-
-
-function isKnownProgramme(
-  programme
-) {
-
-  return Object.prototype.hasOwnProperty.call(
-    PAX,
-    programme
-  );
-
-}
-
-
-function getProgrammeDuration(
-  programme,
-  durationValue
-) {
-
-  if (
-    programme ===
-    "Body Composition Assessment"
-  ) {
-
-    return 30;
-
-  }
-
-
-  if (
-    programme ===
-    "Others"
-  ) {
-
-    return Number(
-      durationValue
-    );
-
-  }
-
-
-  return 60;
-
-}
-
-
-/* =========================================================
-   DATE HELPERS
-========================================================= */
-
-function parseInputDate(
-  value
-) {
-
-  const parts =
-    String(
-      value
-    )
-    .substring(
-      0,
-      10
-    )
-    .split(
-      "-"
-    )
-    .map(
-      Number
-    );
-
-
-  return new Date(
-    parts[0],
-    parts[1] - 1,
-    parts[2]
-  );
-
-}
-
-
-function formatInputDate(
-  date
-) {
-
-  const year =
-    date.getFullYear();
-
-
-  const month =
-    String(
-      date.getMonth() + 1
-    ).padStart(
-      2,
-      "0"
-    );
-
-
-  const day =
-    String(
-      date.getDate()
-    ).padStart(
-      2,
-      "0"
-    );
-
-
-  return (
-    `${year}-${month}-${day}`
-  );
-
-}
-
-
-function addDays(
-  date,
-  days
-) {
-
-  const result =
-    new Date(
-      date
-    );
-
-
-  result.setDate(
-    result.getDate() +
-    days
-  );
-
-
-  return result;
-
-}
-
-
-function startOfWeek(
-  date
-) {
-
-  const result =
-    new Date(
-      date
-    );
-
-
-  result.setHours(
-    0,
-    0,
-    0,
-    0
-  );
-
-
-  result.setDate(
-    result.getDate() -
-    result.getDay()
-  );
-
-
-  return result;
-
-}
-
-
-function isSameDay(
-  a,
-  b
-) {
-
-  return (
-    a.getFullYear() ===
-      b.getFullYear()
-
-    &&
-
-    a.getMonth() ===
-      b.getMonth()
-
-    &&
-
-    a.getDate() ===
-      b.getDate()
-  );
-
-}
-
-
-/* =========================================================
-   TIME DISPLAY
-========================================================= */
-
 function addMinutesToTime(
   time,
   minutes
@@ -728,25 +647,25 @@ function addMinutesToTime(
     );
 
 
-  const newHours =
+  const hours =
     Math.floor(
       total / 60
     ) % 24;
 
 
-  const newMinutes =
+  const mins =
     total % 60;
 
 
   return (
     `${String(
-      newHours
+      hours
     ).padStart(
       2,
       "0"
     )}:` +
     `${String(
-      newMinutes
+      mins
     ).padStart(
       2,
       "0"
@@ -849,6 +768,83 @@ function formatDuration(
 }
 
 
+/* =========================================================
+   PROGRAMME HELPERS
+========================================================= */
+
+function getPax(
+  programme
+) {
+
+  return Object.prototype.hasOwnProperty.call(
+    PAX,
+    programme
+  )
+    ? PAX[programme]
+    : "";
+
+}
+
+
+function isKnownProgramme(
+  programme
+) {
+
+  return Object.prototype.hasOwnProperty.call(
+    PAX,
+    programme
+  );
+
+}
+
+
+function getProgrammeDuration(
+  programme,
+  value
+) {
+
+  if (
+    programme ===
+    "Body Composition Assessment"
+  ) {
+
+    return 30;
+
+  }
+
+
+  if (
+    programme ===
+    "Others"
+  ) {
+
+    return Number(
+      value
+    );
+
+  }
+
+
+  return 60;
+
+}
+
+
+function needsWeek14Session(
+  programme
+) {
+
+  return WEEK_14_PROGRAMMES.includes(
+    programme
+  );
+
+}
+
+
+/* =========================================================
+   DISPLAY HELPERS
+========================================================= */
+
 function formatDisplayDate(
   dateString
 ) {
@@ -876,10 +872,6 @@ function formatDisplayDate(
 }
 
 
-/* =========================================================
-   GENERAL HELPERS
-========================================================= */
-
 function dateTimeValue(
   event
 ) {
@@ -897,9 +889,9 @@ function makeId(
 
   return (
     `${prefix}_${Date.now()}_` +
-    Math.random()
+    `${Math.random()
       .toString(36)
-      .substring(2)
+      .substring(2)}`
   );
 
 }
@@ -937,7 +929,7 @@ function escapeHtml(
 
 
 /* =========================================================
-   SUPABASE PROGRAMMES
+   SUPABASE MAPPING
 ========================================================= */
 
 function mapProgrammeToDatabase(
@@ -1073,6 +1065,10 @@ function convertDatabaseProgramme(
 }
 
 
+/* =========================================================
+   LOAD PROGRAMMES
+========================================================= */
+
 async function loadProgrammesFromSupabase() {
 
   if (
@@ -1142,13 +1138,23 @@ async function refreshProgrammesFromSupabase() {
     );
 
 
-  renderCalendar();
+  if (
+    showingSummary
+  ) {
+
+    renderProgrammeSummary();
+
+  } else {
+
+    renderCalendar();
+
+  }
 
 }
 
 
 /* =========================================================
-   CALENDAR VIEW
+   CALENDAR FILTERING
 ========================================================= */
 
 function getDayEvents(
@@ -1163,9 +1169,7 @@ function getDayEvents(
 
         return (
           event.date ===
-            date
-
-          &&
+            date &&
 
           event.venue ===
             currentVenue
@@ -1179,8 +1183,10 @@ function getDayEvents(
         b
       ) {
 
-        return a.time.localeCompare(
-          b.time
+        return (
+          a.time.localeCompare(
+            b.time
+          )
         );
 
       }
@@ -1188,6 +1194,10 @@ function getDayEvents(
 
 }
 
+
+/* =========================================================
+   MASTER CALENDAR RENDER
+========================================================= */
 
 function renderCalendar() {
 
@@ -1467,8 +1477,7 @@ function renderMonthView() {
 
 
     /*
-      IMPORTANT:
-      Staff/manpower is added BEFORE programmes.
+      STAFF / MANPOWER FIRST
     */
 
     cell.appendChild(
@@ -1478,6 +1487,10 @@ function renderMonthView() {
       )
     );
 
+
+    /*
+      PROGRAMMES SECOND
+    */
 
     getDayEvents(
       dateString
@@ -1608,14 +1621,10 @@ function renderDayView() {
   );
 
 
-  const dayColumn =
+  calendarGrid.appendChild(
     renderDayColumn(
       currentDate
-    );
-
-
-  calendarGrid.appendChild(
-    dayColumn
+    )
   );
 
 }
@@ -1632,23 +1641,22 @@ function getViewDateLabel() {
     "day"
   ) {
 
-    return currentDate
-      .toLocaleDateString(
-        "en-SG",
-        {
-          weekday:
-            "long",
+    return currentDate.toLocaleDateString(
+      "en-SG",
+      {
+        weekday:
+          "long",
 
-          day:
-            "numeric",
+        day:
+          "numeric",
 
-          month:
-            "long",
+        month:
+          "long",
 
-          year:
-            "numeric"
-        }
-      );
+        year:
+          "numeric"
+      }
+    );
 
   }
 
@@ -1707,17 +1715,16 @@ function getViewDateLabel() {
   }
 
 
-  return currentDate
-    .toLocaleDateString(
-      "en-SG",
-      {
-        month:
-          "long",
+  return currentDate.toLocaleDateString(
+    "en-SG",
+    {
+      month:
+        "long",
 
-        year:
-          "numeric"
-      }
-    );
+      year:
+        "numeric"
+    }
+  );
 
 }
 
@@ -1889,8 +1896,7 @@ function renderDayColumn(
 
 
   /*
-    IMPORTANT:
-    Manpower is always inserted BEFORE programmes.
+    STAFF FIRST
   */
 
   column.appendChild(
@@ -1900,6 +1906,10 @@ function renderDayColumn(
     )
   );
 
+
+  /*
+    PROGRAMMES SECOND
+  */
 
   const dayEvents =
     getDayEvents(
@@ -1979,7 +1989,8 @@ function createEventElement(
 
 
   const sessionText =
-    event.totalSessions > 1
+    event.totalSessions >
+    1
 
       ? `W${event.sessionNumber} of ${event.totalSessions}`
 
@@ -2062,7 +2073,7 @@ function createEventElement(
 
 
 /* =========================================================
-   MANPOWER STORAGE
+   MANPOWER
 ========================================================= */
 
 function manpowerKey(
@@ -2103,10 +2114,6 @@ function getManpower(
 
 }
 
-
-/* =========================================================
-   MANPOWER DISPLAY
-========================================================= */
 
 function createManpowerSection(
   venue,
@@ -2170,7 +2177,7 @@ function createManpowerSection(
 
     record.staff.forEach(
       function (
-        staffName
+        name
       ) {
 
         const staff =
@@ -2184,7 +2191,7 @@ function createManpowerSection(
 
 
         staff.textContent =
-          staffName;
+          name;
 
 
         staffList.appendChild(
@@ -2237,27 +2244,27 @@ function createManpowerSection(
     button.textContent =
       "👥 Set manpower";
 
-  } else if (
-    present >= required
-  ) {
-
-    button.classList.add(
-      "good"
-    );
-
-
-    button.textContent =
-      `👥 ${present} staff / ${required} req.`;
-
   } else {
 
-    button.classList.add(
-      "warning"
-    );
-
-
     button.textContent =
       `👥 ${present} staff / ${required} req.`;
+
+
+    if (
+      present >= required
+    ) {
+
+      button.classList.add(
+        "good"
+      );
+
+    } else {
+
+      button.classList.add(
+        "warning"
+      );
+
+    }
 
   }
 
@@ -2265,10 +2272,10 @@ function createManpowerSection(
   button.addEventListener(
     "click",
     function (
-      event
+      clickEvent
     ) {
 
-      event.stopPropagation();
+      clickEvent.stopPropagation();
 
 
       openManpowerModal(
@@ -2313,11 +2320,10 @@ function setupProgrammeForm() {
           customProgrammeGroup
         ) {
 
-          customProgrammeGroup
-            .classList.toggle(
-              "hidden",
-              !isOthers
-            );
+          customProgrammeGroup.classList.toggle(
+            "hidden",
+            !isOthers
+          );
 
         }
 
@@ -2326,11 +2332,10 @@ function setupProgrammeForm() {
           durationGroup
         ) {
 
-          durationGroup
-            .classList.toggle(
-              "hidden",
-              !isOthers
-            );
+          durationGroup.classList.toggle(
+            "hidden",
+            !isOthers
+          );
 
         }
 
@@ -2594,11 +2599,21 @@ async function addProgramme() {
   }
 
 
-  const totalSessions =
+  const normalSessions =
     SERIES_WEEKS[
       programmeName
     ] ||
     1;
+
+
+  const totalSessions =
+    needsWeek14Session(
+      programmeName
+    )
+
+      ? normalSessions + 1
+
+      : normalSessions;
 
 
   const seriesId =
@@ -2611,9 +2626,13 @@ async function addProgramme() {
     [];
 
 
+  /*
+    Normal weekly sessions.
+  */
+
   for (
     let i = 0;
-    i < totalSessions;
+    i < normalSessions;
     i++
   ) {
 
@@ -2669,7 +2688,7 @@ async function addProgramme() {
           : "",
 
       sessionNumber:
-        totalSessions > 1
+        normalSessions > 1
           ? i + 1
           : null,
 
@@ -2680,6 +2699,81 @@ async function addProgramme() {
         totalSessions > 1
           ? "Series"
           : "Stand-alone"
+
+    });
+
+  }
+
+
+  /*
+    Additional Week 14 session.
+  */
+
+  if (
+    needsWeek14Session(
+      programmeName
+    )
+  ) {
+
+    const week14Date =
+      addDays(
+        parseInputDate(
+          date
+        ),
+        13 * 7
+      );
+
+
+    newEvents.push({
+
+      id:
+        makeId(
+          "event"
+        ),
+
+      seriesId:
+        seriesId,
+
+      programme:
+        programmeName,
+
+      venue:
+        venue,
+
+      date:
+        formatInputDate(
+          week14Date
+        ),
+
+      time:
+        time,
+
+      duration:
+        duration,
+
+      pax:
+        getPax(
+          programmeName
+        ),
+
+      status:
+        statusInput
+          ? statusInput.value
+          : "",
+
+      remarks:
+        remarksInput
+          ? remarksInput.value.trim()
+          : "",
+
+      sessionNumber:
+        14,
+
+      totalSessions:
+        totalSessions,
+
+      type:
+        "Series"
 
     });
 
@@ -2699,18 +2793,6 @@ async function addProgramme() {
   }
 
 
-  const rows =
-    newEvents.map(
-      mapProgrammeToDatabase
-    );
-
-
-  console.log(
-    "Saving programme:",
-    rows
-  );
-
-
   const {
     data,
     error
@@ -2720,7 +2802,9 @@ async function addProgramme() {
         "programmes"
       )
       .insert(
-        rows
+        newEvents.map(
+          mapProgrammeToDatabase
+        )
       )
       .select();
 
@@ -2814,6 +2898,7 @@ async function addProgramme() {
 
   resetProgrammeForm();
 
+
   renderCalendar();
 
 
@@ -2854,10 +2939,9 @@ function resetProgrammeForm() {
     customProgrammeGroup
   ) {
 
-    customProgrammeGroup
-      .classList.add(
-        "hidden"
-      );
+    customProgrammeGroup.classList.add(
+      "hidden"
+    );
 
   }
 
@@ -2866,10 +2950,9 @@ function resetProgrammeForm() {
     durationGroup
   ) {
 
-    durationGroup
-      .classList.add(
-        "hidden"
-      );
+    durationGroup.classList.add(
+      "hidden"
+    );
 
   }
 
@@ -3099,7 +3182,7 @@ function closeEventModal() {
 
 
 /* =========================================================
-   OPEN EDIT MODAL
+   OPEN EDIT
 ========================================================= */
 
 function openEditModal() {
@@ -3166,12 +3249,8 @@ function openEditModal() {
         ) {
 
           return (
-            dateTimeValue(
-              a
-            ) -
-            dateTimeValue(
-              b
-            )
+            dateTimeValue(a) -
+            dateTimeValue(b)
           );
 
         }
@@ -3217,11 +3296,10 @@ function openEditModal() {
     editCustomProgrammeGroup
   ) {
 
-    editCustomProgrammeGroup
-      .classList.toggle(
-        "hidden",
-        known
-      );
+    editCustomProgrammeGroup.classList.toggle(
+      "hidden",
+      known
+    );
 
   }
 
@@ -3246,13 +3324,12 @@ function openEditModal() {
   }
 
 
-  const timeParts =
+  const parts =
     String(
       first.time ||
       "09:00"
-    ).split(
-      ":"
-    );
+    )
+    .split(":");
 
 
   if (
@@ -3260,7 +3337,7 @@ function openEditModal() {
   ) {
 
     editStartHour.value =
-      timeParts[0] ||
+      parts[0] ||
       "09";
 
   }
@@ -3271,7 +3348,7 @@ function openEditModal() {
   ) {
 
     editStartMinute.value =
-      timeParts[1] ===
+      parts[1] ===
       "30"
 
         ? "30"
@@ -3311,11 +3388,10 @@ function openEditModal() {
     editDurationGroup
   ) {
 
-    editDurationGroup
-      .classList.toggle(
-        "hidden",
-        known
-      );
+    editDurationGroup.classList.toggle(
+      "hidden",
+      known
+    );
 
   }
 
@@ -3518,20 +3594,34 @@ async function saveEdit() {
       : currentVenue;
 
 
-  const totalSessions =
+  const normalSessions =
     SERIES_WEEKS[
       programmeName
     ] ||
     1;
 
 
+  const totalSessions =
+    needsWeek14Session(
+      programmeName
+    )
+
+      ? normalSessions + 1
+
+      : normalSessions;
+
+
   const replacement =
     [];
 
 
+  /*
+    Normal weekly sessions.
+  */
+
   for (
     let i = 0;
-    i < totalSessions;
+    i < normalSessions;
     i++
   ) {
 
@@ -3587,7 +3677,7 @@ async function saveEdit() {
           : "",
 
       sessionNumber:
-        totalSessions > 1
+        normalSessions > 1
           ? i + 1
           : null,
 
@@ -3598,6 +3688,81 @@ async function saveEdit() {
         totalSessions > 1
           ? "Series"
           : "Stand-alone"
+
+    });
+
+  }
+
+
+  /*
+    Week 14 session.
+  */
+
+  if (
+    needsWeek14Session(
+      programmeName
+    )
+  ) {
+
+    const week14Date =
+      addDays(
+        parseInputDate(
+          editStartDate.value
+        ),
+        13 * 7
+      );
+
+
+    replacement.push({
+
+      id:
+        makeId(
+          "event"
+        ),
+
+      seriesId:
+        oldSeriesId,
+
+      programme:
+        programmeName,
+
+      venue:
+        newVenue,
+
+      date:
+        formatInputDate(
+          week14Date
+        ),
+
+      time:
+        newTime,
+
+      duration:
+        duration,
+
+      pax:
+        getPax(
+          programmeName
+        ),
+
+      status:
+        editStatus
+          ? editStatus.value
+          : "",
+
+      remarks:
+        editRemarks
+          ? editRemarks.value.trim()
+          : "",
+
+      sessionNumber:
+        14,
+
+      totalSessions:
+        totalSessions,
+
+      type:
+        "Series"
 
     });
 
@@ -3618,7 +3783,7 @@ async function saveEdit() {
 
 
   /*
-    Delete original series.
+    Delete old series.
   */
 
   const {
@@ -3656,7 +3821,7 @@ async function saveEdit() {
 
 
   /*
-    Insert edited series.
+    Insert new edited series.
   */
 
   const {
@@ -3685,6 +3850,10 @@ async function saveEdit() {
     );
 
 
+    /*
+      Restore current database state.
+    */
+
     await refreshProgrammesFromSupabase();
 
 
@@ -3698,7 +3867,7 @@ async function saveEdit() {
 
 
   /*
-    Update local events.
+    Replace local data.
   */
 
   events =
@@ -3725,10 +3894,6 @@ async function saveEdit() {
     )
   );
 
-
-  /*
-    Move calendar.
-  */
 
   currentDate =
     parseInputDate(
@@ -3801,7 +3966,7 @@ async function saveEdit() {
 
 
 /* =========================================================
-   CLOSE EDIT MODAL
+   CLOSE EDIT
 ========================================================= */
 
 function closeEditModal() {
@@ -4012,9 +4177,7 @@ function renderStaffChecklist(
 ) {
 
   const container =
-    document.getElementById(
-      "staffList"
-    );
+    $("staffList");
 
 
   if (
@@ -4173,7 +4336,8 @@ function updateStaffStatus() {
 
 
   if (
-    present >= required
+    present >=
+    required
   ) {
 
     status.classList.add(
@@ -4329,8 +4493,74 @@ async function saveManpower() {
       : "";
 
 
-  const required =
-    REQUIRED_MANPOWER;
+  const record =
+    {
+
+      venue:
+        currentVenue,
+
+      date:
+        manpowerDate,
+
+      staff:
+        staff,
+
+      required:
+        REQUIRED_MANPOWER,
+
+      notes:
+        notes
+
+    };
+
+
+  if (
+    supabaseClient
+  ) {
+
+    const {
+      error
+    } =
+      await supabaseClient
+        .from(
+          "manpower"
+        )
+        .upsert(
+          record,
+          {
+            onConflict:
+              "venue,date"
+          }
+        );
+
+
+    if (
+      error
+    ) {
+
+      console.error(
+        "Unable to save manpower:",
+        error
+      );
+
+
+      alert(
+        `Unable to save manpower: ${error.message}`
+      );
+
+      return;
+
+    }
+
+  } else {
+
+    alert(
+      "Supabase is not connected."
+    );
+
+    return;
+
+  }
 
 
   manpower[
@@ -4344,77 +4574,12 @@ async function saveManpower() {
       staff,
 
     required:
-      required,
+      REQUIRED_MANPOWER,
 
     notes:
       notes
 
   };
-
-
-  if (
-    !supabaseClient
-  ) {
-
-    alert(
-      "Supabase is not connected."
-    );
-
-    return;
-
-  }
-
-
-  const {
-    error
-  } =
-    await supabaseClient
-      .from(
-        "manpower"
-      )
-      .upsert(
-        {
-
-          venue:
-            currentVenue,
-
-          date:
-            manpowerDate,
-
-          staff:
-            staff,
-
-          required:
-            required,
-
-          notes:
-            notes
-
-        },
-        {
-          onConflict:
-            "venue,date"
-        }
-      );
-
-
-  if (
-    error
-  ) {
-
-    console.error(
-      "Unable to save manpower:",
-      error
-    );
-
-
-    alert(
-      `Unable to save manpower: ${error.message}`
-    );
-
-    return;
-
-  }
 
 
   closeManpowerModal();
@@ -4512,9 +4677,7 @@ async function loadManpowerFromSupabase() {
           Array.isArray(
             row.staff
           )
-
             ? row.staff
-
             : [],
 
         required:
@@ -4536,7 +4699,7 @@ async function loadManpowerFromSupabase() {
 
 
 /* =========================================================
-   VENUE SWITCHING
+   VENUE
 ========================================================= */
 
 function switchVenue(
@@ -4547,11 +4710,25 @@ function switchVenue(
     venue;
 
 
+  showingSummary =
+    false;
+
+
   if (
     venueSelect
   ) {
 
     venueSelect.value =
+      venue;
+
+  }
+
+
+  if (
+    currentVenueLabel
+  ) {
+
+    currentVenueLabel.textContent =
       venue;
 
   }
@@ -4583,23 +4760,13 @@ function switchVenue(
   }
 
 
-  if (
-    currentVenueLabel
-  ) {
-
-    currentVenueLabel.textContent =
-      venue;
-
-  }
-
-
-  renderCalendar();
+  showCalendarView();
 
 }
 
 
 /* =========================================================
-   NAVIGATION
+   CALENDAR NAVIGATION
 ========================================================= */
 
 function goPrevious() {
@@ -4641,12 +4808,51 @@ function goPrevious() {
   }
 
 
-  renderCalendar();
+  if (
+    showingSummary
+  ) {
+
+    summaryDate =
+      new Date(
+        summaryDate.getFullYear(),
+        summaryDate.getMonth() -
+          1,
+        1
+      );
+
+
+    renderProgrammeSummary();
+
+  } else {
+
+    renderCalendar();
+
+  }
 
 }
 
 
 function goNext() {
+
+  if (
+    showingSummary
+  ) {
+
+    summaryDate =
+      new Date(
+        summaryDate.getFullYear(),
+        summaryDate.getMonth() +
+          1,
+        1
+      );
+
+
+    renderProgrammeSummary();
+
+    return;
+
+  }
+
 
   if (
     activeCalendarView ===
@@ -4724,13 +4930,499 @@ function goToday() {
   }
 
 
-  renderCalendar();
+  if (
+    showingSummary
+  ) {
+
+    summaryDate =
+      new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        1
+      );
+
+
+    renderProgrammeSummary();
+
+  } else {
+
+    renderCalendar();
+
+  }
 
 }
 
 
 /* =========================================================
-   CLEAR ALL
+   CALENDAR VIEW CHANGE
+========================================================= */
+
+function changeCalendarView() {
+
+  if (
+    calendarViewSelect
+  ) {
+
+    activeCalendarView =
+      calendarViewSelect.value;
+
+  }
+
+
+  if (
+    activeCalendarView ===
+    "week"
+  ) {
+
+    currentDate =
+      startOfWeek(
+        currentDate
+      );
+
+  }
+
+
+  showCalendarView();
+
+}
+
+
+/* =========================================================
+   SUMMARY VIEW
+========================================================= */
+
+function showCalendarView() {
+
+  showingSummary =
+    false;
+
+
+  if (
+    summaryPanel
+  ) {
+
+    summaryPanel.classList.add(
+      "hidden"
+    );
+
+  }
+
+
+  const header =
+    document.querySelector(
+      ".week-header"
+    );
+
+
+  if (
+    header
+  ) {
+
+    header.classList.remove(
+      "hidden"
+    );
+
+  }
+
+
+  if (
+    calendarGrid
+  ) {
+
+    calendarGrid.classList.remove(
+      "hidden"
+    );
+
+  }
+
+
+  updateSheetTabs();
+
+  renderCalendar();
+
+}
+
+
+function showSummaryView() {
+
+  showingSummary =
+    true;
+
+
+  if (
+    calendarGrid
+  ) {
+
+    calendarGrid.classList.add(
+      "hidden"
+    );
+
+  }
+
+
+  const header =
+    document.querySelector(
+      ".week-header"
+    );
+
+
+  if (
+    header
+  ) {
+
+    header.classList.add(
+      "hidden"
+    );
+
+  }
+
+
+  if (
+    summaryPanel
+  ) {
+
+    summaryPanel.classList.remove(
+      "hidden"
+    );
+
+  }
+
+
+  updateSheetTabs();
+
+  renderProgrammeSummary();
+
+}
+
+
+function updateSheetTabs() {
+
+  if (
+    hbbSheetTab
+  ) {
+
+    hbbSheetTab.classList.toggle(
+      "active",
+      currentVenue ===
+        "HBB" &&
+      !showingSummary
+    );
+
+  }
+
+
+  if (
+    othSheetTab
+  ) {
+
+    othSheetTab.classList.toggle(
+      "active",
+      currentVenue ===
+        "OTH" &&
+      !showingSummary
+    );
+
+  }
+
+
+  if (
+    summarySheetTab
+  ) {
+
+    summarySheetTab.classList.toggle(
+      "active",
+      showingSummary
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   PROGRAMME SUMMARY
+========================================================= */
+
+function renderProgrammeSummary() {
+
+  if (
+    !summaryTableBody
+  ) {
+
+    return;
+
+  }
+
+
+  const year =
+    summaryDate.getFullYear();
+
+
+  const month =
+    summaryDate.getMonth();
+
+
+  if (
+    summaryMonth
+  ) {
+
+    summaryMonth.textContent =
+      summaryDate.toLocaleDateString(
+        "en-SG",
+        {
+          month:
+            "long",
+
+          year:
+            "numeric"
+        }
+      );
+
+  }
+
+
+  if (
+    summarySubtitle
+  ) {
+
+    summarySubtitle.textContent =
+      `Venue: ${currentVenue}`;
+
+  }
+
+
+  /*
+    Only events belonging to the
+    selected venue and month.
+  */
+
+  const monthlyEvents =
+    events.filter(
+      function (
+        event
+      ) {
+
+        const eventDate =
+          parseInputDate(
+            event.date
+          );
+
+
+        return (
+
+          event.venue ===
+            currentVenue
+
+          &&
+
+          eventDate.getFullYear() ===
+            year
+
+          &&
+
+          eventDate.getMonth() ===
+            month
+
+        );
+
+      }
+    );
+
+
+  const programmeCounts =
+    {};
+
+
+  monthlyEvents.forEach(
+    function (
+      event
+    ) {
+
+      const programme =
+        event.programme ||
+        "Unnamed Programme";
+
+
+      if (
+        !programmeCounts[
+          programme
+        ]
+      ) {
+
+        programmeCounts[
+          programme
+        ] = 0;
+
+      }
+
+
+      programmeCounts[
+        programme
+      ]++;
+
+    }
+  );
+
+
+  const programmes =
+    Object.keys(
+      programmeCounts
+    ).sort(
+      function (
+        a,
+        b
+      ) {
+
+        return a.localeCompare(
+          b
+        );
+
+      }
+    );
+
+
+  summaryTableBody.innerHTML =
+    "";
+
+
+  if (
+    programmes.length ===
+    0
+  ) {
+
+    const row =
+      document.createElement(
+        "tr"
+      );
+
+
+    row.innerHTML = `
+
+      <td
+        colspan="2"
+        class="summary-zero"
+      >
+        No programmes conducted
+        this month.
+      </td>
+
+    `;
+
+
+    summaryTableBody.appendChild(
+      row
+    );
+
+
+    if (
+      summaryTotal
+    ) {
+
+      summaryTotal.textContent =
+        "0";
+
+    }
+
+
+    return;
+
+  }
+
+
+  let total =
+    0;
+
+
+  programmes.forEach(
+    function (
+      programme
+    ) {
+
+      const count =
+        programmeCounts[
+          programme
+        ];
+
+
+      total +=
+        count;
+
+
+      const row =
+        document.createElement(
+          "tr"
+        );
+
+
+      row.innerHTML = `
+
+        <td>
+          ${escapeHtml(
+            programme
+          )}
+        </td>
+
+        <td>
+          ${count}
+        </td>
+
+      `;
+
+
+      summaryTableBody.appendChild(
+        row
+      );
+
+    }
+  );
+
+
+  if (
+    summaryTotal
+  ) {
+
+    summaryTotal.textContent =
+      total;
+
+  }
+
+}
+
+
+function summaryPreviousMonthHandler() {
+
+  summaryDate =
+    new Date(
+      summaryDate.getFullYear(),
+      summaryDate.getMonth() -
+        1,
+      1
+    );
+
+
+  renderProgrammeSummary();
+
+}
+
+
+function summaryNextMonthHandler() {
+
+  summaryDate =
+    new Date(
+      summaryDate.getFullYear(),
+      summaryDate.getMonth() +
+        1,
+      1
+    );
+
+
+  renderProgrammeSummary();
+
+}
+
+
+/* =========================================================
+   CLEAR ALL DATA
 ========================================================= */
 
 async function clearAllData() {
@@ -4829,10 +5521,10 @@ async function clearAllData() {
 
 
 /* =========================================================
-   BUTTON INITIALISATION
+   EVENT LISTENERS
 ========================================================= */
 
-function setupButtons() {
+function setupProgrammeButtons() {
 
   const addButton =
     $("addButton");
@@ -5111,6 +5803,7 @@ function setupButtons() {
       changeCalendarView
     );
 
+
     calendarViewSelect.addEventListener(
       "input",
       changeCalendarView
@@ -5127,9 +5820,10 @@ function setupButtons() {
       "click",
       function () {
 
-        switchVenue(
-          "HBB"
-        );
+        currentVenue =
+          "HBB";
+
+        showCalendarView();
 
       }
     );
@@ -5145,48 +5839,67 @@ function setupButtons() {
       "click",
       function () {
 
-        switchVenue(
-          "OTH"
-        );
+        currentVenue =
+          "OTH";
+
+        showCalendarView();
 
       }
     );
 
   }
 
-}
 
-
-/* =========================================================
-   CALENDAR VIEW CHANGE
-========================================================= */
-
-function changeCalendarView() {
+  /*
+    Google Sheet summary tab.
+  */
 
   if (
-    calendarViewSelect
+    summarySheetTab
   ) {
 
-    activeCalendarView =
-      calendarViewSelect.value;
+    summarySheetTab.addEventListener(
+      "click",
+      function () {
+
+        summaryDate =
+          new Date(
+            currentDate.getFullYear(),
+            currentDate.getMonth(),
+            1
+          );
+
+
+        showSummaryView();
+
+      }
+    );
 
   }
 
 
   if (
-    activeCalendarView ===
-    "week"
+    summaryPreviousMonth
   ) {
 
-    currentDate =
-      startOfWeek(
-        currentDate
-      );
+    summaryPreviousMonth.addEventListener(
+      "click",
+      summaryPreviousMonthHandler
+    );
 
   }
 
 
-  renderCalendar();
+  if (
+    summaryNextMonth
+  ) {
+
+    summaryNextMonth.addEventListener(
+      "click",
+      summaryNextMonthHandler
+    );
+
+  }
 
 }
 
@@ -5240,18 +5953,20 @@ function initialise() {
   }
 
 
+  updateSheetTabs();
+
   renderCalendar();
 
 }
 
 
 /* =========================================================
-   START APPLICATION
+   START
 ========================================================= */
 
 setupProgrammeForm();
 
-setupButtons();
+setupProgrammeButtons();
 
 initialise();
 
