@@ -1598,3 +1598,323 @@ textarea {
   }
 
 }
+
+/* =========================================================
+   FINAL WEEK / DAY VIEW FIX
+   KEEP THIS AT THE BOTTOM OF STYLE.CSS
+========================================================= */
+
+
+/* ---------------------------------------------------------
+   CALENDAR AREA
+--------------------------------------------------------- */
+
+.calendar {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+}
+
+
+/* ---------------------------------------------------------
+   WEEK VIEW
+--------------------------------------------------------- */
+
+.calendar-grid.week-view {
+  flex: 1;
+
+  display: grid !important;
+
+  grid-template-columns:
+    repeat(7, minmax(160px, 1fr)) !important;
+
+  grid-template-rows:
+    minmax(500px, 1fr) !important;
+
+  width: 100%;
+
+  min-width: 1120px;
+
+  min-height: 500px;
+
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+}
+
+
+.week-header.week-view-header {
+  display: grid !important;
+
+  grid-template-columns:
+    repeat(7, minmax(160px, 1fr)) !important;
+
+  width: 100%;
+
+  min-width: 1120px;
+
+  flex-shrink: 0;
+
+  overflow: visible;
+}
+
+
+/* ---------------------------------------------------------
+   DAY VIEW
+--------------------------------------------------------- */
+
+.calendar-grid.day-view {
+  flex: 1;
+
+  display: grid !important;
+
+  grid-template-columns:
+    minmax(0, 1fr) !important;
+
+  grid-template-rows:
+    minmax(500px, 1fr) !important;
+
+  width: 100%;
+
+  min-width: 0;
+
+  min-height: 500px;
+
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+
+
+.week-header.day-view-header {
+  display: grid !important;
+
+  grid-template-columns:
+    minmax(0, 1fr) !important;
+
+  width: 100%;
+
+  min-width: 0;
+
+  flex-shrink: 0;
+}
+
+
+/* ---------------------------------------------------------
+   WEEK / DAY COLUMN
+--------------------------------------------------------- */
+
+.week-column {
+  display: flex !important;
+
+  flex-direction: column !important;
+
+  min-width: 160px;
+
+  min-height: 500px;
+
+  padding: 10px;
+
+  overflow-y: auto;
+
+  background: #ffffff;
+
+  border-right:
+    1px solid #dadce0;
+}
+
+
+.week-column:last-child {
+  border-right: none;
+}
+
+
+.week-column.today-column {
+  background: #f8fbff;
+}
+
+
+/* Day view gets one full-width column */
+
+.calendar-grid.day-view
+.week-column {
+  width: 100% !important;
+
+  min-width: 0 !important;
+
+  max-width: none !important;
+
+  min-height: 500px;
+
+  border-right: none;
+}
+
+
+/* ---------------------------------------------------------
+   HEADER BUTTONS
+--------------------------------------------------------- */
+
+.week-header
+.calendar-date-header {
+  display: block;
+
+  width: 100%;
+
+  min-width: 0;
+
+  min-height: 44px;
+
+  padding: 10px 6px;
+
+  border: 0;
+
+  border-right:
+    1px solid #dadce0;
+
+  background: #ffffff;
+
+  color: #5f6368;
+
+  font-size: 12px;
+
+  font-weight: 700;
+
+  text-align: center;
+
+  cursor: pointer;
+}
+
+
+.week-header
+.calendar-date-header:last-child {
+  border-right: none;
+}
+
+
+.week-header
+.calendar-date-header:hover {
+  background: #f8f9fa;
+}
+
+
+.week-header
+.calendar-date-header.today-header {
+  color: #1a73e8;
+}
+
+
+/* ---------------------------------------------------------
+   MANPOWER MUST COME FIRST
+--------------------------------------------------------- */
+
+.week-column
+.manpower-container {
+  order: 1;
+
+  flex-shrink: 0;
+
+  width: 100%;
+
+  margin-bottom: 10px;
+}
+
+
+/* ---------------------------------------------------------
+   PROGRAMMES AFTER MANPOWER
+--------------------------------------------------------- */
+
+.week-column
+.event {
+  order: 2;
+
+  flex-shrink: 0;
+
+  width: 100%;
+}
+
+
+.week-view-event {
+  width: 100%;
+
+  margin-bottom: 8px;
+
+  font-size: 11px;
+}
+
+
+.day-view-event {
+  width: 100%;
+
+  margin-bottom: 8px;
+
+  padding: 10px 12px;
+
+  font-size: 13px;
+}
+
+
+/* ---------------------------------------------------------
+   EMPTY DAY
+--------------------------------------------------------- */
+
+.week-column
+.view-empty {
+  order: 2;
+
+  width: 100%;
+
+  padding: 24px 10px;
+
+  color: #80868b;
+
+  text-align: center;
+}
+
+
+/* ---------------------------------------------------------
+   MOBILE WEEK VIEW
+
+   Week view stays horizontally scrollable rather than
+   squeezing seven columns onto a phone.
+--------------------------------------------------------- */
+
+@media (max-width: 750px) {
+
+  .calendar-grid.week-view {
+    min-width: 1050px;
+
+    grid-template-columns:
+      repeat(
+        7,
+        150px
+      ) !important;
+  }
+
+
+  .week-header.week-view-header {
+    min-width: 1050px;
+
+    grid-template-columns:
+      repeat(
+        7,
+        150px
+      ) !important;
+  }
+
+
+  .calendar-grid.day-view {
+    min-width: 0;
+  }
+
+
+  .calendar-grid.day-view
+  .week-column {
+    min-width: 0 !important;
+
+    width: 100% !important;
+  }
+
+}
