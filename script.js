@@ -265,6 +265,11 @@ const remarksInput =
 const statusInput =
   $("status");
 
+const exportCurrentMonthButton =
+  $("exportCurrentMonthButton");
+
+const exportBothVenuesButton =
+  $("exportBothVenuesButton");
 
 /* =========================================================
    CALENDAR REFERENCES
@@ -5945,6 +5950,821 @@ async function clearAllData() {
 
 }
 
+/* =========================================================
+   CSV EXPORT
+   ONE ROW PER ROLLING PROGRAMME SERIES
+========================================================= */
+
+
+/* =========================================================
+   CSV ESCAPE
+========================================================= */
+
+function csvEscape(
+  value
+) {
+
+  const text =
+    value === null ||
+    value === undefined
+      ? ""
+      : String(
+          value
+        );
+
+
+  return (
+    `"${text.replace(
+      /"/g,
+      '""'
+    )}"`
+  );
+
+}
+
+
+/* =========================================================
+   DOWNLOAD CSV
+========================================================= */
+
+function downloadCSV(
+  csv,
+  filename
+) {
+
+  const blob =
+    new Blob(
+      [
+        "\uFEFF",
+        csv
+      ],
+      {
+        type:
+          "text/csv;charset=utf-8;"
+      }
+    );
+
+
+  const url =
+    URL.createObjectURL(
+      blob
+    );
+
+
+  const link =
+    document.createElement(
+      "a"
+    );
+
+
+  link.href =
+    url;
+
+
+  link.download =
+    filename;
+
+
+  document.body.appendChild(
+    link
+  );
+
+
+  link.click();
+
+
+  link.remove();
+
+
+  URL.revokeObjectURL(
+    url
+  );
+
+}
+
+
+/* =========================================================
+   EXPORT MONTH
+========================================================= */
+
+function getExportMonthDate() {
+
+  return showingSummary
+    ? new Date(
+        summaryDate
+      )
+    : new Date(
+        currentDate
+      );
+
+}
+
+
+/* =========================================================
+   DATE FORMATTING
+========================================================= */
+
+function formatShortDate(
+  dateString
+) {
+
+  const date =
+    parseInputDate(
+      dateString
+    );
+
+
+  return date.toLocaleDateString(
+    "en-SG",
+    {
+      day:
+        "2-digit",
+
+      month:
+        "2-digit",
+
+      year:
+        "numeric"
+    }
+  );
+
+}
+
+
+function formatMonth(
+  dateString
+) {
+
+  const date =
+    parseInputDate(
+      dateString
+    );
+
+
+  return date.toLocaleDateString(
+    "en-SG",
+    {
+      month:
+        "long",
+
+      year:
+        "numeric"
+    }
+  );
+
+}
+
+
+/* =========================================================
+   CHECK WHETHER DATE FALLS IN EXPORT MONTH
+========================================================= */
+
+function isDateInExportMonth(
+  dateString
+) {
+
+  const exportDate =
+    getExportMonthDate();
+
+
+  const date =
+    parseInputDate(
+      dateString
+    );
+
+
+  return (
+
+    date.getFullYear() ===
+      exportDate.getFullYear()
+
+    &&
+
+    date.getMonth() ===
+      exportDate.getMonth()
+
+  );
+
+}
+
+
+/* =========================================================
+   GET SERIES FOR VENUE
+========================================================= */
+
+function getVenueSeries(
+  venue
+) {
+
+  const groups =
+    {};
+
+
+  events
+    .filter(
+      function (
+        event
+      ) {
+
+        return (
+          event.venue ===
+          venue
+        );
+
+      }
+    )
+    .forEach(
+      function (
+        event
+      ) {
+
+        const key =
+          event.seriesId ||
+          event.id;
+
+
+        if (
+          !groups[
+            key
+          ]
+        ) {
+
+          groups[
+            key
+          ] =
+            [];
+
+        }
+
+
+        groups[
+          key
+        ].push(
+          event
+        );
+
+      }
+    );
+
+
+  /*
+    Sort every series by date/time.
+  */
+
+  Object.values(
+    groups
+  )
+  .forEach(
+    function (
+      series
+    ) {
+
+      series.sort(
+        function (
+          a,
+          b
+        ) {
+
+          return (
+            dateTimeValue(
+              a
+            ) -
+            dateTimeValue(
+              b
+            )
+          );
+
+        }
+      );
+
+    }
+  );
+
+
+  return Object.values(
+    groups
+  );
+
+}
+
+
+/* =========================================================
+   CHECK IF SERIES IS ROLLING
+========================================================= */
+
+function isRollingSeries(
+  series
+) {
+
+  if (
+    !series ||
+    series.length === 0
+  ) {
+
+    return false;
+
+  }
+
+
+  return (
+    Number(
+      series[0].totalSessions
+    ) > 1
+  );
+
+}
+
+
+/* =========================================================
+   BUILD EXPORT ROWS
+========================================================= */
+
+function buildVenueExportRows(
+  venue
+) {
+
+  const rows =
+    [];
+
+
+  const seriesGroups =
+    getVenueSeries(
+      venue
+    );
+
+
+  seriesGroups.forEach(
+    function (
+      series
+    ) {
+
+      if (
+        !series.length
+      ) {
+
+        return;
+
+      }
+
+
+      const first =
+        series[0];
+
+
+      const rolling =
+        isRollingSeries(
+          series
+        );
+
+
+      /* =====================================================
+         ROLLING PROGRAMME
+
+         Only export if Week 1 falls
+         inside the selected month.
+
+         Then populate W1-W8 using
+         the whole series, even if
+         later dates fall in the next month.
+      ===================================================== */
+
+      if (
+        rolling
+      ) {
+
+        if (
+          !isDateInExportMonth(
+            first.date
+          )
+        ) {
+
+          return;
+
+        }
+
+
+        const row = [
+
+          /* Month */
+          formatMonth(
+            first.date
+          ),
+
+          /* Remarks */
+          "",
+
+          /* Programme Name */
+          first.programme ||
+          "",
+
+          /* Date / Week 1 */
+          formatShortDate(
+            first.date
+          ),
+
+          /* Time */
+          formatTime(
+            first.time
+          ),
+
+          /* Pax */
+          first.pax ??
+          "",
+
+          /* Status */
+          first.status ||
+          "",
+
+          /* W1 */
+          "",
+
+          /* W2 */
+          "",
+
+          /* W3 */
+          "",
+
+          /* W4 */
+          "",
+
+          /* W5 */
+          "",
+
+          /* W6 */
+          "",
+
+          /* W7 */
+          "",
+
+          /* W8 */
+          ""
+
+        ];
+
+
+        /*
+          Populate W1-W8.
+        */
+
+        series.forEach(
+          function (
+            event
+          ) {
+
+            const week =
+              Number(
+                event.sessionNumber
+              );
+
+
+            if (
+              week >= 1 &&
+              week <= 8
+            ) {
+
+              const columnIndex =
+                7 +
+                (
+                  week - 1
+                );
+
+
+              row[
+                columnIndex
+              ] =
+                formatShortDate(
+                  event.date
+                );
+
+            }
+
+          }
+        );
+
+
+        rows.push(
+          row
+        );
+
+
+        return;
+
+      }
+
+
+      /* =====================================================
+         STAND-ALONE PROGRAMME
+
+         Export if the programme date
+         falls within the selected month.
+      ===================================================== */
+
+      if (
+        !isDateInExportMonth(
+          first.date
+        )
+      ) {
+
+        return;
+
+      }
+
+
+      rows.push(
+        [
+
+          /* Month */
+          formatMonth(
+            first.date
+          ),
+
+          /* Remarks */
+          "",
+
+          /* Programme Name */
+          first.programme ||
+          "",
+
+          /* Date / Week 1 */
+          formatShortDate(
+            first.date
+          ),
+
+          /* Time */
+          formatTime(
+            first.time
+          ),
+
+          /* Pax */
+          first.pax ??
+          "",
+
+          /* Status */
+          first.status ||
+          "",
+
+          /* W1 */
+          "",
+
+          /* W2 */
+          "",
+
+          /* W3 */
+          "",
+
+          /* W4 */
+          "",
+
+          /* W5 */
+          "",
+
+          /* W6 */
+          "",
+
+          /* W7 */
+          "",
+
+          /* W8 */
+          ""
+
+        ]
+      );
+
+    }
+  );
+
+
+  /*
+    Sort rows by actual start date.
+  */
+
+  rows.sort(
+    function (
+      a,
+      b
+    ) {
+
+      const dateA =
+        a[3]
+          .split("/")
+          .reverse()
+          .join("-");
+
+
+      const dateB =
+        b[3]
+          .split("/")
+          .reverse()
+          .join("-");
+
+
+      return dateA.localeCompare(
+        dateB
+      );
+
+    }
+  );
+
+
+  return rows;
+
+}
+
+
+/* =========================================================
+   EXPORT ONE VENUE
+========================================================= */
+
+function exportVenueMonthCSV(
+  venue
+) {
+
+  const rows =
+    buildVenueExportRows(
+      venue
+    );
+
+
+  if (
+    rows.length === 0
+  ) {
+
+    alert(
+      `There are no ${venue} programmes to export for this month.`
+    );
+
+    return false;
+
+  }
+
+
+  const headers = [
+
+    "Month",
+
+    "Remarks",
+
+    "Programme Name",
+
+    "Date/ Week 1",
+
+    "Time",
+
+    "Pax",
+
+    "Status",
+
+    "W1",
+
+    "W2",
+
+    "W3",
+
+    "W4",
+
+    "W5",
+
+    "W6",
+
+    "W7",
+
+    "W8"
+
+  ];
+
+
+  const csv =
+    [
+      headers,
+      ...rows
+    ]
+    .map(
+      function (
+        row
+      ) {
+
+        return row
+          .map(
+            csvEscape
+          )
+          .join(
+            ","
+          );
+
+      }
+    )
+    .join(
+      "\r\n"
+    );
+
+
+  const exportDate =
+    getExportMonthDate();
+
+
+  const year =
+    exportDate.getFullYear();
+
+
+  const month =
+    String(
+      exportDate.getMonth() +
+      1
+    ).padStart(
+      2,
+      "0"
+    );
+
+
+  const filename =
+    `${venue}_${year}-${month}_programme_schedule.csv`;
+
+
+  downloadCSV(
+    csv,
+    filename
+  );
+
+
+  return true;
+
+}
+
+
+/* =========================================================
+   EXPORT CURRENT VENUE
+========================================================= */
+
+function exportCurrentMonthCSV() {
+
+  exportVenueMonthCSV(
+    currentVenue
+  );
+
+}
+
+
+/* =========================================================
+   EXPORT HBB + OTH
+========================================================= */
+
+function exportBothVenuesCSV() {
+
+  const hbbRows =
+    buildVenueExportRows(
+      "HBB"
+    );
+
+
+  const othRows =
+    buildVenueExportRows(
+      "OTH"
+    );
+
+
+  if (
+    hbbRows.length === 0 &&
+    othRows.length === 0
+  ) {
+
+    alert(
+      "There are no HBB or OTH programmes to export for this month."
+    );
+
+    return;
+
+  }
+
+
+  if (
+    hbbRows.length > 0
+  ) {
+
+    exportVenueMonthCSV(
+      "HBB"
+    );
+
+  }
+
+
+  if (
+    othRows.length > 0
+  ) {
+
+    setTimeout(
+      function () {
+
+        exportVenueMonthCSV(
+          "OTH"
+        );
+
+      },
+      300
+    );
+
+  }
+
+}
 
 /* =========================================================
    BUTTON SETUP
@@ -5967,6 +6787,28 @@ function setupButtons() {
 
   }
 
+   if (
+  exportCurrentMonthButton
+) {
+
+  exportCurrentMonthButton.addEventListener(
+    "click",
+    exportCurrentMonthCSV
+  );
+
+}
+
+
+if (
+  exportBothVenuesButton
+) {
+
+  exportBothVenuesButton.addEventListener(
+    "click",
+    exportBothVenuesCSV
+  );
+
+}
 
   const editButton =
     $("editButton");
