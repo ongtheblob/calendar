@@ -187,9 +187,22 @@ let manpower = {};
 let currentVenue =
   "HBB";
 
-let currentDate =
-  new Date();
+/* =========================================================
+   REMEMBER SELECTED CALENDAR DATE
+========================================================= */
 
+const savedCalendarDate =
+  localStorage.getItem("selectedCalendarDate");
+
+let currentDate = savedCalendarDate
+  ? parseInputDate(savedCalendarDate)
+  : new Date();
+function saveCalendarDate() {
+  localStorage.setItem(
+    "selectedCalendarDate",
+    formatInputDate(currentDate)
+  );
+}
 let activeCalendarView =
   "month";
 
@@ -1433,18 +1446,25 @@ function getDayEvents(
 
 function renderCalendar() {
 
-  if (
-    !calendarGrid
-  ) {
-
-    console.error(
-      "calendarGrid was not found."
-    );
-
-
+  if (!calendarGrid) {
     return;
-
   }
+
+  // Remember the selected date
+  saveCalendarDate();
+
+  if (activeCalendarView === "week") {
+    renderWeekView();
+    return;
+  }
+
+  if (activeCalendarView === "day") {
+    renderDayView();
+    return;
+  }
+
+  renderMonthView();
+}
 
 
   console.log(
