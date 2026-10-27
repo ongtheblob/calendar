@@ -1443,15 +1443,19 @@ function getDayEvents(
 /* =========================================================
    MASTER CALENDAR RENDER
 ========================================================= */
-
 function renderCalendar() {
 
   if (!calendarGrid) {
     return;
   }
 
-  // Remember the selected date
+  // Remember the selected calendar date
   saveCalendarDate();
+
+  console.log(
+    "Rendering calendar view:",
+    activeCalendarView
+  );
 
   if (activeCalendarView === "week") {
     renderWeekView();
@@ -1466,43 +1470,7 @@ function renderCalendar() {
   renderMonthView();
 }
 
-
-  console.log(
-    "Rendering calendar view:",
-    activeCalendarView
-  );
-
-
-  if (
-    activeCalendarView ===
-    "week"
-  ) {
-
-    renderWeekView();
-
-    return;
-
-  }
-
-
-  if (
-    activeCalendarView ===
-    "day"
-  ) {
-
-    renderDayView();
-
-    return;
-
-  }
-
-
-  renderMonthView();
-
-}
-
-
-/* =========================================================
+/* ========================================================
    VIEW DATE LABEL
 ========================================================= */
 
