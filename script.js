@@ -1498,7 +1498,7 @@ function getViewDateLabel() {
       }
     );
 
-  }
+
 
 
   if (
