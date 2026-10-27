@@ -1,23 +1,22 @@
 /* =========================================================
-   PROGRAMME CALENDAR
+   ACTIVE HEALTH PROGRAMME CALENDAR
+   HBB / OTH
 
    Features:
-   - Supabase
-   - HBB / OTH
-   - Month / Week / Day views
-   - Add / Edit / Delete programmes
-   - Rolling programme sessions
-   - Manage Knee / Metabolic Week 14 session
-   - Body Composition = 30 minutes
-   - Start minutes only :00 / :30
-   - Fixed required manpower = 2
-   - Staff on duty shown above programmes
+   - Supabase database
+   - Month / Week / Day calendar
+   - Remember selected calendar month
+   - Add, edit and delete programmes
+   - Rolling programme schedules
+   - Additional Week 14 sessions
+   - Staff on duty and manpower
    - Monthly programme summary
+   - CSV exports for HBB and OTH
 ========================================================= */
 
 
 /* =========================================================
-   SUPABASE CONFIG
+   1. SUPABASE CONFIGURATION
 ========================================================= */
 
 const SUPABASE_URL =
@@ -26,144 +25,59 @@ const SUPABASE_URL =
 const SUPABASE_PUBLISHABLE_KEY =
   "sb_publishable_jxGJEa2GF2dM8q4-bAO1eA_0SrLus17";
 
+const supabaseClient =
+  window.supabase?.createClient
+    ? window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_PUBLISHABLE_KEY
+      )
+    : null;
 
-let supabaseClient = null;
-
-
-if (
-  window.supabase &&
-  typeof window.supabase.createClient === "function"
-) {
-
-  supabaseClient =
-    window.supabase.createClient(
-      SUPABASE_URL,
-      SUPABASE_PUBLISHABLE_KEY
-    );
-
-  console.log(
-    "Supabase client initialised."
-  );
-
-} else {
-
-  console.error(
-    "Supabase library was not loaded."
-  );
-
+if (!supabaseClient) {
+  console.error("Supabase library was not loaded.");
 }
 
 
 /* =========================================================
-   SETTINGS
+   2. SETTINGS
 ========================================================= */
 
 const REQUIRED_MANPOWER = 2;
 
-
-/* =========================================================
-   PROGRAMME SERIES LENGTH
-========================================================= */
-
 const SERIES_WEEKS = {
-
-  "Manage Knee Health":
-    6,
-
-  "Manage Metabolic Health":
-    6,
-
-  "Function - Combat Age-Related Loss of Muscle (CALM) 1.0":
-    8,
-
-  "Function - Combat Age-Related Loss of Muscle (CALM) 2.0":
-    6,
-
-  "Strength 1.0":
-    8,
-
-  "Perform 1.0":
-    8
-
+  "Manage Knee Health": 6,
+  "Manage Metabolic Health": 6,
+  "Function - Combat Age-Related Loss of Muscle (CALM) 1.0": 8,
+  "Function - Combat Age-Related Loss of Muscle (CALM) 2.0": 6,
+  "Strength 1.0": 8,
+  "Perform 1.0": 8
 };
-
-
-/* =========================================================
-   PROGRAMMES WITH AN EXTRA WEEK 14 SESSION
-========================================================= */
 
 const WEEK_14_PROGRAMMES = [
-
   "Manage Knee Health",
-
   "Manage Metabolic Health"
-
 ];
 
-
-/* =========================================================
-   PAX
-========================================================= */
-
 const PAX = {
-
-  "Strength 1.0":
-    12,
-
-  "Strength 2.0 - Foundation Strength Workout":
-    14,
-
-  "Strength 2.0 - Functional Fitness Workout":
-    12,
-
-  "Strength 2.0 - Mobility Workout":
-    12,
-
-  "Strength 2.0 - Assessment & Check-In":
-    10,
-
-  "Perform 1.0":
-    10,
-
-  "Perform 2.0 - Multi-Modal Workout":
-    12,
-
-  "Perform 2.0 - AMRAP Workout":
-    12,
-
-  "Perform 2.0 - ENGINE Workout":
-    12,
-
-  "Perform 2.0 - Assessment & Check-In":
-    10,
-
-  "Function - Combat Age-Related Loss of Muscle (CALM) 1.0":
-    12,
-
-  "Function - Combat Age-Related Loss of Muscle (CALM) 2.0":
-    14,
-
-  "Manage Knee Health":
-    8,
-
-  "Manage Metabolic Health":
-    8,
-
-  "Body Composition Assessment":
-    16,
-
-  "Active Health Senior Interest Group":
-    12
-
+  "Strength 1.0": 12,
+  "Strength 2.0 - Foundation Strength Workout": 14,
+  "Strength 2.0 - Functional Fitness Workout": 12,
+  "Strength 2.0 - Mobility Workout": 12,
+  "Strength 2.0 - Assessment & Check-In": 10,
+  "Perform 1.0": 10,
+  "Perform 2.0 - Multi-Modal Workout": 12,
+  "Perform 2.0 - AMRAP Workout": 12,
+  "Perform 2.0 - ENGINE Workout": 12,
+  "Perform 2.0 - Assessment & Check-In": 10,
+  "Function - Combat Age-Related Loss of Muscle (CALM) 1.0": 12,
+  "Function - Combat Age-Related Loss of Muscle (CALM) 2.0": 14,
+  "Manage Knee Health": 8,
+  "Manage Metabolic Health": 8,
+  "Body Composition Assessment": 16,
+  "Active Health Senior Interest Group": 12
 };
 
-
-/* =========================================================
-   STAFF
-========================================================= */
-
 const STAFF_LIST = [
-
   "Joelle",
   "Jireh",
   "RJ",
@@ -172,2666 +86,929 @@ const STAFF_LIST = [
   "Team Nila",
   "APS",
   "Other"
-
 ];
 
 
 /* =========================================================
-   APPLICATION STATE
-========================================================= */
-
-let events = [];
-
-let manpower = {};
-
-let currentVenue =
-  "HBB";
-
-/* =========================================================
-   REMEMBER SELECTED CALENDAR DATE
-========================================================= */
-
-const savedCalendarDate =
-  localStorage.getItem("selectedCalendarDate");
-
-let currentDate = savedCalendarDate
-  ? parseInputDate(savedCalendarDate)
-  : new Date();
-function saveCalendarDate() {
-  localStorage.setItem(
-    "selectedCalendarDate",
-    formatInputDate(currentDate)
-  );
-}
-let activeCalendarView =
-  "month";
-
-let selectedEventId =
-  null;
-
-let manpowerDate =
-  null;
-
-let manpowerVenue =
-  null;
-
-let showingSummary =
-  false;
-
-let summaryDate =
-  new Date();
-
-
-/* =========================================================
-   DOM HELPER
+   3. DOM HELPERS
 ========================================================= */
 
 function $(id) {
+  return document.getElementById(id);
+}
 
-  return document.getElementById(
-    id
+function valueOf(id, fallback = "") {
+  return $(id)?.value ?? fallback;
+}
+
+function setValue(id, value) {
+  if ($(id)) $(id).value = value;
+}
+
+function setText(id, value) {
+  if ($(id)) $(id).textContent = value;
+}
+
+function toggleHidden(id, hidden) {
+  $(id)?.classList.toggle("hidden", hidden);
+}
+
+function on(id, eventName, handler) {
+  $(id)?.addEventListener(eventName, handler);
+}
+
+
+/* =========================================================
+   4. DATE HELPERS
+========================================================= */
+
+function parseInputDate(value) {
+  const parts = String(value).slice(0, 10).split("-").map(Number);
+
+  if (
+    parts.length !== 3 ||
+    parts.some(n => !Number.isInteger(n))
+  ) {
+    return new Date(NaN);
+  }
+
+  const date = new Date(parts[0], parts[1] - 1, parts[2]);
+
+  if (
+    date.getFullYear() !== parts[0] ||
+    date.getMonth() !== parts[1] - 1 ||
+    date.getDate() !== parts[2]
+  ) {
+    return new Date(NaN);
+  }
+
+  return date;
+}
+
+function formatInputDate(date) {
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0")
+  ].join("-");
+}
+
+function addDays(date, days) {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+}
+
+function startOfWeek(date) {
+  const result = new Date(date);
+  result.setHours(0, 0, 0, 0);
+  result.setDate(result.getDate() - result.getDay());
+  return result;
+}
+
+function isSameDay(a, b) {
+  return formatInputDate(a) === formatInputDate(b);
+}
+
+function formatShortDate(dateString) {
+  const date = parseInputDate(dateString);
+
+  return [
+    String(date.getDate()).padStart(2, "0"),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    date.getFullYear()
+  ].join("/");
+}
+
+function formatMonth(dateString) {
+  return parseInputDate(dateString).toLocaleDateString(
+    "en-SG",
+    { month: "long", year: "numeric" }
   );
+}
 
+function formatDisplayDate(dateString) {
+  return parseInputDate(dateString).toLocaleDateString(
+    "en-SG",
+    {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+      year: "numeric"
+    }
+  );
 }
 
 
 /* =========================================================
-   DOM REFERENCES
+   5. REMEMBER SELECTED CALENDAR DATE
 ========================================================= */
 
-const programmeSelect =
-  $("programme");
+let currentDate = new Date();
 
-const customProgrammeGroup =
-  $("customProgrammeGroup");
+try {
+  const savedDate = localStorage.getItem("selectedCalendarDate");
 
-const customProgrammeInput =
-  $("customProgramme");
+  if (savedDate) {
+    const parsed = parseInputDate(savedDate);
 
-const venueSelect =
-  $("venue");
-
-const startDateInput =
-  $("startDate");
-
-const startTimeInput =
-  $("startTime");
-
-const startHour =
-  $("startHour");
-
-const startMinute =
-  $("startMinute");
-
-const durationGroup =
-  $("durationGroup");
-
-const durationPreset =
-  $("durationPreset");
-
-const customDuration =
-  $("customDuration");
-
-const remarksInput =
-  $("remarks");
-
-const statusInput =
-  $("status");
-
-const exportCurrentMonthButton =
-  $("exportCurrentMonthButton");
-
-const exportBothVenuesButton =
-  $("exportBothVenuesButton");
-
-/* =========================================================
-   CALENDAR REFERENCES
-========================================================= */
-
-const calendarGrid =
-  $("calendarGrid");
-
-const monthTitle =
-  $("monthTitle");
-
-const currentVenueLabel =
-  $("currentVenueLabel");
-
-const calendarViewSelect =
-  $("calendarView");
-
-const hbbSheetTab =
-  $("hbbSheetTab");
-
-const othSheetTab =
-  $("othSheetTab");
-
-
-/* =========================================================
-   MODAL REFERENCES
-========================================================= */
-
-const eventModal =
-  $("eventModal");
-
-const editModal =
-  $("editModal");
-
-const manpowerModal =
-  $("manpowerModal");
-
-
-/* =========================================================
-   EDIT REFERENCES
-========================================================= */
-
-const editProgramme =
-  $("editProgramme");
-
-const editCustomProgrammeGroup =
-  $("editCustomProgrammeGroup");
-
-const editCustomProgramme =
-  $("editCustomProgramme");
-
-const editVenue =
-  $("editVenue");
-
-const editStartDate =
-  $("editStartDate");
-
-const editStartTime =
-  $("editStartTime");
-
-const editStartHour =
-  $("editStartHour");
-
-const editStartMinute =
-  $("editStartMinute");
-
-const editDurationGroup =
-  $("editDurationGroup");
-
-const editDuration =
-  $("editDuration");
-
-const editRemarks =
-  $("editRemarks");
-
-const editStatus =
-  $("editStatus");
-
-
-/* =========================================================
-   SUMMARY REFERENCES
-========================================================= */
-
-const summarySheetTab =
-  $("summarySheetTab");
-
-const summaryPanel =
-  $("summaryPanel");
-
-const summaryMonth =
-  $("summaryMonth");
-
-const summarySubtitle =
-  $("summarySubtitle");
-
-const summaryTableBody =
-  $("summaryTableBody");
-
-const summaryTotal =
-  $("summaryTotal");
-
-const summaryPreviousMonth =
-  $("summaryPreviousMonth");
-
-const summaryNextMonth =
-  $("summaryNextMonth");
-
-
-/* =========================================================
-   SUPABASE TEST
-========================================================= */
-
-async function testSupabaseConnection() {
-
-  if (
-    !supabaseClient
-  ) {
-
-    return;
-
+    if (!isNaN(parsed.getTime())) {
+      currentDate = parsed;
+    }
   }
+} catch (error) {
+  console.warn("Calendar date could not be restored.", error);
+}
 
-
-  const {
-    data,
-    error
-  } =
-    await supabaseClient
-      .from(
-        "programmes"
-      )
-      .select("*")
-      .limit(1);
-
-
-  if (
-    error
-  ) {
-
-    console.error(
-      "Supabase connection test failed:",
-      error
+function saveCalendarDate() {
+  try {
+    localStorage.setItem(
+      "selectedCalendarDate",
+      formatInputDate(currentDate)
     );
-
-  } else {
-
-    console.log(
-      "Supabase connection successful.",
-      data
-    );
-
+  } catch (error) {
+    console.warn("Calendar date could not be saved.", error);
   }
-
 }
 
 
 /* =========================================================
-   TIME SELECTOR SETUP
+   6. APPLICATION STATE
+========================================================= */
+
+let events = [];
+let manpower = {};
+
+let currentVenue = "HBB";
+let activeCalendarView = "month";
+
+let selectedEventId = null;
+
+let manpowerDate = null;
+let manpowerVenue = null;
+
+let showingSummary = false;
+let summaryDate = new Date(currentDate);
+
+let programmesLoaded = false;
+let manpowerLoaded = false;
+
+
+/* =========================================================
+   7. TIME HELPERS
 ========================================================= */
 
 function populateHours() {
+  ["startHour", "editStartHour"].forEach(id => {
+    const select = $(id);
+    if (!select) return;
 
-  const selectors = [
-    startHour,
-    editStartHour
-  ];
+    select.innerHTML = "";
 
+    for (let hour = 0; hour < 24; hour++) {
+      const option = document.createElement("option");
 
-  selectors.forEach(
-    function (select) {
+      option.value = String(hour).padStart(2, "0");
+      option.textContent = option.value;
 
-      if (
-        !select
-      ) {
-
-        return;
-
-      }
-
-
-      select.innerHTML =
-        "";
-
-
-      for (
-        let hour = 0;
-        hour < 24;
-        hour++
-      ) {
-
-        const option =
-          document.createElement(
-            "option"
-          );
-
-
-        option.value =
-          String(
-            hour
-          ).padStart(
-            2,
-            "0"
-          );
-
-
-        option.textContent =
-          String(
-            hour
-          ).padStart(
-            2,
-            "0"
-          );
-
-
-        select.appendChild(
-          option
-        );
-
-      }
-
+      select.appendChild(option);
     }
-  );
 
+    select.value = "09";
+  });
 
-  if (
-    startHour
-  ) {
-
-    startHour.value =
-      "09";
-
-  }
-
-
-  if (
-    startMinute
-  ) {
-
-    startMinute.value =
-      "00";
-
-  }
-
-
-  if (
-    editStartHour
-  ) {
-
-    editStartHour.value =
-      "09";
-
-  }
-
-
-  if (
-    editStartMinute
-  ) {
-
-    editStartMinute.value =
-      "00";
-
-  }
-
+  setValue("startMinute", "00");
+  setValue("editStartMinute", "00");
 }
-
-
-/* =========================================================
-   DATE HELPERS
-========================================================= */
-
-function parseInputDate(
-  value
-) {
-
-  const parts =
-    String(
-      value ||
-      ""
-    )
-    .substring(
-      0,
-      10
-    )
-    .split(
-      "-"
-    )
-    .map(
-      Number
-    );
-
-
-  return new Date(
-    parts[0],
-    (
-      parts[1] ||
-      1
-    ) - 1,
-    parts[2] ||
-    1
-  );
-
-}
-
-
-function formatInputDate(
-  date
-) {
-
-  const year =
-    date.getFullYear();
-
-
-  const month =
-    String(
-      date.getMonth() + 1
-    ).padStart(
-      2,
-      "0"
-    );
-
-
-  const day =
-    String(
-      date.getDate()
-    ).padStart(
-      2,
-      "0"
-    );
-
-
-  return (
-    `${year}-${month}-${day}`
-  );
-
-}
-
-
-function addDays(
-  date,
-  days
-) {
-
-  const result =
-    new Date(
-      date
-    );
-
-
-  result.setDate(
-    result.getDate() +
-    days
-  );
-
-
-  return result;
-
-}
-
-
-function startOfWeek(
-  date
-) {
-
-  const result =
-    new Date(
-      date
-    );
-
-
-  result.setHours(
-    0,
-    0,
-    0,
-    0
-  );
-
-
-  result.setDate(
-    result.getDate() -
-    result.getDay()
-  );
-
-
-  return result;
-
-}
-
-
-function isSameDay(
-  a,
-  b
-) {
-
-  return (
-
-    a.getFullYear() ===
-      b.getFullYear()
-
-    &&
-
-    a.getMonth() ===
-      b.getMonth()
-
-    &&
-
-    a.getDate() ===
-      b.getDate()
-
-  );
-
-}
-
-
-/* =========================================================
-   TIME HELPERS
-========================================================= */
-
-function isValidHalfHourTime(
-  time
-) {
-
-  const parts =
-    String(
-      time ||
-      ""
-    )
-    .split(
-      ":"
-    );
-
-
-  if (
-    parts.length <
-    2
-  ) {
-
-    return false;
-
-  }
-
-
-  const minutes =
-    Number(
-      parts[1]
-    );
-
-
-  return (
-    minutes === 0 ||
-    minutes === 30
-  );
-
-}
-
 
 function getAddTime() {
-
-  if (
-    startHour &&
-    startMinute
-  ) {
-
-    return (
-      `${String(
-        startHour.value
-      ).padStart(
-        2,
-        "0"
-      )}:` +
-      `${String(
-        startMinute.value
-      ).padStart(
-        2,
-        "0"
-      )}`
-    );
-
+  if ($("startHour") && $("startMinute")) {
+    return `${valueOf("startHour")}:${valueOf("startMinute")}`;
   }
 
-
-  if (
-    startTimeInput
-  ) {
-
-    return String(
-      startTimeInput.value
-    ).substring(
-      0,
-      5
-    );
-
-  }
-
-
-  return "";
-
+  return valueOf("startTime").slice(0, 5);
 }
-
 
 function getEditTime() {
-
-  if (
-    editStartHour &&
-    editStartMinute
-  ) {
-
-    return (
-      `${String(
-        editStartHour.value
-      ).padStart(
-        2,
-        "0"
-      )}:` +
-      `${String(
-        editStartMinute.value
-      ).padStart(
-        2,
-        "0"
-      )}`
-    );
-
+  if ($("editStartHour") && $("editStartMinute")) {
+    return `${valueOf("editStartHour")}:${valueOf("editStartMinute")}`;
   }
 
-
-  if (
-    editStartTime
-  ) {
-
-    return String(
-      editStartTime.value
-    ).substring(
-      0,
-      5
-    );
-
-  }
-
-
-  return "";
-
+  return valueOf("editStartTime").slice(0, 5);
 }
 
-
-function addMinutesToTime(
-  time,
-  minutes
-) {
-
-  const [
-    hours,
-    mins
-  ] =
-    String(
-      time ||
-      "09:00"
-    )
-    .split(
-      ":"
-    )
-    .map(
-      Number
-    );
-
-
-  const total =
-    (
-      hours *
-      60
-    ) +
-    mins +
-    Number(
-      minutes ||
-      0
-    );
-
-
-  const newHours =
-    Math.floor(
-      total /
-      60
-    ) % 24;
-
-
-  const newMinutes =
-    total %
-    60;
-
-
-  return (
-    `${String(
-      newHours
-    ).padStart(
-      2,
-      "0"
-    )}:` +
-    `${String(
-      newMinutes
-    ).padStart(
-      2,
-      "0"
-    )}`
-  );
-
+function isValidHalfHourTime(time) {
+  return /^([01]\d|2[0-3]):(00|30)$/.test(time);
 }
 
+function addMinutesToTime(time, minutes) {
+  const [hour, minute] = time.split(":").map(Number);
 
-function formatTime(
-  time
-) {
+  const total = hour * 60 + minute + Number(minutes);
 
-  const [
-    hours,
-    minutes
-  ] =
-    String(
-      time ||
-      "09:00"
-    )
-    .split(
-      ":"
-    )
-    .map(
-      Number
-    );
-
-
-  const date =
-    new Date();
-
-
-  date.setHours(
-    hours,
-    minutes,
-    0,
-    0
-  );
-
-
-  return date.toLocaleTimeString(
-    "en-SG",
-    {
-      hour:
-        "numeric",
-
-      minute:
-        "2-digit"
-    }
-  );
-
+  return [
+    String(Math.floor(total / 60) % 24).padStart(2, "0"),
+    String(total % 60).padStart(2, "0")
+  ].join(":");
 }
 
+function formatTime(time) {
+  const [hour, minute] = time.split(":").map(Number);
 
-function formatDuration(
-  minutes
-) {
+  const date = new Date();
+  date.setHours(hour, minute, 0, 0);
 
-  const total =
-    Number(
-      minutes ||
-      0
-    );
+  return date.toLocaleTimeString("en-SG", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true
+  });
+}
 
+function formatDuration(minutes) {
+  const value = Number(minutes);
 
-  if (
-    total <
-    60
-  ) {
+  if (value < 60) return `${value} min`;
 
-    return (
-      `${total} min`
-    );
+  const hours = Math.floor(value / 60);
+  const remaining = value % 60;
 
-  }
-
-
-  const hours =
-    Math.floor(
-      total /
-      60
-    );
-
-
-  const remainder =
-    total %
-    60;
-
-
-  if (
-    remainder ===
-    0
-  ) {
-
-    return (
-      `${hours} hour${
-        hours === 1
-          ? ""
-          : "s"
-      }`
-    );
-
-  }
-
-
-  return (
-    `${hours} hr ${remainder} min`
-  );
-
+  return remaining
+    ? `${hours} hr ${remaining} min`
+    : `${hours} hour${hours === 1 ? "" : "s"}`;
 }
 
 
 /* =========================================================
-   DISPLAY HELPERS
+   8. GENERAL HELPERS
 ========================================================= */
 
-function formatDisplayDate(
-  dateString
-) {
-
-  return parseInputDate(
-    dateString
-  )
-  .toLocaleDateString(
-    "en-SG",
-    {
-      weekday:
-        "short",
-
-      day:
-        "numeric",
-
-      month:
-        "short",
-
-      year:
-        "numeric"
-    }
-  );
-
+function makeId(prefix) {
+  return `${prefix}_${Date.now()}_${Math.random()
+    .toString(36)
+    .slice(2, 12)}`;
 }
 
-
-function dateTimeValue(
-  event
-) {
-
-  return new Date(
-    `${event.date}T${event.time}`
-  ).getTime();
-
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
-
-function makeId(
-  prefix
-) {
-
-  return (
-    `${prefix}_${Date.now()}_` +
-    Math.random()
-      .toString(36)
-      .slice(2)
-  );
-
+function dateTimeValue(event) {
+  return new Date(`${event.date}T${event.time}`).getTime();
 }
 
-
-function escapeHtml(
-  value
-) {
-
-  return String(
-    value ??
-    ""
-  )
-  .replace(
-    /&/g,
-    "&amp;"
-  )
-  .replace(
-    /</g,
-    "&lt;"
-  )
-  .replace(
-    />/g,
-    "&gt;"
-  )
-  .replace(
-    /"/g,
-    "&quot;"
-  )
-  .replace(
-    /'/g,
-    "&#039;"
-  );
-
-}
-
-
-/* =========================================================
-   PROGRAMME HELPERS
-========================================================= */
-
-function getPax(
-  programme
-) {
-
-  return Object.prototype
-    .hasOwnProperty.call(
-      PAX,
-      programme
-    )
-
-    ? PAX[
-        programme
-      ]
-
+function getPax(programme) {
+  return Object.prototype.hasOwnProperty.call(PAX, programme)
+    ? PAX[programme]
     : "";
-
 }
 
-
-function isKnownProgramme(
-  programme
-) {
-
-  return Object.prototype
-    .hasOwnProperty.call(
-      PAX,
-      programme
-    );
-
+function isKnownProgramme(programme) {
+  return Object.prototype.hasOwnProperty.call(PAX, programme);
 }
 
+function needsWeek14Session(programme) {
+  return WEEK_14_PROGRAMMES.includes(programme);
+}
 
-function getProgrammeDuration(
-  programme,
-  value
-) {
+function getProgrammeDuration(programme, customValue = 60) {
+  if (programme === "Body Composition Assessment") return 30;
 
-  if (
-    programme ===
-    "Body Composition Assessment"
-  ) {
+  if (isKnownProgramme(programme)) return 60;
 
-    return 30;
+  return Number(customValue);
+}
 
+function getSessionLabel(event) {
+  if (Number(event.totalSessions) <= 1) {
+    return "Stand-alone";
   }
 
-
-  /*
-    Custom programme name has already
-    replaced "Others" before this function
-    is normally called, so the supplied
-    value is used when available.
-  */
-
-  if (
-    Number(
-      value
-    ) > 0
-  ) {
-
-    return Number(
-      value
-    );
-
-  }
-
-
-  return 60;
-
-}
-
-
-function needsWeek14Session(
-  programme
-) {
-
-  return WEEK_14_PROGRAMMES.includes(
-    programme
-  );
-
+  return event.sessionNumber
+    ? `Week ${event.sessionNumber}`
+    : "Series";
 }
 
 
 /* =========================================================
-   DATABASE MAPPING
+   9. DATABASE MAPPING
 ========================================================= */
 
-function mapProgrammeToDatabase(
-  event
-) {
-
+function mapProgrammeToDatabase(event) {
   return {
-
-    id:
-      event.id,
-
-    series_id:
-      event.seriesId,
-
-    programme:
-      event.programme,
-
-    venue:
-      event.venue,
-
-    date:
-      event.date,
-
-    time:
-      event.time,
-
-    duration:
-      Number(
-        event.duration
-      ),
-
-    pax:
-      event.pax ===
-        "" ||
-      event.pax ==
-        null
-
+    id: event.id,
+    series_id: event.seriesId,
+    programme: event.programme,
+    venue: event.venue,
+    date: event.date,
+    time: event.time,
+    duration: Number(event.duration),
+    pax: event.pax === "" || event.pax == null
       ? null
-
-      : Number(
-          event.pax
-        ),
-
-    status:
-      event.status ||
-      null,
-
-    remarks:
-      event.remarks ||
-      null,
-
-    session_number:
-      event.sessionNumber ??
-      null,
-
-    total_sessions:
-      event.totalSessions ??
-      1,
-
-    type:
-      event.type ||
-      null
-
+      : Number(event.pax),
+    status: event.status || null,
+    remarks: event.remarks || null,
+    session_number: event.sessionNumber ?? null,
+    total_sessions: event.totalSessions ?? 1,
+    type: event.type || "Stand-alone"
   };
-
 }
 
-
-function convertDatabaseProgramme(
-  row
-) {
-
+function convertDatabaseProgramme(row) {
   return {
-
-    id:
-      row.id,
-
-    seriesId:
-      row.series_id,
-
-    programme:
-      row.programme,
-
-    venue:
-      row.venue,
-
-    date:
-      String(
-        row.date ||
-        ""
-      ).substring(
-        0,
-        10
-      ),
-
-    time:
-      String(
-        row.time ||
-        "09:00"
-      ).substring(
-        0,
-        5
-      ),
-
-    duration:
-      Number(
-        row.duration ||
-        60
-      ),
-
-    pax:
-      row.pax ??
-      "",
-
-    status:
-      row.status ||
-      "",
-
-    remarks:
-      row.remarks ||
-      "",
-
-    sessionNumber:
-      row.session_number ??
-      null,
-
-    totalSessions:
-      row.total_sessions ??
-      1,
-
-    type:
-      row.type ||
-      "Stand-alone"
-
+    id: row.id,
+    seriesId: row.series_id || row.id,
+    programme: row.programme,
+    venue: row.venue,
+    date: String(row.date).slice(0, 10),
+    time: String(row.time || "09:00").slice(0, 5),
+    duration: Number(row.duration ?? 60),
+    pax: row.pax ?? "",
+    status: row.status || "",
+    remarks: row.remarks || "",
+    sessionNumber: row.session_number ?? null,
+    totalSessions: Number(row.total_sessions ?? 1),
+    type: row.type || "Stand-alone"
   };
-
 }
 
 
 /* =========================================================
-   LOAD PROGRAMMES
+   10. SUPABASE LOADING
 ========================================================= */
+
+async function testSupabaseConnection() {
+  if (!supabaseClient) return;
+
+  const { data, error } = await supabaseClient
+    .from("programmes")
+    .select("id")
+    .limit(1);
+
+  if (error) {
+    console.error("Supabase connection failed:", error);
+  } else {
+    console.log("Supabase connection successful.", data);
+  }
+}
 
 async function loadProgrammesFromSupabase() {
+  if (!supabaseClient) return false;
 
-  if (
-    !supabaseClient
-  ) {
+  const allRows = [];
+  const pageSize = 1000;
 
-    return [];
-
-  }
-
-
-  const {
-    data,
-    error
-  } =
-    await supabaseClient
-      .from(
-        "programmes"
-      )
+  for (let offset = 0; ; offset += pageSize) {
+    const { data, error } = await supabaseClient
+      .from("programmes")
       .select("*")
-      .order(
-        "date",
-        {
-          ascending:
-            true
-        }
-      )
-      .order(
-        "time",
-        {
-          ascending:
-            true
-        }
-      );
+      .order("date", { ascending: true })
+      .order("time", { ascending: true })
+      .order("id", { ascending: true })
+      .range(offset, offset + pageSize - 1);
 
+    if (error) {
+      console.error("Unable to load programmes:", error);
+      return false;
+    }
 
-  if (
-    error
-  ) {
+    allRows.push(...(data || []));
 
-    console.error(
-      "Unable to load programmes:",
-      error
-    );
-
-
-    return [];
-
+    if (!data || data.length < pageSize) break;
   }
 
+  events = allRows.map(convertDatabaseProgramme);
+  programmesLoaded = true;
 
-  return (
-    data ||
-    []
-  );
-
+  return true;
 }
-
 
 async function refreshProgrammesFromSupabase() {
+  const success = await loadProgrammesFromSupabase();
 
-  events =
-    (
-      await loadProgrammesFromSupabase()
-    )
-    .map(
-      convertDatabaseProgramme
-    );
-
-
-  if (
-    showingSummary
-  ) {
-
-    renderProgrammeSummary();
-
-  } else {
-
-    renderCalendar();
-
+  if (success) {
+    renderCurrentScreen();
   }
 
+  return success;
+}
+
+async function loadManpowerFromSupabase() {
+  if (!supabaseClient) return false;
+
+  const allRows = [];
+  const pageSize = 1000;
+
+  for (let offset = 0; ; offset += pageSize) {
+    const { data, error } = await supabaseClient
+      .from("manpower")
+      .select("*")
+      .order("date", { ascending: true })
+      .order("venue", { ascending: true })
+      .range(offset, offset + pageSize - 1);
+
+    if (error) {
+      console.error("Unable to load manpower:", error);
+      return false;
+    }
+
+    allRows.push(...(data || []));
+
+    if (!data || data.length < pageSize) break;
+  }
+
+  manpower = {};
+
+  allRows.forEach(row => {
+    const date = String(row.date).slice(0, 10);
+
+    manpower[manpowerKey(row.venue, date)] = {
+      staff: Array.isArray(row.staff) ? row.staff : [],
+      required: REQUIRED_MANPOWER,
+      notes: row.notes || ""
+    };
+  });
+
+  manpowerLoaded = true;
+  renderCurrentScreen();
+
+  return true;
 }
 
 
 /* =========================================================
-   FILTER EVENTS
+   11. CALENDAR EVENT FILTERING
 ========================================================= */
 
-function getDayEvents(
-  date
-) {
-
+function getDayEvents(dateString) {
   return events
-    .filter(
-      function (
-        event
-      ) {
-
-        return (
-          event.date ===
-            date
-
-          &&
-
-          event.venue ===
-            currentVenue
-        );
-
-      }
+    .filter(event =>
+      event.date === dateString &&
+      event.venue === currentVenue
     )
-    .sort(
-      function (
-        a,
-        b
-      ) {
-
-        return a.time.localeCompare(
-          b.time
-        );
-
-      }
-    );
-
+    .sort((a, b) => a.time.localeCompare(b.time));
 }
 
 
 /* =========================================================
-   MASTER CALENDAR RENDER
-========================================================= */
-function renderCalendar() {
-
-  if (!calendarGrid) {
-    return;
-  }
-
-  // Remember the selected calendar date
-  saveCalendarDate();
-
-  console.log(
-    "Rendering calendar view:",
-    activeCalendarView
-  );
-
-  if (activeCalendarView === "week") {
-    renderWeekView();
-    return;
-  }
-
-  if (activeCalendarView === "day") {
-    renderDayView();
-    return;
-  }
-
-  renderMonthView();
-}
-
-/* ========================================================
-   VIEW DATE LABEL
+   12. CALENDAR DATE LABEL
 ========================================================= */
 
 function getViewDateLabel() {
-
-  if (
-    activeCalendarView ===
-    "day"
-  ) {
-
-    return currentDate.toLocaleDateString(
-      "en-SG",
-      {
-        weekday:
-          "long",
-
-        day:
-          "numeric",
-
-        month:
-          "long",
-
-        year:
-          "numeric"
-      }
-    );
-
-
-
-
-  if (
-    activeCalendarView ===
-    "week"
-  ) {
-
-    const start =
-      startOfWeek(
-        currentDate
-      );
-
-
-    const end =
-      addDays(
-        start,
-        6
-      );
-
-
-    const startText =
-      start.toLocaleDateString(
-        "en-SG",
-        {
-          day:
-            "numeric",
-
-          month:
-            "short"
-        }
-      );
-
-
-    const endText =
-      end.toLocaleDateString(
-        "en-SG",
-        {
-          day:
-            "numeric",
-
-          month:
-            "short",
-
-          year:
-            "numeric"
-        }
-      );
-
-
-    return (
-      `${startText} - ${endText}`
-    );
-
+  if (activeCalendarView === "day") {
+    return currentDate.toLocaleDateString("en-SG", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    });
   }
 
+  if (activeCalendarView === "week") {
+    const start = startOfWeek(currentDate);
+    const end = addDays(start, 6);
 
-  return currentDate.toLocaleDateString(
-    "en-SG",
-    {
-      month:
-        "long",
+    return (
+      start.toLocaleDateString("en-SG", {
+        day: "numeric",
+        month: "short"
+      }) +
+      " - " +
+      end.toLocaleDateString("en-SG", {
+        day: "numeric",
+        month: "short",
+        year: "numeric"
+      })
+    );
+  }
 
-      year:
-        "numeric"
-    }
-  );
-
+  return currentDate.toLocaleDateString("en-SG", {
+    month: "long",
+    year: "numeric"
+  });
 }
 
 
 /* =========================================================
-   MONTH VIEW
+   13. MASTER CALENDAR RENDER
+========================================================= */
+
+function renderCalendar() {
+  const grid = $("calendarGrid");
+
+  if (!grid) {
+    console.error("calendarGrid element not found.");
+    return;
+  }
+
+  saveCalendarDate();
+
+  if (activeCalendarView === "week") {
+    renderWeekView();
+  } else if (activeCalendarView === "day") {
+    renderDayView();
+  } else {
+    renderMonthView();
+  }
+}
+
+
+/* =========================================================
+   14. MONTH VIEW
 ========================================================= */
 
 function renderMonthView() {
+  const grid = $("calendarGrid");
+  const header = $("weekHeader") ||
+    document.querySelector(".week-header");
 
-  calendarGrid.className =
-    "calendar-grid";
+  grid.className = "calendar-grid";
+  grid.innerHTML = "";
 
+  if (header) {
+    header.className = "week-header";
 
-  calendarGrid.innerHTML =
-    "";
-
-
-  const header =
-    document.querySelector(
-      ".week-header"
-    );
-
-
-  if (
-    header
-  ) {
-
-    header.className =
-      "week-header";
-
-
-    header.innerHTML = `
-
-      <div>Sun</div>
-      <div>Mon</div>
-      <div>Tue</div>
-      <div>Wed</div>
-      <div>Thu</div>
-      <div>Fri</div>
-      <div>Sat</div>
-
-    `;
-
+    header.innerHTML = [
+      "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
+    ].map(day => `<div>${day}</div>`).join("");
   }
 
+  setText("monthTitle", getViewDateLabel());
 
-  const year =
-    currentDate.getFullYear();
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
 
+  const firstWeekday = new Date(year, month, 1).getDay();
+  const firstGridDate = new Date(
+    year,
+    month,
+    1 - firstWeekday
+  );
 
-  const month =
-    currentDate.getMonth();
+  for (let i = 0; i < 42; i++) {
+    const date = addDays(firstGridDate, i);
+    const dateString = formatInputDate(date);
 
+    const cell = document.createElement("div");
+    cell.className = "day-cell";
 
-  if (
-    monthTitle
-  ) {
-
-    monthTitle.textContent =
-      currentDate.toLocaleDateString(
-        "en-SG",
-        {
-          month:
-            "long",
-
-          year:
-            "numeric"
-        }
-      );
-
-  }
-
-
-  const firstDay =
-    new Date(
-      year,
-      month,
-      1
-    );
-
-
-  const firstWeekday =
-    firstDay.getDay();
-
-
-  const daysInMonth =
-    new Date(
-      year,
-      month + 1,
-      0
-    ).getDate();
-
-
-  const previousMonthDays =
-    new Date(
-      year,
-      month,
-      0
-    ).getDate();
-
-
-  for (
-    let index = 0;
-    index < 42;
-    index++
-  ) {
-
-    let dayNumber;
-
-    let cellDate;
-
-    let otherMonth =
-      false;
-
-
-    if (
-      index <
-      firstWeekday
-    ) {
-
-      dayNumber =
-        previousMonthDays -
-        firstWeekday +
-        index +
-        1;
-
-
-      cellDate =
-        new Date(
-          year,
-          month - 1,
-          dayNumber
-        );
-
-
-      otherMonth =
-        true;
-
-    } else if (
-      index <
-      firstWeekday +
-      daysInMonth
-    ) {
-
-      dayNumber =
-        index -
-        firstWeekday +
-        1;
-
-
-      cellDate =
-        new Date(
-          year,
-          month,
-          dayNumber
-        );
-
-    } else {
-
-      dayNumber =
-        index -
-        firstWeekday -
-        daysInMonth +
-        1;
-
-
-      cellDate =
-        new Date(
-          year,
-          month + 1,
-          dayNumber
-        );
-
-
-      otherMonth =
-        true;
-
+    if (date.getMonth() !== month) {
+      cell.classList.add("other-month");
     }
 
-
-    const cell =
-      document.createElement(
-        "div"
-      );
-
-
-    cell.className =
-      "day-cell";
-
-
-    if (
-      otherMonth
-    ) {
-
-      cell.classList.add(
-        "other-month"
-      );
-
+    if (isSameDay(date, new Date())) {
+      cell.classList.add("today");
     }
 
+    const number = document.createElement("div");
+    number.className = "date-number";
+    number.textContent = date.getDate();
 
-    if (
-      isSameDay(
-        cellDate,
-        new Date()
-      )
-    ) {
+    cell.appendChild(number);
 
-      cell.classList.add(
-        "today"
-      );
-
-    }
-
-
-    const dateNumber =
-      document.createElement(
-        "div"
-      );
-
-
-    dateNumber.className =
-      "date-number";
-
-
-    dateNumber.textContent =
-      dayNumber;
-
-
+    // Staff always appears before programmes.
     cell.appendChild(
-      dateNumber
+      createManpowerSection(currentVenue, dateString)
     );
 
+    getDayEvents(dateString).forEach(event => {
+      cell.appendChild(createEventElement(event));
+    });
 
-    const dateString =
-      formatInputDate(
-        cellDate
-      );
-
-
-    /*
-      Manpower / staff first.
-    */
-
-    cell.appendChild(
-      createManpowerSection(
-        currentVenue,
-        dateString
-      )
-    );
-
-
-    /*
-      Programmes second.
-    */
-
-    getDayEvents(
-      dateString
-    ).forEach(
-      function (
-        event
-      ) {
-
-        cell.appendChild(
-          createEventElement(
-            event
-          )
-        );
-
-      }
-    );
-
-
-    calendarGrid.appendChild(
-      cell
-    );
-
+    grid.appendChild(cell);
   }
-
 }
 
 
 /* =========================================================
-   WEEK VIEW
+   15. WEEK VIEW
 ========================================================= */
 
 function renderWeekView() {
+  const grid = $("calendarGrid");
 
-  if (
-    !calendarGrid
-  ) {
+  grid.className = "calendar-grid week-view";
+  grid.innerHTML = "";
 
-    return;
+  const start = startOfWeek(currentDate);
 
-  }
+  setText("monthTitle", getViewDateLabel());
 
-
-  const weekStart =
-    startOfWeek(
-      currentDate
-    );
-
-
-  currentDate =
-    new Date(
-      weekStart
-    );
-
-
-  calendarGrid.innerHTML =
-    "";
-
-
-  calendarGrid.className =
-    "calendar-grid week-view";
-
-
-  if (
-    monthTitle
-  ) {
-
-    monthTitle.textContent =
-      getViewDateLabel();
-
-  }
-
-
-  const dates =
-    [];
-
-
-  for (
-    let index = 0;
-    index < 7;
-    index++
-  ) {
-
-    dates.push(
-      addDays(
-        weekStart,
-        index
-      )
-    );
-
-  }
-
-
-  renderFlexibleHeader(
-    dates
+  const dates = Array.from(
+    { length: 7 },
+    (_, i) => addDays(start, i)
   );
 
+  renderFlexibleHeader(dates);
 
-  dates.forEach(
-    function (
-      date
-    ) {
-
-      calendarGrid.appendChild(
-        renderDayColumn(
-          date
-        )
-      );
-
-    }
-  );
-
+  dates.forEach(date => {
+    grid.appendChild(renderDayColumn(date));
+  });
 
   console.log(
-    "Week view rendered with",
-    calendarGrid.children.length,
-    "columns."
+    "Week view rendered:",
+    grid.children.length,
+    "columns"
   );
-
 }
 
 
 /* =========================================================
-   DAY VIEW
+   16. DAY VIEW
 ========================================================= */
 
 function renderDayView() {
+  const grid = $("calendarGrid");
 
-  if (
-    !calendarGrid
-  ) {
+  grid.className = "calendar-grid day-view";
+  grid.innerHTML = "";
 
-    return;
+  setText("monthTitle", getViewDateLabel());
 
-  }
+  renderFlexibleHeader([currentDate]);
 
-
-  calendarGrid.innerHTML =
-    "";
-
-
-  calendarGrid.className =
-    "calendar-grid day-view";
-
-
-  if (
-    monthTitle
-  ) {
-
-    monthTitle.textContent =
-      getViewDateLabel();
-
-  }
-
-
-  renderFlexibleHeader(
-    [
-      new Date(
-        currentDate
-      )
-    ]
-  );
-
-
-  calendarGrid.appendChild(
-    renderDayColumn(
-      currentDate
-    )
-  );
-
+  grid.appendChild(renderDayColumn(currentDate));
 
   console.log(
-    "Day view rendered with",
-    calendarGrid.children.length,
-    "column."
+    "Day view rendered:",
+    grid.children.length,
+    "column"
   );
-
 }
 
 
 /* =========================================================
-   WEEK / DAY HEADER
+   17. WEEK / DAY HEADERS
 ========================================================= */
 
-function renderFlexibleHeader(
-  dates
-) {
+function renderFlexibleHeader(dates) {
+  const header = $("weekHeader") ||
+    document.querySelector(".week-header");
 
-  const header =
-    document.querySelector(
-      ".week-header"
-    );
+  if (!header) return;
 
-
-  if (
-    !header
-  ) {
-
-    console.error(
-      "week-header was not found."
-    );
-
-
-    return;
-
-  }
-
-
-  header.innerHTML =
-    "";
-
+  header.innerHTML = "";
 
   header.className =
-    activeCalendarView ===
-    "day"
-
+    activeCalendarView === "day"
       ? "week-header day-view-header"
-
       : "week-header week-view-header";
 
+  dates.forEach(date => {
+    const button = document.createElement("button");
 
-  dates.forEach(
-    function (
-      date
-    ) {
+    button.type = "button";
+    button.className = "calendar-date-header";
 
-      const button =
-        document.createElement(
-          "button"
-        );
+    button.textContent = date.toLocaleDateString("en-SG", {
+      weekday: activeCalendarView === "day"
+        ? "long"
+        : "short",
+      day: "numeric",
+      month: "short"
+    });
 
-
-      button.type =
-        "button";
-
-
-      button.className =
-        "calendar-date-header";
-
-
-      button.textContent =
-        date.toLocaleDateString(
-          "en-SG",
-          {
-            weekday:
-              activeCalendarView ===
-              "day"
-
-                ? "long"
-
-                : "short",
-
-            day:
-              "numeric",
-
-            month:
-              "short"
-          }
-        );
-
-
-      if (
-        isSameDay(
-          date,
-          new Date()
-        )
-      ) {
-
-        button.classList.add(
-          "today-header"
-        );
-
-      }
-
-
-      /*
-        Clicking a date in Week view
-        opens that date in Day view.
-      */
-
-      if (
-        activeCalendarView ===
-        "week"
-      ) {
-
-        button.addEventListener(
-          "click",
-          function () {
-
-            currentDate =
-              new Date(
-                date
-              );
-
-
-            activeCalendarView =
-              "day";
-
-
-            if (
-              calendarViewSelect
-            ) {
-
-              calendarViewSelect.value =
-                "day";
-
-            }
-
-
-            renderCalendar();
-
-          }
-        );
-
-      }
-
-
-      header.appendChild(
-        button
-      );
-
+    if (isSameDay(date, new Date())) {
+      button.classList.add("today-header");
     }
-  );
 
+    if (activeCalendarView === "week") {
+      button.addEventListener("click", () => {
+        currentDate = new Date(date);
+        activeCalendarView = "day";
+
+        setValue("calendarView", "day");
+
+        renderCalendar();
+      });
+    }
+
+    header.appendChild(button);
+  });
 }
 
 
 /* =========================================================
-   DAY COLUMN
+   18. DAY COLUMN
 ========================================================= */
 
-function renderDayColumn(
-  date
-) {
+function renderDayColumn(date) {
+  const column = document.createElement("div");
 
-  const column =
-    document.createElement(
-      "div"
-    );
+  column.className = "week-column";
 
-
-  column.className =
-    "week-column";
-
-
-  if (
-    activeCalendarView ===
-    "day"
-  ) {
-
-    column.classList.add(
-      "day-column"
-    );
-
+  if (activeCalendarView === "day") {
+    column.classList.add("day-column");
   }
 
-
-  if (
-    isSameDay(
-      date,
-      new Date()
-    )
-  ) {
-
-    column.classList.add(
-      "today-column"
-    );
-
+  if (isSameDay(date, new Date())) {
+    column.classList.add("today-column");
   }
 
+  const dateString = formatInputDate(date);
 
-  const dateString =
-    formatInputDate(
-      date
-    );
-
-
-  /*
-    STAFF / MANPOWER FIRST
-  */
-
-  const manpowerSection =
-    createManpowerSection(
-      currentVenue,
-      dateString
-    );
-
-
+  // Staff on duty comes first.
   column.appendChild(
-    manpowerSection
+    createManpowerSection(currentVenue, dateString)
   );
 
+  const dayEvents = getDayEvents(dateString);
 
-  /*
-    PROGRAMMES SECOND
-  */
+  if (dayEvents.length === 0) {
+    const empty = document.createElement("div");
 
-  const dayEvents =
-    getDayEvents(
-      dateString
-    );
+    empty.className = "view-empty";
+    empty.textContent = "No programmes";
 
-
-  if (
-    dayEvents.length ===
-    0
-  ) {
-
-    const empty =
-      document.createElement(
-        "div"
-      );
-
-
-    empty.className =
-      "view-empty";
-
-
-    empty.textContent =
-      "No programmes";
-
-
-    column.appendChild(
-      empty
-    );
-
-  } else {
-
-    dayEvents.forEach(
-      function (
-        event
-      ) {
-
-        const eventElement =
-          createEventElement(
-            event
-          );
-
-
-        if (
-          activeCalendarView ===
-          "week"
-        ) {
-
-          eventElement.classList.add(
-            "week-view-event"
-          );
-
-        }
-
-
-        if (
-          activeCalendarView ===
-          "day"
-        ) {
-
-          eventElement.classList.add(
-            "day-view-event"
-          );
-
-        }
-
-
-        column.appendChild(
-          eventElement
-        );
-
-      }
-    );
-
+    column.appendChild(empty);
   }
 
+  dayEvents.forEach(event => {
+    const element = createEventElement(event);
+
+    element.classList.add(
+      activeCalendarView === "day"
+        ? "day-view-event"
+        : "week-view-event"
+    );
+
+    column.appendChild(element);
+  });
 
   return column;
-
 }
 
 
 /* =========================================================
-   EVENT ELEMENT
+   19. PROGRAMME CARD
 ========================================================= */
 
-function createEventElement(
-  event
-) {
+function createEventElement(event) {
+  const element = document.createElement("div");
 
-  const element =
-    document.createElement(
-      "div"
-    );
+  element.className = "event";
 
-
-  element.className =
-    "event";
-
-
-  const endTime =
-    addMinutesToTime(
-      event.time,
-      event.duration
-    );
-
-
-  const sessionText =
-    event.totalSessions >
-    1
-
-      ? (
-          event.sessionNumber ===
-          14
-
-            ? "Week 14"
-
-            : `Week ${event.sessionNumber}`
-        )
-
-      : "Stand-alone";
-
-
-  const paxText =
-    event.pax !== ""
-
-      ? ` · ${event.pax} pax`
-
-      : "";
-
+  const endTime = addMinutesToTime(
+    event.time,
+    event.duration
+  );
 
   element.innerHTML = `
-
     <div class="event-time">
-
-      ${escapeHtml(
-        formatTime(
-          event.time
-        )
-      )}
-
+      ${escapeHtml(formatTime(event.time))}
       -
-
-      ${escapeHtml(
-        formatTime(
-          endTime
-        )
-      )}
-
+      ${escapeHtml(formatTime(endTime))}
     </div>
-
 
     <div class="event-name">
-
-      ${escapeHtml(
-        event.programme
-      )}
-
+      ${escapeHtml(event.programme)}
     </div>
-
 
     <div class="event-meta">
-
-      ${escapeHtml(
-        sessionText
-      )}
-
-      ${escapeHtml(
-        paxText
-      )}
-
+      ${escapeHtml(getSessionLabel(event))}
+      ${event.pax !== ""
+        ? ` · ${escapeHtml(event.pax)} pax`
+        : ""}
     </div>
-
   `;
 
-
-  element.addEventListener(
-    "click",
-    function (
-      clickEvent
-    ) {
-
-      clickEvent.stopPropagation();
-
-
-      openEventModal(
-        event
-      );
-
-    }
-  );
-
+  element.addEventListener("click", e => {
+    e.stopPropagation();
+    openEventModal(event);
+  });
 
   return element;
-
 }
 
 
 /* =========================================================
-   MANPOWER HELPERS
+   20. MANPOWER HELPERS
 ========================================================= */
 
-function manpowerKey(
-  venue,
-  date
-) {
-
-  return (
-    `${venue}__${date}`
-  );
-
+function manpowerKey(venue, date) {
+  return `${venue}__${date}`;
 }
 
-
-function getManpower(
-  venue,
-  date
-) {
-
-  return (
-    manpower[
-      manpowerKey(
-        venue,
-        date
-      )
-    ] || {
-
-      staff: [],
-
-      required:
-        REQUIRED_MANPOWER,
-
-      notes:
-        ""
-
-    }
-  );
-
+function getManpower(venue, date) {
+  return manpower[manpowerKey(venue, date)] || {
+    staff: [],
+    required: REQUIRED_MANPOWER,
+    notes: ""
+  };
 }
 
 
 /* =========================================================
-   MANPOWER DISPLAY
+   21. MANPOWER DISPLAY
 ========================================================= */
 
-function createManpowerSection(
-  venue,
-  date
-) {
+function createManpowerSection(venue, date) {
+  const record = getManpower(venue, date);
 
-  const record =
-    getManpower(
-      venue,
-      date
-    );
+  const container = document.createElement("div");
+  container.className = "manpower-container";
 
+  if (record.staff.length > 0) {
+    const heading = document.createElement("div");
 
-  const container =
-    document.createElement(
-      "div"
-    );
+    heading.className = "calendar-staff-heading";
+    heading.textContent = "Staff on duty";
 
+    container.appendChild(heading);
 
-  container.className =
-    "manpower-container";
+    const list = document.createElement("div");
+    list.className = "calendar-staff-list";
 
+    record.staff.forEach(name => {
+      const staff = document.createElement("div");
 
-  /*
-    STAFF ON DUTY
-  */
+      staff.className = "calendar-staff-name";
+      staff.textContent = name;
 
-  if (
-    Array.isArray(
-      record.staff
-    ) &&
-    record.staff.length >
-      0
-  ) {
+      list.appendChild(staff);
+    });
 
-    const heading =
-      document.createElement(
-        "div"
-      );
-
-
-    heading.className =
-      "calendar-staff-heading";
-
-
-    heading.textContent =
-      "Staff on duty";
-
-
-    container.appendChild(
-      heading
-    );
-
-
-    const staffList =
-      document.createElement(
-        "div"
-      );
-
-
-    staffList.className =
-      "calendar-staff-list";
-
-
-    record.staff.forEach(
-      function (
-        name
-      ) {
-
-        const staff =
-          document.createElement(
-            "div"
-          );
-
-
-        staff.className =
-          "calendar-staff-name";
-
-
-        staff.textContent =
-          name;
-
-
-        staffList.appendChild(
-          staff
-        );
-
-      }
-    );
-
-
-    container.appendChild(
-      staffList
-    );
-
+    container.appendChild(list);
   }
 
+  const button = document.createElement("button");
 
-  /*
-    MANPOWER BUTTON
-  */
+  button.type = "button";
+  button.className = "manpower-button";
 
-  const button =
-    document.createElement(
-      "button"
+  const present = record.staff.length;
+
+  button.textContent = present
+    ? `👥 ${present} staff / ${REQUIRED_MANPOWER} req.`
+    : "👥 Set manpower";
+
+  if (present > 0) {
+    button.classList.add(
+      present >= REQUIRED_MANPOWER ? "good" : "warning"
     );
-
-
-  button.type =
-    "button";
-
-
-  button.className =
-    "manpower-button";
-
-
-  const present =
-    Array.isArray(
-      record.staff
-    )
-
-      ? record.staff.length
-
-      : 0;
-
-
-  if (
-    present === 0
-  ) {
-
-    button.textContent =
-      "👥 Set manpower";
-
-  } else {
-
-    button.textContent =
-      `👥 ${present} staff / ${REQUIRED_MANPOWER} req.`;
-
-
-    if (
-      present >=
-      REQUIRED_MANPOWER
-    ) {
-
-      button.classList.add(
-        "good"
-      );
-
-    } else {
-
-      button.classList.add(
-        "warning"
-      );
-
-    }
-
   }
 
+  button.addEventListener("click", e => {
+    e.stopPropagation();
+    openManpowerModal(venue, date);
+  });
 
-  button.addEventListener(
-    "click",
-    function (
-      clickEvent
-    ) {
-
-      clickEvent.stopPropagation();
-
-
-      openManpowerModal(
-        venue,
-        date
-      );
-
-    }
-  );
-
-
-  container.appendChild(
-    button
-  );
-
+  container.appendChild(button);
 
   return container;
-
 }
 
 
 /* =========================================================
-   PROGRAMME FORM SETUP
+   22. PROGRAMME FORM
 ========================================================= */
 
 function setupProgrammeForm() {
+  on("programme", "change", () => {
+    const custom = valueOf("programme") === "Others";
 
-  if (
-    programmeSelect
-  ) {
+    toggleHidden("customProgrammeGroup", !custom);
+    toggleHidden("durationGroup", !custom);
 
-    programmeSelect.addEventListener(
-      "change",
-      function () {
+    if (!custom) {
+      setValue("customProgramme", "");
+      setValue("durationPreset", "60");
+      setValue("customDuration", "");
 
-        const isOthers =
-          programmeSelect.value ===
-          "Others";
-
-
-        if (
-          customProgrammeGroup
-        ) {
-
-          customProgrammeGroup
-            .classList.toggle(
-              "hidden",
-              !isOthers
-            );
-
-        }
-
-
-        if (
-          durationGroup
-        ) {
-
-          durationGroup
-            .classList.toggle(
-              "hidden",
-              !isOthers
-            );
-
-        }
-
-
-        if (
-          !isOthers
-        ) {
-
-          if (
-            customProgrammeInput
-          ) {
-
-            customProgrammeInput.value =
-              "";
-
-          }
-
-
-          if (
-            durationPreset
-          ) {
-
-            durationPreset.value =
-              "60";
-
-          }
-
-
-          if (
-            customDuration
-          ) {
-
-            customDuration.value =
-              "";
-
-            customDuration.disabled =
-              true;
-
-          }
-
-        }
-
+      if ($("customDuration")) {
+        $("customDuration").disabled = true;
       }
-    );
+    }
+  });
 
-  }
+  on("durationPreset", "change", () => {
+    const custom = valueOf("durationPreset") === "custom";
 
+    if ($("customDuration")) {
+      $("customDuration").disabled = !custom;
+    }
+  });
 
-  if (
-    durationPreset
-  ) {
+  on("editProgramme", "change", () => {
+    const custom =
+      valueOf("editProgramme") === "__CUSTOM__";
 
-    durationPreset.addEventListener(
-      "change",
-      function () {
-
-        const custom =
-          durationPreset.value ===
-          "custom";
-
-
-        if (
-          customDuration
-        ) {
-
-          customDuration.disabled =
-            !custom;
-
-
-          if (
-            !custom
-          ) {
-
-            customDuration.value =
-              "";
-
-          }
-
-        }
-
-      }
-    );
-
-  }
-
-
-  /*
-    EDIT PROGRAMME SELECT
-  */
-
-  if (
-    editProgramme
-  ) {
-
-    editProgramme.addEventListener(
-      "change",
-      function () {
-
-        const isCustom =
-          editProgramme.value ===
-          "__CUSTOM__";
-
-
-        if (
-          editCustomProgrammeGroup
-        ) {
-
-          editCustomProgrammeGroup
-            .classList.toggle(
-              "hidden",
-              !isCustom
-            );
-
-        }
-
-
-        if (
-          editDurationGroup
-        ) {
-
-          editDurationGroup
-            .classList.toggle(
-              "hidden",
-              !isCustom
-            );
-
-        }
-
-      }
-    );
-
-  }
-
+    toggleHidden("editCustomProgrammeGroup", !custom);
+    toggleHidden("editDurationGroup", !custom);
+  });
 }
 
 
 /* =========================================================
-   BUILD PROGRAMME EVENTS
+   23. BUILD PROGRAMME SESSIONS
 ========================================================= */
 
-function buildProgrammeEvents(
-  options
-) {
-
+function buildProgrammeEvents(options) {
   const {
     programmeName,
     venue,
@@ -2841,4386 +1018,1279 @@ function buildProgrammeEvents(
     status,
     remarks,
     seriesId
-  } =
-    options;
+  } = options;
 
+  const normalSessions = SERIES_WEEKS[programmeName] || 1;
 
-  const normalSessions =
-    SERIES_WEEKS[
-      programmeName
-    ] ||
-    1;
+  const extraWeek14 = needsWeek14Session(programmeName);
 
+  const totalSessions =
+    normalSessions + (extraWeek14 ? 1 : 0);
 
-  const hasWeek14 =
-    needsWeek14Session(
-      programmeName
+  const weekNumbers = Array.from(
+    { length: normalSessions },
+    (_, i) => i + 1
+  );
+
+  if (extraWeek14) weekNumbers.push(14);
+
+  return weekNumbers.map(week => {
+    const date = addDays(
+      parseInputDate(startDate),
+      (week - 1) * 7
     );
 
-
-  const storedSessionCount =
-    normalSessions +
-    (
-      hasWeek14
-        ? 1
-        : 0
-    );
-
-
-  const result =
-    [];
-
-
-  /*
-    Normal weekly sessions.
-  */
-
-  for (
-    let index = 0;
-    index < normalSessions;
-    index++
-  ) {
-
-    const sessionDate =
-      addDays(
-        parseInputDate(
-          startDate
-        ),
-        index * 7
-      );
-
-
-    result.push({
-
-      id:
-        makeId(
-          "event"
-        ),
-
-      seriesId:
-        seriesId,
-
-      programme:
-        programmeName,
-
-      venue:
-        venue,
-
-      date:
-        formatInputDate(
-          sessionDate
-        ),
-
-      time:
-        time,
-
-      duration:
-        duration,
-
-      pax:
-        getPax(
-          programmeName
-        ),
-
-      status:
-        status,
-
-      remarks:
-        remarks,
-
-      sessionNumber:
-        normalSessions > 1 ||
-        hasWeek14
-
-          ? index + 1
-
-          : null,
-
-      totalSessions:
-        storedSessionCount,
-
-      type:
-        storedSessionCount > 1
-
-          ? "Series"
-
-          : "Stand-alone"
-
-    });
-
-  }
-
-
-  /*
-    Additional Week 14 session.
-  */
-
-  if (
-    hasWeek14
-  ) {
-
-    const week14Date =
-      addDays(
-        parseInputDate(
-          startDate
-        ),
-        13 * 7
-      );
-
-
-    result.push({
-
-      id:
-        makeId(
-          "event"
-        ),
-
-      seriesId:
-        seriesId,
-
-      programme:
-        programmeName,
-
-      venue:
-        venue,
-
-      date:
-        formatInputDate(
-          week14Date
-        ),
-
-      time:
-        time,
-
-      duration:
-        duration,
-
-      pax:
-        getPax(
-          programmeName
-        ),
-
-      status:
-        status,
-
-      remarks:
-        remarks,
-
-      sessionNumber:
-        14,
-
-      totalSessions:
-        storedSessionCount,
-
-      type:
-        "Series"
-
-    });
-
-  }
-
-
-  return result;
-
+    return {
+      id: makeId("event"),
+      seriesId,
+      programme: programmeName,
+      venue,
+      date: formatInputDate(date),
+      time,
+      duration,
+      pax: getPax(programmeName),
+      status,
+      remarks,
+      sessionNumber: totalSessions > 1 ? week : null,
+      totalSessions,
+      type: totalSessions > 1 ? "Series" : "Stand-alone"
+    };
+  });
 }
 
 
 /* =========================================================
-   ADD PROGRAMME
+   24. ADD PROGRAMME
 ========================================================= */
 
 async function addProgramme() {
+  const selected = valueOf("programme");
 
-  const selected =
-    programmeSelect
-      ? programmeSelect.value
-      : "";
-
-
-  if (
-    !selected
-  ) {
-
-    alert(
-      "Please select a programme."
-    );
-
+  if (!selected) {
+    alert("Please select a programme.");
     return;
-
   }
 
+  const isCustom = selected === "Others";
 
-  let programmeName =
-    selected;
+  const programmeName = isCustom
+    ? valueOf("customProgramme").trim()
+    : selected;
 
-
-  let isCustom =
-    false;
-
-
-  if (
-    selected ===
-    "Others"
-  ) {
-
-    isCustom =
-      true;
-
-
-    programmeName =
-      customProgrammeInput
-
-        ? customProgrammeInput
-            .value
-            .trim()
-
-        : "";
-
-
-    if (
-      !programmeName
-    ) {
-
-      alert(
-        "Please enter a programme name."
-      );
-
-      return;
-
-    }
-
-  }
-
-
-  const venue =
-    venueSelect
-      ? venueSelect.value
-      : currentVenue;
-
-
-  const date =
-    startDateInput
-      ? startDateInput.value
-      : "";
-
-
-  const time =
-    getAddTime();
-
-
-  if (
-    !date
-  ) {
-
-    alert(
-      "Please select a date."
-    );
-
+  if (!programmeName) {
+    alert("Please enter a programme name.");
     return;
-
   }
 
+  const venue = valueOf("venue", currentVenue);
+  const date = valueOf("startDate");
+  const time = getAddTime();
 
-  if (
-    !time ||
-    !isValidHalfHourTime(
-      time
-    )
-  ) {
-
-    alert(
-      "Please select a start time ending in :00 or :30."
-    );
-
+  if (!date || isNaN(parseInputDate(date).getTime())) {
+    alert("Please select a valid date.");
     return;
-
   }
 
-
-  let duration =
-    60;
-
-
-  if (
-    selected ===
-    "Body Composition Assessment"
-  ) {
-
-    duration =
-      30;
-
-  } else if (
-    isCustom
-  ) {
-
-    let durationValue =
-      durationPreset
-        ? durationPreset.value
-        : "60";
-
-
-    if (
-      durationValue ===
-      "custom"
-    ) {
-
-      durationValue =
-        customDuration
-          ? customDuration.value
-          : "";
-
-    }
-
-
-    duration =
-      Number(
-        durationValue
-      );
-
-  }
-
-
-  if (
-    !Number.isFinite(
-      duration
-    ) ||
-    duration <=
-      0
-  ) {
-
-    alert(
-      "Please enter a valid duration."
-    );
-
+  if (!isValidHalfHourTime(time)) {
+    alert("Start time must end in :00 or :30.");
     return;
-
   }
 
+  let customDurationValue = valueOf("durationPreset", "60");
 
-  const seriesId =
-    makeId(
-      "series"
-    );
+  if (customDurationValue === "custom") {
+    customDurationValue = valueOf("customDuration");
+  }
 
+  const duration = isCustom
+    ? Number(customDurationValue)
+    : getProgrammeDuration(programmeName);
 
-  const newEvents =
-    buildProgrammeEvents(
-      {
-
-        programmeName:
-          programmeName,
-
-        venue:
-          venue,
-
-        startDate:
-          date,
-
-        time:
-          time,
-
-        duration:
-          duration,
-
-        status:
-          statusInput
-            ? statusInput.value
-            : "",
-
-        remarks:
-          remarksInput
-            ? remarksInput.value.trim()
-            : "",
-
-        seriesId:
-          seriesId
-
-      }
-    );
-
-
-  if (
-    !supabaseClient
-  ) {
-
-    alert(
-      "Supabase is not connected."
-    );
-
+  if (!Number.isFinite(duration) || duration <= 0) {
+    alert("Please enter a valid duration.");
     return;
-
   }
 
-
-  const {
-    data,
-    error
-  } =
-    await supabaseClient
-      .from(
-        "programmes"
-      )
-      .insert(
-        newEvents.map(
-          mapProgrammeToDatabase
-        )
-      )
-      .select();
-
-
-  if (
-    error
-  ) {
-
-    console.error(
-      "Programme insert failed:",
-      error
-    );
-
-
-    alert(
-      `Unable to save programme: ${error.message}`
-    );
-
+  if (!supabaseClient) {
+    alert("Supabase is not connected.");
     return;
-
   }
 
+  const newEvents = buildProgrammeEvents({
+    programmeName,
+    venue,
+    startDate: date,
+    time,
+    duration,
+    status: valueOf("status"),
+    remarks: valueOf("remarks").trim(),
+    seriesId: makeId("series")
+  });
 
-  events.push(
-    ...(
-      data ||
-      []
-    ).map(
-      convertDatabaseProgramme
-    )
-  );
+  const { data, error } = await supabaseClient
+    .from("programmes")
+    .insert(newEvents.map(mapProgrammeToDatabase))
+    .select();
 
-
-  currentVenue =
-    venue;
-
-
-  currentDate =
-    parseInputDate(
-      date
-    );
-
-
-  if (
-    activeCalendarView ===
-    "month"
-  ) {
-
-    currentDate =
-      new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth(),
-        1
-      );
-
+  if (error) {
+    console.error(error);
+    alert(`Unable to save programme: ${error.message}`);
+    return;
   }
 
+  events.push(...(data || []).map(convertDatabaseProgramme));
 
-  if (
-    activeCalendarView ===
-    "week"
-  ) {
-
-    currentDate =
-      startOfWeek(
-        currentDate
-      );
-
-  }
-
-
-  updateVenueUI();
-
-
+  // Preserve the month currently selected.
   resetProgrammeForm();
+  renderCurrentScreen();
 
-
-  renderCalendar();
-
-
-  alert(
-    "Programme saved successfully."
-  );
-
+  alert("Programme saved successfully.");
 }
 
 
 /* =========================================================
-   RESET PROGRAMME FORM
+   25. RESET ADD PROGRAMME FORM
 ========================================================= */
 
 function resetProgrammeForm() {
+  setValue("programme", "");
+  setValue("customProgramme", "");
+  setValue("durationPreset", "60");
+  setValue("customDuration", "");
+  setValue("startDate", formatInputDate(new Date()));
+  setValue("startHour", "09");
+  setValue("startMinute", "00");
+  setValue("startTime", "09:00");
+  setValue("remarks", "");
+  setValue("status", "Uploaded (100% Created)");
 
-  if (
-    programmeSelect
-  ) {
+  toggleHidden("customProgrammeGroup", true);
+  toggleHidden("durationGroup", true);
 
-    programmeSelect.value =
-      "";
-
+  if ($("customDuration")) {
+    $("customDuration").disabled = true;
   }
-
-
-  if (
-    customProgrammeInput
-  ) {
-
-    customProgrammeInput.value =
-      "";
-
-  }
-
-
-  if (
-    customProgrammeGroup
-  ) {
-
-    customProgrammeGroup
-      .classList.add(
-        "hidden"
-      );
-
-  }
-
-
-  if (
-    durationGroup
-  ) {
-
-    durationGroup
-      .classList.add(
-        "hidden"
-      );
-
-  }
-
-
-  if (
-    durationPreset
-  ) {
-
-    durationPreset.value =
-      "60";
-
-  }
-
-
-  if (
-    customDuration
-  ) {
-
-    customDuration.value =
-      "";
-
-    customDuration.disabled =
-      true;
-
-  }
-
-
-  if (
-    startDateInput
-  ) {
-
-    startDateInput.value =
-      formatInputDate(
-        new Date()
-      );
-
-  }
-
-
-  if (
-    startHour
-  ) {
-
-    startHour.value =
-      "09";
-
-  }
-
-
-  if (
-    startMinute
-  ) {
-
-    startMinute.value =
-      "00";
-
-  }
-
-
-  if (
-    startTimeInput
-  ) {
-
-    startTimeInput.value =
-      "09:00";
-
-  }
-
-
-  if (
-    remarksInput
-  ) {
-
-    remarksInput.value =
-      "";
-
-  }
-
-
-  if (
-    statusInput
-  ) {
-
-    statusInput.value =
-      "Uploaded (100% Created)";
-
-  }
-
 }
 
 
 /* =========================================================
-   EVENT MODAL
+   26. PROGRAMME DETAILS MODAL
 ========================================================= */
 
-function openEventModal(
-  event
-) {
+function openEventModal(event) {
+  selectedEventId = event.id;
 
-  selectedEventId =
-    event.id;
-
-
-  function setText(
-    id,
-    value
-  ) {
-
-    const element =
-      $(id);
-
-
-    if (
-      element
-    ) {
-
-      element.textContent =
-        value;
-
-    }
-
-  }
-
-
-  setText(
-    "modalProgramme",
-    event.programme
-  );
-
-
-  setText(
-    "modalVenue",
-    event.venue
-  );
-
-
-  setText(
-    "modalDate",
-    formatDisplayDate(
-      event.date
-    )
-  );
-
+  setText("modalProgramme", event.programme);
+  setText("modalVenue", event.venue);
+  setText("modalDate", formatDisplayDate(event.date));
 
   setText(
     "modalTime",
-    `${formatTime(
-      event.time
-    )} - ${formatTime(
-      addMinutesToTime(
-        event.time,
-        event.duration
-      )
+    `${formatTime(event.time)} - ${formatTime(
+      addMinutesToTime(event.time, event.duration)
     )}`
   );
 
-
-  setText(
-    "modalDuration",
-    formatDuration(
-      event.duration
-    )
-  );
-
+  setText("modalDuration", formatDuration(event.duration));
 
   setText(
     "modalPax",
-    event.pax === ""
-
-      ? "Not specified"
-
-      : `${event.pax} pax`
+    event.pax === "" ? "Not specified" : `${event.pax} pax`
   );
 
+  setText("modalSession", getSessionLabel(event));
+  setText("modalStatus", event.status || "");
+  setText("modalRemarks", event.remarks || "—");
 
-  setText(
-    "modalSession",
-    event.totalSessions > 1
-
-      ? (
-          event.sessionNumber === 14
-
-            ? "Week 14"
-
-            : `Week ${event.sessionNumber}`
-        )
-
-      : "Stand-alone"
-  );
-
-
-  setText(
-    "modalStatus",
-    event.status ||
-    ""
-  );
-
-
-  setText(
-    "modalRemarks",
-    event.remarks ||
-    "—"
-  );
-
-
-  if (
-    eventModal
-  ) {
-
-    eventModal.classList.add(
-      "visible"
-    );
-
-  }
-
+  $("eventModal")?.classList.add("visible");
 }
 
-
 function closeEventModal() {
-
-  if (
-    eventModal
-  ) {
-
-    eventModal.classList.remove(
-      "visible"
-    );
-
-  }
-
-
-  selectedEventId =
-    null;
-
+  $("eventModal")?.classList.remove("visible");
+  selectedEventId = null;
 }
 
 
 /* =========================================================
-   OPEN EDIT MODAL
+   27. OPEN EDIT MODAL
 ========================================================= */
 
 function openEditModal() {
+  const selected = events.find(
+    event => event.id === selectedEventId
+  );
 
-  if (
-    !selectedEventId
-  ) {
-
-    alert(
-      "Please select a programme first."
-    );
-
+  if (!selected) {
+    alert("Programme not found.");
     return;
-
   }
 
+  const series = events
+    .filter(event => event.seriesId === selected.seriesId)
+    .sort((a, b) => dateTimeValue(a) - dateTimeValue(b));
 
-  const selected =
-    events.find(
-      function (
-        event
-      ) {
+  const first = series[0] || selected;
 
-        return (
-          event.id ===
-          selectedEventId
-        );
+  const known = isKnownProgramme(first.programme);
 
-      }
-    );
+  setValue(
+    "editProgramme",
+    known ? first.programme : "__CUSTOM__"
+  );
 
+  setValue(
+    "editCustomProgramme",
+    known ? "" : first.programme
+  );
 
-  if (
-    !selected
-  ) {
+  toggleHidden("editCustomProgrammeGroup", known);
+  toggleHidden("editDurationGroup", known);
 
-    alert(
-      "Programme could not be found."
-    );
+  setValue("editVenue", first.venue);
+  setValue("editStartDate", first.date);
 
-    return;
+  const [hour, minute] = first.time.split(":");
 
-  }
+  setValue("editStartHour", hour);
+  setValue("editStartMinute", minute);
+  setValue("editStartTime", first.time);
 
+  setValue("editDuration", first.duration);
+  setValue("editRemarks", first.remarks);
+  setValue("editStatus", first.status);
 
-  const series =
-    events
-      .filter(
-        function (
-          event
-        ) {
+  // Hide details without clearing selectedEventId.
+  $("eventModal")?.classList.remove("visible");
 
-          return (
-            event.seriesId ===
-            selected.seriesId
-          );
+  $("editModal")?.classList.add("visible");
+}
 
-        }
-      )
-      .sort(
-        function (
-          a,
-          b
-        ) {
-
-          return (
-            dateTimeValue(
-              a
-            ) -
-            dateTimeValue(
-              b
-            )
-          );
-
-        }
-      );
-
-
-  const first =
-    series[0] ||
-    selected;
-
-
-  const known =
-    isKnownProgramme(
-      first.programme
-    );
-
-
-  if (
-    editProgramme
-  ) {
-
-    editProgramme.value =
-      known
-
-        ? first.programme
-
-        : "__CUSTOM__";
-
-  }
-
-
-  if (
-    editCustomProgramme
-  ) {
-
-    editCustomProgramme.value =
-      known
-
-        ? ""
-
-        : first.programme;
-
-  }
-
-
-  if (
-    editCustomProgrammeGroup
-  ) {
-
-    editCustomProgrammeGroup
-      .classList.toggle(
-        "hidden",
-        known
-      );
-
-  }
-
-
-  if (
-    editVenue
-  ) {
-
-    editVenue.value =
-      first.venue;
-
-  }
-
-
-  if (
-    editStartDate
-  ) {
-
-    editStartDate.value =
-      first.date;
-
-  }
-
-
-  const timeParts =
-    String(
-      first.time ||
-      "09:00"
-    )
-    .split(
-      ":"
-    );
-
-
-  if (
-    editStartHour
-  ) {
-
-    editStartHour.value =
-      timeParts[0] ||
-      "09";
-
-  }
-
-
-  if (
-    editStartMinute
-  ) {
-
-    editStartMinute.value =
-      timeParts[1] ===
-      "30"
-
-        ? "30"
-
-        : "00";
-
-  }
-
-
-  if (
-    editStartTime
-  ) {
-
-    editStartTime.value =
-      String(
-        first.time ||
-        "09:00"
-      ).substring(
-        0,
-        5
-      );
-
-  }
-
-
-  if (
-    editDuration
-  ) {
-
-    editDuration.value =
-      first.duration;
-
-  }
-
-
-  if (
-    editDurationGroup
-  ) {
-
-    editDurationGroup
-      .classList.toggle(
-        "hidden",
-        known
-      );
-
-  }
-
-
-  if (
-    editRemarks
-  ) {
-
-    editRemarks.value =
-      first.remarks ||
-      "";
-
-  }
-
-
-  if (
-    editStatus
-  ) {
-
-    editStatus.value =
-      first.status ||
-      "Uploaded (100% Created)";
-
-  }
-
-
-  /*
-    IMPORTANT:
-    Do NOT call closeEventModal() here,
-    because it clears selectedEventId.
-  */
-
-  if (
-    eventModal
-  ) {
-
-    eventModal.classList.remove(
-      "visible"
-    );
-
-  }
-
-
-  if (
-    editModal
-  ) {
-
-    editModal.classList.add(
-      "visible"
-    );
-
-  }
-
+function closeEditModal() {
+  $("editModal")?.classList.remove("visible");
+  selectedEventId = null;
 }
 
 
 /* =========================================================
-   SAVE EDIT
+   28. SAVE EDIT
+   Updates existing rows before adding/removing sessions.
 ========================================================= */
 
 async function saveEdit() {
+  const selected = events.find(
+    event => event.id === selectedEventId
+  );
 
-  if (
-    !selectedEventId
-  ) {
-
-    alert(
-      "No programme selected."
-    );
-
+  if (!selected) {
+    alert("No programme selected.");
     return;
-
   }
 
+  if (!supabaseClient) {
+    alert("Supabase is not connected.");
+    return;
+  }
 
-  const selected =
-    events.find(
-      function (
-        event
-      ) {
+  const selectedName = valueOf("editProgramme");
 
-        return (
-          event.id ===
-          selectedEventId
+  const isCustom = selectedName === "__CUSTOM__";
+
+  const programmeName = isCustom
+    ? valueOf("editCustomProgramme").trim()
+    : selectedName;
+
+  const startDate = valueOf("editStartDate");
+  const time = getEditTime();
+
+  if (!programmeName) {
+    alert("Please select a programme.");
+    return;
+  }
+
+  if (
+    !startDate ||
+    isNaN(parseInputDate(startDate).getTime())
+  ) {
+    alert("Please select a valid date.");
+    return;
+  }
+
+  if (!isValidHalfHourTime(time)) {
+    alert("Start time must end in :00 or :30.");
+    return;
+  }
+
+  const duration = isCustom
+    ? Number(valueOf("editDuration"))
+    : getProgrammeDuration(programmeName);
+
+  if (!Number.isFinite(duration) || duration <= 0) {
+    alert("Please enter a valid duration.");
+    return;
+  }
+
+  const oldSeriesId = selected.seriesId;
+
+  const existing = events
+    .filter(event => event.seriesId === oldSeriesId)
+    .sort((a, b) => dateTimeValue(a) - dateTimeValue(b));
+
+  const replacement = buildProgrammeEvents({
+    programmeName,
+    venue: valueOf("editVenue", currentVenue),
+    startDate,
+    time,
+    duration,
+    status: valueOf("editStatus"),
+    remarks: valueOf("editRemarks").trim(),
+    seriesId: oldSeriesId
+  });
+
+  // Match existing sessions by week number where possible.
+  const existingByWeek = new Map();
+
+  existing.forEach(event => {
+    const key = event.sessionNumber ?? 1;
+    existingByWeek.set(key, event);
+  });
+
+  const updates = [];
+  const inserts = [];
+  const retainedIds = new Set();
+
+  replacement.forEach(event => {
+    const key = event.sessionNumber ?? 1;
+    const old = existingByWeek.get(key);
+
+    if (old) {
+      event.id = old.id;
+      retainedIds.add(old.id);
+      updates.push(event);
+    } else {
+      inserts.push(event);
+    }
+  });
+
+  const obsolete = existing.filter(
+    event => !retainedIds.has(event.id)
+  );
+
+  // Save the previous values for rollback if an update fails.
+  const originalRows = existing.map(mapProgrammeToDatabase);
+
+  try {
+    for (const event of updates) {
+      const row = mapProgrammeToDatabase(event);
+      const { id, ...changes } = row;
+
+      const { data, error } = await supabaseClient
+        .from("programmes")
+        .update(changes)
+        .eq("id", id)
+        .select("id");
+
+      if (error) throw error;
+
+      if (!data || data.length !== 1) {
+        throw new Error(
+          "Update was not confirmed. Check database permissions."
         );
-
       }
-    );
+    }
 
+    if (inserts.length > 0) {
+      const { data, error } = await supabaseClient
+        .from("programmes")
+        .insert(inserts.map(mapProgrammeToDatabase))
+        .select("id");
 
-  if (
-    !selected
-  ) {
+      if (error) throw error;
 
-    alert(
-      "Programme could not be found."
-    );
-
-    return;
-
-  }
-
-
-  const oldSeriesId =
-    selected.seriesId;
-
-
-  let programmeName =
-    editProgramme
-      ? editProgramme.value
-      : "";
-
-
-  let isCustom =
-    false;
-
-
-  if (
-    programmeName ===
-    "__CUSTOM__"
-  ) {
-
-    isCustom =
-      true;
-
-
-    programmeName =
-      editCustomProgramme
-
-        ? editCustomProgramme
-            .value
-            .trim()
-
-        : "";
-
-  }
-
-
-  if (
-    !programmeName
-  ) {
-
-    alert(
-      "Please select or enter a programme."
-    );
-
-    return;
-
-  }
-
-
-  if (
-    !editStartDate ||
-    !editStartDate.value
-  ) {
-
-    alert(
-      "Please select a date."
-    );
-
-    return;
-
-  }
-
-
-  const newTime =
-    getEditTime();
-
-
-  if (
-    !newTime ||
-    !isValidHalfHourTime(
-      newTime
-    )
-  ) {
-
-    alert(
-      "Please select a start time ending in :00 or :30."
-    );
-
-    return;
-
-  }
-
-
-  let duration =
-    60;
-
-
-  if (
-    programmeName ===
-    "Body Composition Assessment"
-  ) {
-
-    duration =
-      30;
-
-  } else if (
-    isCustom
-  ) {
-
-    duration =
-      Number(
-        editDuration
-          ? editDuration.value
-          : ""
-      );
-
-  }
-
-
-  if (
-    !Number.isFinite(
-      duration
-    ) ||
-    duration <=
-      0
-  ) {
-
-    alert(
-      "Please enter a valid duration."
-    );
-
-    return;
-
-  }
-
-
-  const newVenue =
-    editVenue
-      ? editVenue.value
-      : currentVenue;
-
-
-  const replacement =
-    buildProgrammeEvents(
-      {
-
-        programmeName:
-          programmeName,
-
-        venue:
-          newVenue,
-
-        startDate:
-          editStartDate.value,
-
-        time:
-          newTime,
-
-        duration:
-          duration,
-
-        status:
-          editStatus
-            ? editStatus.value
-            : "",
-
-        remarks:
-          editRemarks
-            ? editRemarks.value.trim()
-            : "",
-
-        seriesId:
-          oldSeriesId
-
+      if (!data || data.length !== inserts.length) {
+        throw new Error(
+          "Not all new sessions were confirmed."
+        );
       }
-    );
+    }
 
+    if (obsolete.length > 0) {
+      const ids = obsolete.map(event => event.id);
 
-  if (
-    !supabaseClient
-  ) {
+      const { data, error } = await supabaseClient
+        .from("programmes")
+        .delete()
+        .in("id", ids)
+        .select("id");
 
-    alert(
-      "Supabase is not connected."
-    );
+      if (error) throw error;
 
-    return;
+      if (!data || data.length !== ids.length) {
+        throw new Error(
+          "Not all obsolete sessions were deleted."
+        );
+      }
+    }
 
-  }
+  } catch (error) {
+    console.error("Unable to save edited programme:", error);
 
-
-  /*
-    Delete old series.
-  */
-
-  const {
-    error:
-      deleteError
-  } =
-    await supabaseClient
-      .from(
-        "programmes"
-      )
-      .delete()
-      .eq(
-        "series_id",
-        oldSeriesId
-      );
-
-
-  if (
-    deleteError
-  ) {
-
-    console.error(
-      "Unable to delete old programme:",
-      deleteError
-    );
-
-
-    alert(
-      `Unable to update programme: ${deleteError.message}`
-    );
-
-    return;
-
-  }
-
-
-  /*
-    Insert edited series.
-  */
-
-  const {
-    data,
-    error
-  } =
-    await supabaseClient
-      .from(
-        "programmes"
-      )
-      .insert(
-        replacement.map(
-          mapProgrammeToDatabase
-        )
-      )
-      .select();
-
-
-  if (
-    error
-  ) {
-
-    console.error(
-      "Unable to save edited programme:",
-      error
-    );
-
-
+    // Reload the actual database state rather than
+    // displaying unconfirmed local changes.
     await refreshProgrammesFromSupabase();
 
-
     alert(
-      `Unable to save changes: ${error.message}`
+      "Unable to complete programme edit: " +
+      error.message +
+      "\n\nSome changes may have been saved. Please review the series."
     );
 
     return;
-
   }
 
+  const reloaded = await refreshProgrammesFromSupabase();
 
-  events =
-    events.filter(
-      function (
-        event
-      ) {
-
-        return (
-          event.seriesId !==
-          oldSeriesId
-        );
-
-      }
+  if (!reloaded) {
+    alert(
+      "Changes were submitted, but the calendar could not reload. " +
+      "Refresh the page to verify them."
     );
-
-
-  events.push(
-    ...(
-      data ||
-      []
-    ).map(
-      convertDatabaseProgramme
-    )
-  );
-
-
-  currentVenue =
-    newVenue;
-
-
-  currentDate =
-    parseInputDate(
-      editStartDate.value
-    );
-
-
-  if (
-    activeCalendarView ===
-    "month"
-  ) {
-
-    currentDate =
-      new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth(),
-        1
-      );
-
+    return;
   }
 
-
-  if (
-    activeCalendarView ===
-    "week"
-  ) {
-
-    currentDate =
-      startOfWeek(
-        currentDate
-      );
-
-  }
-
-
-  updateVenueUI();
-
-
+  // Keep the selected calendar month unchanged.
   closeEditModal();
+  renderCurrentScreen();
 
-
-  renderCalendar();
-
-
-  alert(
-    "Programme updated successfully."
-  );
-
+  alert("Programme updated successfully.");
 }
 
 
 /* =========================================================
-   CLOSE EDIT MODAL
-========================================================= */
-
-function closeEditModal() {
-
-  if (
-    editModal
-  ) {
-
-    editModal.classList.remove(
-      "visible"
-    );
-
-  }
-
-
-  selectedEventId =
-    null;
-
-}
-
-
-/* =========================================================
-   DELETE PROGRAMME
+   29. DELETE PROGRAMME
 ========================================================= */
 
 async function deleteSelected() {
-
-  if (
-    !selectedEventId
-  ) {
-
-    return;
-
-  }
-
-
-  const selected =
-    events.find(
-      function (
-        event
-      ) {
-
-        return (
-          event.id ===
-          selectedEventId
-        );
-
-      }
-    );
-
-
-  if (
-    !selected
-  ) {
-
-    return;
-
-  }
-
-
-  const wholeSeries =
-    Number(
-      selected.totalSessions
-    ) >
-    1;
-
-
-  const message =
-    wholeSeries
-
-      ? "Delete the entire programme series?"
-
-      : "Delete this programme?";
-
-
-  if (
-    !confirm(
-      message
-    )
-  ) {
-
-    return;
-
-  }
-
-
-  if (
-    !supabaseClient
-  ) {
-
-    alert(
-      "Supabase is not connected."
-    );
-
-    return;
-
-  }
-
-
-  let query =
-    supabaseClient
-      .from(
-        "programmes"
-      )
-      .delete();
-
-
-  if (
-    wholeSeries
-  ) {
-
-    query =
-      query.eq(
-        "series_id",
-        selected.seriesId
-      );
-
-  } else {
-
-    query =
-      query.eq(
-        "id",
-        selected.id
-      );
-
-  }
-
-
-  const {
-    error
-  } =
-    await query;
-
-
-  if (
-    error
-  ) {
-
-    console.error(
-      "Unable to delete programme:",
-      error
-    );
-
-
-    alert(
-      `Unable to delete programme: ${error.message}`
-    );
-
-    return;
-
-  }
-
-
-  if (
-    wholeSeries
-  ) {
-
-    events =
-      events.filter(
-        function (
-          event
-        ) {
-
-          return (
-            event.seriesId !==
-            selected.seriesId
-          );
-
-        }
-      );
-
-  } else {
-
-    events =
-      events.filter(
-        function (
-          event
-        ) {
-
-          return (
-            event.id !==
-            selected.id
-          );
-
-        }
-      );
-
-  }
-
-
-  closeEventModal();
-
-
-  renderCalendar();
-
-
-  alert(
-    "Programme deleted successfully."
+  const selected = events.find(
+    event => event.id === selectedEventId
   );
 
+  if (!selected) return;
+
+  const wholeSeries = Number(selected.totalSessions) > 1;
+
+  const confirmed = confirm(
+    wholeSeries
+      ? "Delete the entire programme series?"
+      : "Delete this programme?"
+  );
+
+  if (!confirmed) return;
+
+  if (!supabaseClient) {
+    alert("Supabase is not connected.");
+    return;
+  }
+
+  const query = supabaseClient
+    .from("programmes")
+    .delete();
+
+  const filteredQuery = wholeSeries
+    ? query.eq("series_id", selected.seriesId)
+    : query.eq("id", selected.id);
+
+  const { data, error } = await filteredQuery.select("id");
+
+  if (error) {
+    alert(`Unable to delete programme: ${error.message}`);
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    alert("No programme rows were deleted. Check permissions.");
+    return;
+  }
+
+  const expectedCount = wholeSeries
+    ? events.filter(e => e.seriesId === selected.seriesId).length
+    : 1;
+
+  if (data.length !== expectedCount) {
+    await refreshProgrammesFromSupabase();
+    alert(
+      "Only some programme rows were deleted. " +
+      "Please check the calendar."
+    );
+    return;
+  }
+
+  const deletedIds = new Set(data.map(row => row.id));
+
+  events = events.filter(event => !deletedIds.has(event.id));
+
+  closeEventModal();
+  renderCurrentScreen();
+
+  alert("Programme deleted successfully.");
 }
 
 
 /* =========================================================
-   STAFF CHECKLIST
+   30. STAFF CHECKLIST
 ========================================================= */
 
-function renderStaffChecklist(
-  selected
-) {
+function renderStaffChecklist(selected = []) {
+  const container = $("staffList");
 
-  const container =
-    $("staffList");
+  if (!container) return;
 
+  container.innerHTML = "";
 
-  if (
-    !container
-  ) {
+  STAFF_LIST.forEach(name => {
+    const label = document.createElement("label");
+    label.className = "staff-option";
 
-    return;
+    const checkbox = document.createElement("input");
 
-  }
+    checkbox.type = "checkbox";
+    checkbox.value = name;
+    checkbox.checked = selected.includes(name);
 
+    checkbox.addEventListener("change", () => {
+      updateStaffCount();
+      updateStaffStatus();
+    });
 
-  container.innerHTML =
-    "";
+    const text = document.createElement("span");
+    text.textContent = name;
 
-
-  STAFF_LIST.forEach(
-    function (
-      name
-    ) {
-
-      const label =
-        document.createElement(
-          "label"
-        );
-
-
-      label.className =
-        "staff-option";
-
-
-      const checkbox =
-        document.createElement(
-          "input"
-        );
-
-
-      checkbox.type =
-        "checkbox";
-
-
-      checkbox.value =
-        name;
-
-
-      checkbox.checked =
-        selected.includes(
-          name
-        );
-
-
-      checkbox.addEventListener(
-        "change",
-        function () {
-
-          updateStaffCount();
-
-          updateStaffStatus();
-
-        }
-      );
-
-
-      const text =
-        document.createElement(
-          "span"
-        );
-
-
-      text.textContent =
-        name;
-
-
-      label.appendChild(
-        checkbox
-      );
-
-
-      label.appendChild(
-        text
-      );
-
-
-      container.appendChild(
-        label
-      );
-
-    }
-  );
-
+    label.append(checkbox, text);
+    container.appendChild(label);
+  });
 }
 
-
 function selectedStaff() {
-
   return Array.from(
     document.querySelectorAll(
       '#staffList input[type="checkbox"]:checked'
     )
-  )
-  .map(
-    function (
-      checkbox
-    ) {
-
-      return checkbox.value;
-
-    }
-  );
-
+  ).map(input => input.value);
 }
-
 
 function updateStaffCount() {
-
-  const count =
-    $("presentCount");
-
-
-  if (
-    count
-  ) {
-
-    count.textContent =
-      selectedStaff().length;
-
-  }
-
+  setText("presentCount", selectedStaff().length);
 }
-
 
 function updateStaffStatus() {
+  const status = $("staffStatus");
 
-  const status =
-    $("staffStatus");
+  if (!status) return;
 
+  const present = selectedStaff().length;
 
-  if (
-    !status
-  ) {
+  status.className = "staff-status";
 
-    return;
-
-  }
-
-
-  const present =
-    selectedStaff().length;
-
-
-  status.className =
-    "staff-status";
-
-
-  if (
-    present >=
-    REQUIRED_MANPOWER
-  ) {
-
-    status.classList.add(
-      "good"
-    );
-
-
-    status.textContent =
-      "✓ Adequately staffed";
-
+  if (present >= REQUIRED_MANPOWER) {
+    status.classList.add("good");
+    status.textContent = "✓ Adequately staffed";
   } else {
-
-    status.classList.add(
-      "warning"
-    );
-
-
+    status.classList.add("warning");
     status.textContent =
-      `⚠ Understaffed by ${
-        REQUIRED_MANPOWER -
-        present
-      }`;
-
+      `⚠ Understaffed by ${REQUIRED_MANPOWER - present}`;
   }
-
 }
 
 
 /* =========================================================
-   OPEN MANPOWER MODAL
+   31. MANPOWER MODAL
 ========================================================= */
 
-function openManpowerModal(
-  venue,
-  date
-) {
+function openManpowerModal(venue, date) {
+  manpowerVenue = venue;
+  manpowerDate = date;
 
-  manpowerDate =
-    date;
+  const record = getManpower(venue, date);
 
+  setText("manpowerVenue", venue);
+  setText("manpowerDate", formatDisplayDate(date));
 
-  manpowerVenue =
-    venue;
+  setValue("requiredManpower", REQUIRED_MANPOWER);
+  setValue("manpowerNotes", record.notes);
 
-
-  const record =
-    getManpower(
-      venue,
-      date
-    );
-
-
-  const venueDisplay =
-    $("manpowerVenue");
-
-
-  if (
-    venueDisplay
-  ) {
-
-    venueDisplay.textContent =
-      venue;
-
-  }
-
-
-  const dateDisplay =
-    $("manpowerDate");
-
-
-  if (
-    dateDisplay
-  ) {
-
-    dateDisplay.textContent =
-      formatDisplayDate(
-        date
-      );
-
-  }
-
-
-  const requiredInput =
-    $("requiredManpower");
-
-
-  if (
-    requiredInput
-  ) {
-
-    requiredInput.value =
-      REQUIRED_MANPOWER;
-
-  }
-
-
-  const notesInput =
-    $("manpowerNotes");
-
-
-  if (
-    notesInput
-  ) {
-
-    notesInput.value =
-      record.notes ||
-      "";
-
-  }
-
-
-  renderStaffChecklist(
-    record.staff ||
-    []
-  );
-
+  renderStaffChecklist(record.staff);
 
   updateStaffCount();
-
   updateStaffStatus();
 
-
-  if (
-    manpowerModal
-  ) {
-
-    manpowerModal.classList.add(
-      "visible"
-    );
-
-  }
-
+  $("manpowerModal")?.classList.add("visible");
 }
-
-
-/* =========================================================
-   CLOSE MANPOWER MODAL
-========================================================= */
 
 function closeManpowerModal() {
+  $("manpowerModal")?.classList.remove("visible");
 
-  if (
-    manpowerModal
-  ) {
-
-    manpowerModal.classList.remove(
-      "visible"
-    );
-
-  }
-
-
-  manpowerDate =
-    null;
-
-
-  manpowerVenue =
-    null;
-
+  manpowerVenue = null;
+  manpowerDate = null;
 }
-
-
-/* =========================================================
-   SAVE MANPOWER
-========================================================= */
 
 async function saveManpower() {
+  if (!manpowerVenue || !manpowerDate) return;
 
-  if (
-    !manpowerDate ||
-    !manpowerVenue
-  ) {
-
+  if (!supabaseClient) {
+    alert("Supabase is not connected.");
     return;
-
   }
-
-
-  const staff =
-    selectedStaff();
-
-
-  const notesInput =
-    $("manpowerNotes");
-
-
-  const notes =
-    notesInput
-      ? notesInput.value.trim()
-      : "";
-
-
-  if (
-    !supabaseClient
-  ) {
-
-    alert(
-      "Supabase is not connected."
-    );
-
-    return;
-
-  }
-
 
   const record = {
-
-    venue:
-      manpowerVenue,
-
-    date:
-      manpowerDate,
-
-    staff:
-      staff,
-
-    required:
-      REQUIRED_MANPOWER,
-
-    notes:
-      notes
-
+    venue: manpowerVenue,
+    date: manpowerDate,
+    staff: selectedStaff(),
+    required: REQUIRED_MANPOWER,
+    notes: valueOf("manpowerNotes").trim()
   };
 
+  const { error } = await supabaseClient
+    .from("manpower")
+    .upsert(record, {
+      onConflict: "venue,date"
+    });
 
-  const {
-    error
-  } =
-    await supabaseClient
-      .from(
-        "manpower"
-      )
-      .upsert(
-        record,
-        {
-          onConflict:
-            "venue,date"
-        }
-      );
-
-
-  if (
-    error
-  ) {
-
-    console.error(
-      "Unable to save manpower:",
-      error
-    );
-
-
-    alert(
-      `Unable to save manpower: ${error.message}`
-    );
-
+  if (error) {
+    alert(`Unable to save manpower: ${error.message}`);
     return;
-
   }
 
+  // Confirm saved state by reloading from Supabase.
+  const reloaded = await loadManpowerFromSupabase();
 
-  manpower[
-    manpowerKey(
-      manpowerVenue,
-      manpowerDate
-    )
-  ] = {
-
-    staff:
-      staff,
-
-    required:
-      REQUIRED_MANPOWER,
-
-    notes:
-      notes
-
-  };
-
+  if (!reloaded) {
+    alert(
+      "Manpower was submitted, but could not be reloaded. " +
+      "Please refresh to verify."
+    );
+    return;
+  }
 
   closeManpowerModal();
-
-
-  renderCalendar();
-
+  renderCurrentScreen();
 }
 
 
 /* =========================================================
-   LOAD MANPOWER
-========================================================= */
-
-async function loadManpowerFromSupabase() {
-
-  if (
-    !supabaseClient
-  ) {
-
-    return;
-
-  }
-
-
-  const {
-    data,
-    error
-  } =
-    await supabaseClient
-      .from(
-        "manpower"
-      )
-      .select("*");
-
-
-  if (
-    error
-  ) {
-
-    console.warn(
-      "Unable to load manpower:",
-      error
-    );
-
-
-    return;
-
-  }
-
-
-  manpower =
-    {};
-
-
-  (
-    data ||
-    []
-  ).forEach(
-    function (
-      row
-    ) {
-
-      const date =
-        String(
-          row.date ||
-          ""
-        ).substring(
-          0,
-          10
-        );
-
-
-      manpower[
-        manpowerKey(
-          row.venue,
-          date
-        )
-      ] = {
-
-        staff:
-          Array.isArray(
-            row.staff
-          )
-
-            ? row.staff
-
-            : [],
-
-        required:
-          REQUIRED_MANPOWER,
-
-        notes:
-          row.notes ||
-          ""
-
-      };
-
-    }
-  );
-
-
-  renderCalendar();
-
-}
-
-
-/* =========================================================
-   VENUE UI
+   32. VENUE AND CALENDAR NAVIGATION
 ========================================================= */
 
 function updateVenueUI() {
-
-  if (
-    venueSelect
-  ) {
-
-    venueSelect.value =
-      currentVenue;
-
-  }
-
-
-  if (
-    currentVenueLabel
-  ) {
-
-    currentVenueLabel.textContent =
-      currentVenue;
-
-  }
-
+  setValue("venue", currentVenue);
+  setText("currentVenueLabel", currentVenue);
 
   updateSheetTabs();
-
 }
 
-
-/* =========================================================
-   SWITCH VENUE
-========================================================= */
-
-function switchVenue(
-  venue
-) {
-
-  currentVenue =
-    venue;
-
-
-  showingSummary =
-    false;
-
+function switchVenue(venue) {
+  currentVenue = venue;
 
   updateVenueUI();
-
-
   showCalendarView();
-
 }
-
-
-/* =========================================================
-   CHANGE CALENDAR VIEW
-========================================================= */
 
 function changeCalendarView() {
+  activeCalendarView = valueOf("calendarView", "month");
 
-  if (
-    !calendarViewSelect
-  ) {
-
-    return;
-
-  }
-
-
-  activeCalendarView =
-    calendarViewSelect.value;
-
-
-  console.log(
-    "Changing calendar view to:",
-    activeCalendarView
-  );
-
-
-  showingSummary =
-    false;
-
-
-  if (
-    summaryPanel
-  ) {
-
-    summaryPanel.classList.add(
-      "hidden"
-    );
-
-  }
-
-
-  if (
-    calendarGrid
-  ) {
-
-    calendarGrid.classList.remove(
-      "hidden"
-    );
-
-  }
-
-
-  const header =
-    document.querySelector(
-      ".week-header"
-    );
-
-
-  if (
-    header
-  ) {
-
-    header.classList.remove(
-      "hidden"
-    );
-
-  }
-
-
-  if (
-    activeCalendarView ===
-    "week"
-  ) {
-
-    currentDate =
-      startOfWeek(
-        currentDate
-      );
-
-  }
-
-
-  updateSheetTabs();
-
-
-  renderCalendar();
-
+  showCalendarView();
 }
-
-
-/* =========================================================
-   PREVIOUS
-========================================================= */
 
 function goPrevious() {
+  if (showingSummary) {
+    summaryDate = new Date(
+      summaryDate.getFullYear(),
+      summaryDate.getMonth() - 1,
+      1
+    );
 
-  if (
-    showingSummary
-  ) {
-
-    summaryDate =
-      new Date(
-        summaryDate.getFullYear(),
-        summaryDate.getMonth() -
-          1,
-        1
-      );
-
-
+    currentDate = new Date(summaryDate);
+    saveCalendarDate();
     renderProgrammeSummary();
-
-
     return;
-
   }
 
-
-  if (
-    activeCalendarView ===
-    "day"
-  ) {
-
-    currentDate =
-      addDays(
-        currentDate,
-        -1
-      );
-
-  } else if (
-    activeCalendarView ===
-    "week"
-  ) {
-
-    currentDate =
-      addDays(
-        startOfWeek(
-          currentDate
-        ),
-        -7
-      );
-
+  if (activeCalendarView === "day") {
+    currentDate = addDays(currentDate, -1);
+  } else if (activeCalendarView === "week") {
+    currentDate = addDays(currentDate, -7);
   } else {
-
-    currentDate =
-      new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth() -
-          1,
-        1
-      );
-
+    currentDate = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() - 1,
+      1
+    );
   }
-
 
   renderCalendar();
-
 }
-
-
-/* =========================================================
-   NEXT
-========================================================= */
 
 function goNext() {
+  if (showingSummary) {
+    summaryDate = new Date(
+      summaryDate.getFullYear(),
+      summaryDate.getMonth() + 1,
+      1
+    );
 
-  if (
-    showingSummary
-  ) {
-
-    summaryDate =
-      new Date(
-        summaryDate.getFullYear(),
-        summaryDate.getMonth() +
-          1,
-        1
-      );
-
-
+    currentDate = new Date(summaryDate);
+    saveCalendarDate();
     renderProgrammeSummary();
-
-
     return;
-
   }
 
-
-  if (
-    activeCalendarView ===
-    "day"
-  ) {
-
-    currentDate =
-      addDays(
-        currentDate,
-        1
-      );
-
-  } else if (
-    activeCalendarView ===
-    "week"
-  ) {
-
-    currentDate =
-      addDays(
-        startOfWeek(
-          currentDate
-        ),
-        7
-      );
-
+  if (activeCalendarView === "day") {
+    currentDate = addDays(currentDate, 1);
+  } else if (activeCalendarView === "week") {
+    currentDate = addDays(currentDate, 7);
   } else {
-
-    currentDate =
-      new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth() +
-          1,
-        1
-      );
-
+    currentDate = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() + 1,
+      1
+    );
   }
-
 
   renderCalendar();
-
 }
-
-
-/* =========================================================
-   TODAY
-========================================================= */
 
 function goToday() {
+  currentDate = new Date();
 
-  currentDate =
-    new Date();
-
-
-  if (
-    activeCalendarView ===
-    "month"
-  ) {
-
-    currentDate =
-      new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth(),
-        1
-      );
-
-  }
-
-
-  if (
-    activeCalendarView ===
-    "week"
-  ) {
-
-    currentDate =
-      startOfWeek(
-        currentDate
-      );
-
-  }
-
-
-  if (
-    showingSummary
-  ) {
-
-    summaryDate =
-      new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth(),
-        1
-      );
-
+  if (showingSummary) {
+    summaryDate = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      1
+    );
 
     renderProgrammeSummary();
-
   } else {
-
     renderCalendar();
-
   }
 
+  saveCalendarDate();
 }
 
 
 /* =========================================================
-   SHOW CALENDAR
+   33. CALENDAR / SUMMARY VISIBILITY
 ========================================================= */
 
 function showCalendarView() {
+  showingSummary = false;
 
-  showingSummary =
-    false;
+  toggleHidden("summaryPanel", true);
+  toggleHidden("calendarArea", false);
+  toggleHidden("calendarGrid", false);
 
+  const header = $("weekHeader") ||
+    document.querySelector(".week-header");
 
-  if (
-    summaryPanel
-  ) {
-
-    summaryPanel.classList.add(
-      "hidden"
-    );
-
-  }
-
-
-  if (
-    calendarGrid
-  ) {
-
-    calendarGrid.classList.remove(
-      "hidden"
-    );
-
-  }
-
-
-  const header =
-    document.querySelector(
-      ".week-header"
-    );
-
-
-  if (
-    header
-  ) {
-
-    header.classList.remove(
-      "hidden"
-    );
-
-  }
-
+  header?.classList.remove("hidden");
 
   updateSheetTabs();
-
-
   renderCalendar();
-
 }
-
-
-/* =========================================================
-   SHOW SUMMARY
-========================================================= */
 
 function showSummaryView() {
+  showingSummary = true;
 
-  showingSummary =
-    true;
-
-
-  if (
-    calendarGrid
-  ) {
-
-    calendarGrid.classList.add(
-      "hidden"
-    );
-
-  }
-
-
-  const header =
-    document.querySelector(
-      ".week-header"
-    );
-
-
-  if (
-    header
-  ) {
-
-    header.classList.add(
-      "hidden"
-    );
-
-  }
-
-
-  if (
-    summaryPanel
-  ) {
-
-    summaryPanel.classList.remove(
-      "hidden"
-    );
-
-  }
-
+  toggleHidden("calendarArea", true);
+  toggleHidden("summaryPanel", false);
 
   updateSheetTabs();
-
-
   renderProgrammeSummary();
-
 }
 
-
-/* =========================================================
-   UPDATE TABS
-========================================================= */
+function renderCurrentScreen() {
+  if (showingSummary) {
+    renderProgrammeSummary();
+  } else {
+    renderCalendar();
+  }
+}
 
 function updateSheetTabs() {
+  $("hbbSheetTab")?.classList.toggle(
+    "active",
+    currentVenue === "HBB" && !showingSummary
+  );
 
-  if (
-    hbbSheetTab
-  ) {
+  $("othSheetTab")?.classList.toggle(
+    "active",
+    currentVenue === "OTH" && !showingSummary
+  );
 
-    hbbSheetTab.classList.toggle(
-      "active",
-      currentVenue ===
-        "HBB" &&
-      !showingSummary
-    );
-
-  }
-
-
-  if (
-    othSheetTab
-  ) {
-
-    othSheetTab.classList.toggle(
-      "active",
-      currentVenue ===
-        "OTH" &&
-      !showingSummary
-    );
-
-  }
-
-
-  if (
-    summarySheetTab
-  ) {
-
-    summarySheetTab.classList.toggle(
-      "active",
-      showingSummary
-    );
-
-  }
-
+  $("summarySheetTab")?.classList.toggle(
+    "active",
+    showingSummary
+  );
 }
 
 
 /* =========================================================
-   MONTHLY PROGRAMME SUMMARY
+   34. MONTHLY PROGRAMME SUMMARY
 ========================================================= */
 
 function renderProgrammeSummary() {
+  const body = $("summaryTableBody");
 
-  if (
-    !summaryTableBody
-  ) {
+  if (!body) return;
 
-    return;
+  const year = summaryDate.getFullYear();
+  const month = summaryDate.getMonth();
 
-  }
-
-
-  const year =
-    summaryDate.getFullYear();
-
-
-  const month =
-    summaryDate.getMonth();
-
-
-  if (
-    summaryMonth
-  ) {
-
-    summaryMonth.textContent =
-      summaryDate.toLocaleDateString(
-        "en-SG",
-        {
-          month:
-            "long",
-
-          year:
-            "numeric"
-        }
-      );
-
-  }
-
-
-  if (
-    summarySubtitle
-  ) {
-
-    summarySubtitle.textContent =
-      `Venue: ${currentVenue}`;
-
-  }
-
-
-  const monthlyEvents =
-    events.filter(
-      function (
-        event
-      ) {
-
-        const eventDate =
-          parseInputDate(
-            event.date
-          );
-
-
-        return (
-
-          event.venue ===
-            currentVenue
-
-          &&
-
-          eventDate.getFullYear() ===
-            year
-
-          &&
-
-          eventDate.getMonth() ===
-            month
-
-        );
-
-      }
-    );
-
-
-  const programmeCounts =
-    {};
-
-
-  monthlyEvents.forEach(
-    function (
-      event
-    ) {
-
-      const programme =
-        event.programme ||
-        "Unnamed Programme";
-
-
-      if (
-        !programmeCounts[
-          programme
-        ]
-      ) {
-
-        programmeCounts[
-          programme
-        ] =
-          0;
-
-      }
-
-
-      programmeCounts[
-        programme
-      ]++;
-
-    }
+  setText(
+    "summaryMonth",
+    summaryDate.toLocaleDateString("en-SG", {
+      month: "long",
+      year: "numeric"
+    })
   );
 
+  setText("summarySubtitle", `Venue: ${currentVenue}`);
 
-  const programmes =
-    Object.keys(
-      programmeCounts
-    )
-    .sort(
-      function (
-        a,
-        b
-      ) {
+  const counts = new Map();
 
-        return a.localeCompare(
-          b
-        );
+  events.forEach(event => {
+    if (event.venue !== currentVenue) return;
 
-      }
-    );
-
-
-  summaryTableBody.innerHTML =
-    "";
-
-
-  if (
-    programmes.length ===
-    0
-  ) {
-
-    const row =
-      document.createElement(
-        "tr"
-      );
-
-
-    row.innerHTML = `
-
-      <td
-        colspan="2"
-        class="summary-zero"
-      >
-        No programmes conducted this month.
-      </td>
-
-    `;
-
-
-    summaryTableBody.appendChild(
-      row
-    );
-
+    const date = parseInputDate(event.date);
 
     if (
-      summaryTotal
+      date.getFullYear() !== year ||
+      date.getMonth() !== month
     ) {
-
-      summaryTotal.textContent =
-        "0";
-
+      return;
     }
 
+    const name = event.programme || "Unnamed Programme";
 
-    return;
+    counts.set(name, (counts.get(name) || 0) + 1);
+  });
 
-  }
+  body.innerHTML = "";
 
+  let total = 0;
 
-  let total =
-    0;
-
-
-  programmes.forEach(
-    function (
-      programme
-    ) {
-
-      const count =
-        programmeCounts[
-          programme
-        ];
-
-
-      total +=
-        count;
-
-
-      const row =
-        document.createElement(
-          "tr"
-        );
-
-
-      row.innerHTML = `
-
-        <td>
-          ${escapeHtml(
-            programme
-          )}
-        </td>
-
-        <td>
-          ${count}
-        </td>
-
-      `;
-
-
-      summaryTableBody.appendChild(
-        row
-      );
-
-    }
+  const names = Array.from(counts.keys()).sort(
+    (a, b) => a.localeCompare(b)
   );
 
+  if (names.length === 0) {
+    const row = document.createElement("tr");
+    const cell = document.createElement("td");
 
-  if (
-    summaryTotal
-  ) {
+    cell.colSpan = 2;
+    cell.className = "summary-zero";
+    cell.textContent = "No programmes scheduled this month.";
 
-    summaryTotal.textContent =
-      total;
-
+    row.appendChild(cell);
+    body.appendChild(row);
   }
 
+  names.forEach(name => {
+    const count = counts.get(name);
+    total += count;
+
+    const row = document.createElement("tr");
+
+    const nameCell = document.createElement("td");
+    nameCell.textContent = name;
+
+    const countCell = document.createElement("td");
+    countCell.textContent = count;
+
+    row.append(nameCell, countCell);
+    body.appendChild(row);
+  });
+
+  setText("summaryTotal", total);
 }
-
-
-/* =========================================================
-   SUMMARY MONTH NAVIGATION
-========================================================= */
 
 function summaryPreviousMonthHandler() {
+  summaryDate = new Date(
+    summaryDate.getFullYear(),
+    summaryDate.getMonth() - 1,
+    1
+  );
 
-  summaryDate =
-    new Date(
-      summaryDate.getFullYear(),
-      summaryDate.getMonth() -
-        1,
-      1
-    );
+  currentDate = new Date(summaryDate);
 
-
+  saveCalendarDate();
   renderProgrammeSummary();
-
 }
-
 
 function summaryNextMonthHandler() {
+  summaryDate = new Date(
+    summaryDate.getFullYear(),
+    summaryDate.getMonth() + 1,
+    1
+  );
 
-  summaryDate =
-    new Date(
-      summaryDate.getFullYear(),
-      summaryDate.getMonth() +
-        1,
-      1
-    );
+  currentDate = new Date(summaryDate);
 
-
+  saveCalendarDate();
   renderProgrammeSummary();
-
 }
 
 
 /* =========================================================
-   CLEAR ALL DATA
+   35. CSV HELPERS
 ========================================================= */
 
-async function clearAllData() {
-
-  if (
-    !confirm(
-      "Delete all programmes and manpower?"
-    )
-  ) {
-
-    return;
-
-  }
-
-
-  if (
-    !supabaseClient
-  ) {
-
-    alert(
-      "Supabase is not connected."
-    );
-
-    return;
-
-  }
-
-
-  const programmeResult =
-    await supabaseClient
-      .from(
-        "programmes"
-      )
-      .delete()
-      .neq(
-        "id",
-        "__never__"
-      );
-
-
-  if (
-    programmeResult.error
-  ) {
-
-    alert(
-      `Unable to clear programmes: ${programmeResult.error.message}`
-    );
-
-    return;
-
-  }
-
-
-  const manpowerResult =
-    await supabaseClient
-      .from(
-        "manpower"
-      )
-      .delete()
-      .neq(
-        "venue",
-        "__never__"
-      );
-
-
-  if (
-    manpowerResult.error
-  ) {
-
-    alert(
-      `Unable to clear manpower: ${manpowerResult.error.message}`
-    );
-
-    return;
-
-  }
-
-
-  events =
-    [];
-
-
-  manpower =
-    {};
-
-
-  renderCalendar();
-
-
-  alert(
-    "All data cleared."
-  );
-
+function csvEscape(value) {
+  return `"${String(value ?? "").replace(/"/g, '""')}"`;
 }
 
-/* =========================================================
-   CSV EXPORT
-   ONE ROW PER ROLLING PROGRAMME SERIES
-========================================================= */
-
-
-/* =========================================================
-   CSV ESCAPE
-========================================================= */
-
-function csvEscape(
-  value
-) {
-
-  const text =
-    value === null ||
-    value === undefined
-      ? ""
-      : String(
-          value
-        );
-
-
-  return (
-    `"${text.replace(
-      /"/g,
-      '""'
-    )}"`
+function downloadCSV(csv, filename) {
+  const blob = new Blob(
+    ["\uFEFF", csv],
+    { type: "text/csv;charset=utf-8;" }
   );
 
-}
+  const url = URL.createObjectURL(blob);
 
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
 
-/* =========================================================
-   DOWNLOAD CSV
-========================================================= */
-
-function downloadCSV(
-  csv,
-  filename
-) {
-
-  const blob =
-    new Blob(
-      [
-        "\uFEFF",
-        csv
-      ],
-      {
-        type:
-          "text/csv;charset=utf-8;"
-      }
-    );
-
-
-  const url =
-    URL.createObjectURL(
-      blob
-    );
-
-
-  const link =
-    document.createElement(
-      "a"
-    );
-
-
-  link.href =
-    url;
-
-
-  link.download =
-    filename;
-
-
-  document.body.appendChild(
-    link
-  );
-
-
+  document.body.appendChild(link);
   link.click();
-
-
   link.remove();
 
-
-  URL.revokeObjectURL(
-    url
-  );
-
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
-
-
-/* =========================================================
-   EXPORT MONTH
-========================================================= */
 
 function getExportMonthDate() {
-
   return showingSummary
-    ? new Date(
-        summaryDate
-      )
-    : new Date(
-        currentDate
-      );
-
+    ? new Date(summaryDate)
+    : new Date(currentDate);
 }
 
-
-/* =========================================================
-   DATE FORMATTING
-========================================================= */
-
-function formatShortDate(
-  dateString
-) {
-
-  const date =
-    parseInputDate(
-      dateString
-    );
-
-
-  return date.toLocaleDateString(
-    "en-SG",
-    {
-      day:
-        "2-digit",
-
-      month:
-        "2-digit",
-
-      year:
-        "numeric"
-    }
-  );
-
-}
-
-
-function formatMonth(
-  dateString
-) {
-
-  const date =
-    parseInputDate(
-      dateString
-    );
-
-
-  return date.toLocaleDateString(
-    "en-SG",
-    {
-      month:
-        "long",
-
-      year:
-        "numeric"
-    }
-  );
-
-}
-
-
-/* =========================================================
-   CHECK WHETHER DATE FALLS IN EXPORT MONTH
-========================================================= */
-
-function isDateInExportMonth(
-  dateString
-) {
-
-  const exportDate =
-    getExportMonthDate();
-
-
-  const date =
-    parseInputDate(
-      dateString
-    );
-
+function isDateInExportMonth(dateString) {
+  const date = parseInputDate(dateString);
+  const selected = getExportMonthDate();
 
   return (
-
-    date.getFullYear() ===
-      exportDate.getFullYear()
-
-    &&
-
-    date.getMonth() ===
-      exportDate.getMonth()
-
+    date.getFullYear() === selected.getFullYear() &&
+    date.getMonth() === selected.getMonth()
   );
-
 }
 
 
 /* =========================================================
-   GET SERIES FOR VENUE
+   36. CSV SERIES GROUPING
 ========================================================= */
 
-function getVenueSeries(
-  venue
-) {
-
-  const groups =
-    {};
-
+function getVenueSeries(venue) {
+  const groups = new Map();
 
   events
-    .filter(
-      function (
-        event
-      ) {
+    .filter(event => event.venue === venue)
+    .forEach(event => {
+      const key = event.seriesId || event.id;
 
-        return (
-          event.venue ===
-          venue
-        );
-
+      if (!groups.has(key)) {
+        groups.set(key, []);
       }
+
+      groups.get(key).push(event);
+    });
+
+  return Array.from(groups.values()).map(series =>
+    series.sort(
+      (a, b) => dateTimeValue(a) - dateTimeValue(b)
     )
-    .forEach(
-      function (
-        event
-      ) {
+  );
+}
 
-        const key =
-          event.seriesId ||
-          event.id;
+function buildVenueExportRows(venue) {
+  const rows = [];
 
+  getVenueSeries(venue).forEach(series => {
+    if (!series.length) return;
 
-        if (
-          !groups[
-            key
-          ]
-        ) {
+    const first = series[0];
 
-          groups[
-            key
-          ] =
-            [];
+    // Only include a rolling programme in the
+    // month in which its Week 1 begins.
+    if (!isDateInExportMonth(first.date)) return;
 
+    const row = [
+      formatMonth(first.date),
+      "", // Remarks always blank
+      first.programme || "",
+      formatShortDate(first.date),
+      formatTime(first.time),
+      first.pax ?? "",
+      first.status || "",
+      "", "", "", "", "", "", "", ""
+    ];
+
+    const rolling =
+      Number(first.totalSessions) > 1;
+
+    if (rolling) {
+      series.forEach(event => {
+        const week = Number(event.sessionNumber);
+
+        if (week >= 1 && week <= 8) {
+          row[7 + week - 1] = formatShortDate(event.date);
         }
-
-
-        groups[
-          key
-        ].push(
-          event
-        );
-
-      }
-    );
-
-
-  /*
-    Sort every series by date/time.
-  */
-
-  Object.values(
-    groups
-  )
-  .forEach(
-    function (
-      series
-    ) {
-
-      series.sort(
-        function (
-          a,
-          b
-        ) {
-
-          return (
-            dateTimeValue(
-              a
-            ) -
-            dateTimeValue(
-              b
-            )
-          );
-
-        }
-      );
-
+      });
     }
+
+    rows.push({
+      date: first.date,
+      time: first.time,
+      row
+    });
+  });
+
+  rows.sort((a, b) =>
+    `${a.date}T${a.time}`.localeCompare(
+      `${b.date}T${b.time}`
+    )
   );
 
-
-  return Object.values(
-    groups
-  );
-
+  return rows.map(item => item.row);
 }
 
 
 /* =========================================================
-   CHECK IF SERIES IS ROLLING
+   37. EXPORT CSV
 ========================================================= */
 
-function isRollingSeries(
-  series
-) {
+const CSV_HEADERS = [
+  "Month",
+  "Remarks",
+  "Programme Name",
+  "Date/ Week 1",
+  "Time",
+  "Pax",
+  "Status",
+  "W1",
+  "W2",
+  "W3",
+  "W4",
+  "W5",
+  "W6",
+  "W7",
+  "W8"
+];
 
-  if (
-    !series ||
-    series.length === 0
-  ) {
+function makeVenueCSV(venue) {
+  const rows = buildVenueExportRows(venue);
 
+  if (!rows.length) return null;
+
+  return [CSV_HEADERS, ...rows]
+    .map(row => row.map(csvEscape).join(","))
+    .join("\r\n");
+}
+
+function getExportFilename(venue) {
+  const date = getExportMonthDate();
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+
+  return `${venue}_${year}-${month}_programme_schedule.csv`;
+}
+
+function exportVenueMonthCSV(venue) {
+  if (!programmesLoaded) {
+    alert("Programme data has not loaded yet.");
     return false;
-
   }
 
+  const csv = makeVenueCSV(venue);
 
-  return (
-    Number(
-      series[0].totalSessions
-    ) > 1
-  );
-
-}
-
-
-/* =========================================================
-   BUILD EXPORT ROWS
-========================================================= */
-
-function buildVenueExportRows(
-  venue
-) {
-
-  const rows =
-    [];
-
-
-  const seriesGroups =
-    getVenueSeries(
-      venue
-    );
-
-
-  seriesGroups.forEach(
-    function (
-      series
-    ) {
-
-      if (
-        !series.length
-      ) {
-
-        return;
-
-      }
-
-
-      const first =
-        series[0];
-
-
-      const rolling =
-        isRollingSeries(
-          series
-        );
-
-
-      /* =====================================================
-         ROLLING PROGRAMME
-
-         Only export if Week 1 falls
-         inside the selected month.
-
-         Then populate W1-W8 using
-         the whole series, even if
-         later dates fall in the next month.
-      ===================================================== */
-
-      if (
-        rolling
-      ) {
-
-        if (
-          !isDateInExportMonth(
-            first.date
-          )
-        ) {
-
-          return;
-
-        }
-
-
-        const row = [
-
-          /* Month */
-          formatMonth(
-            first.date
-          ),
-
-          /* Remarks */
-          "",
-
-          /* Programme Name */
-          first.programme ||
-          "",
-
-          /* Date / Week 1 */
-          formatShortDate(
-            first.date
-          ),
-
-          /* Time */
-          formatTime(
-            first.time
-          ),
-
-          /* Pax */
-          first.pax ??
-          "",
-
-          /* Status */
-          first.status ||
-          "",
-
-          /* W1 */
-          "",
-
-          /* W2 */
-          "",
-
-          /* W3 */
-          "",
-
-          /* W4 */
-          "",
-
-          /* W5 */
-          "",
-
-          /* W6 */
-          "",
-
-          /* W7 */
-          "",
-
-          /* W8 */
-          ""
-
-        ];
-
-
-        /*
-          Populate W1-W8.
-        */
-
-        series.forEach(
-          function (
-            event
-          ) {
-
-            const week =
-              Number(
-                event.sessionNumber
-              );
-
-
-            if (
-              week >= 1 &&
-              week <= 8
-            ) {
-
-              const columnIndex =
-                7 +
-                (
-                  week - 1
-                );
-
-
-              row[
-                columnIndex
-              ] =
-                formatShortDate(
-                  event.date
-                );
-
-            }
-
-          }
-        );
-
-
-        rows.push(
-          row
-        );
-
-
-        return;
-
-      }
-
-
-      /* =====================================================
-         STAND-ALONE PROGRAMME
-
-         Export if the programme date
-         falls within the selected month.
-      ===================================================== */
-
-      if (
-        !isDateInExportMonth(
-          first.date
-        )
-      ) {
-
-        return;
-
-      }
-
-
-      rows.push(
-        [
-
-          /* Month */
-          formatMonth(
-            first.date
-          ),
-
-          /* Remarks */
-          "",
-
-          /* Programme Name */
-          first.programme ||
-          "",
-
-          /* Date / Week 1 */
-          formatShortDate(
-            first.date
-          ),
-
-          /* Time */
-          formatTime(
-            first.time
-          ),
-
-          /* Pax */
-          first.pax ??
-          "",
-
-          /* Status */
-          first.status ||
-          "",
-
-          /* W1 */
-          "",
-
-          /* W2 */
-          "",
-
-          /* W3 */
-          "",
-
-          /* W4 */
-          "",
-
-          /* W5 */
-          "",
-
-          /* W6 */
-          "",
-
-          /* W7 */
-          "",
-
-          /* W8 */
-          ""
-
-        ]
-      );
-
-    }
-  );
-
-
-  /*
-    Sort rows by actual start date.
-  */
-
-  rows.sort(
-    function (
-      a,
-      b
-    ) {
-
-      const dateA =
-        a[3]
-          .split("/")
-          .reverse()
-          .join("-");
-
-
-      const dateB =
-        b[3]
-          .split("/")
-          .reverse()
-          .join("-");
-
-
-      return dateA.localeCompare(
-        dateB
-      );
-
-    }
-  );
-
-
-  return rows;
-
-}
-
-
-/* =========================================================
-   EXPORT ONE VENUE
-========================================================= */
-
-function exportVenueMonthCSV(
-  venue
-) {
-
-  const rows =
-    buildVenueExportRows(
-      venue
-    );
-
-
-  if (
-    rows.length === 0
-  ) {
-
-    alert(
-      `There are no ${venue} programmes to export for this month.`
-    );
-
+  if (!csv) {
+    alert(`No ${venue} programmes begin in the selected month.`);
     return false;
-
   }
 
-
-  const headers = [
-
-    "Month",
-
-    "Remarks",
-
-    "Programme Name",
-
-    "Date/ Week 1",
-
-    "Time",
-
-    "Pax",
-
-    "Status",
-
-    "W1",
-
-    "W2",
-
-    "W3",
-
-    "W4",
-
-    "W5",
-
-    "W6",
-
-    "W7",
-
-    "W8"
-
-  ];
-
-
-  const csv =
-    [
-      headers,
-      ...rows
-    ]
-    .map(
-      function (
-        row
-      ) {
-
-        return row
-          .map(
-            csvEscape
-          )
-          .join(
-            ","
-          );
-
-      }
-    )
-    .join(
-      "\r\n"
-    );
-
-
-  const exportDate =
-    getExportMonthDate();
-
-
-  const year =
-    exportDate.getFullYear();
-
-
-  const month =
-    String(
-      exportDate.getMonth() +
-      1
-    ).padStart(
-      2,
-      "0"
-    );
-
-
-  const filename =
-    `${venue}_${year}-${month}_programme_schedule.csv`;
-
-
-  downloadCSV(
-    csv,
-    filename
-  );
-
-
+  downloadCSV(csv, getExportFilename(venue));
   return true;
-
 }
-
-
-/* =========================================================
-   EXPORT CURRENT VENUE
-========================================================= */
 
 function exportCurrentMonthCSV() {
-
-  exportVenueMonthCSV(
-    currentVenue
-  );
-
+  exportVenueMonthCSV(currentVenue);
 }
-
-
-/* =========================================================
-   EXPORT HBB + OTH
-========================================================= */
 
 function exportBothVenuesCSV() {
-
-  const hbbRows =
-    buildVenueExportRows(
-      "HBB"
-    );
-
-
-  const othRows =
-    buildVenueExportRows(
-      "OTH"
-    );
-
-
-  if (
-    hbbRows.length === 0 &&
-    othRows.length === 0
-  ) {
-
-    alert(
-      "There are no HBB or OTH programmes to export for this month."
-    );
-
+  if (!programmesLoaded) {
+    alert("Programme data has not loaded yet.");
     return;
-
   }
 
+  const hbb = makeVenueCSV("HBB");
+  const oth = makeVenueCSV("OTH");
 
-  if (
-    hbbRows.length > 0
-  ) {
-
-    exportVenueMonthCSV(
-      "HBB"
-    );
-
+  if (!hbb && !oth) {
+    alert("No programmes begin in the selected month.");
+    return;
   }
 
-
-  if (
-    othRows.length > 0
-  ) {
-
-    setTimeout(
-      function () {
-
-        exportVenueMonthCSV(
-          "OTH"
-        );
-
-      },
-      300
-    );
-
+  // Two downloads may require permission in some browsers.
+  if (hbb) {
+    downloadCSV(hbb, getExportFilename("HBB"));
   }
 
+  if (oth) {
+    downloadCSV(oth, getExportFilename("OTH"));
+  }
 }
 
+
 /* =========================================================
-   BUTTON SETUP
+   38. CLEAR ALL DATA
+   Disabled to prevent accidental deletion of
+   the entire shared Supabase calendar.
+========================================================= */
+
+function clearAllData() {
+  alert(
+    "Clear All Data is disabled for safety. " +
+    "Delete individual programmes using their calendar cards."
+  );
+}
+
+
+/* =========================================================
+   39. BUTTON LISTENERS
 ========================================================= */
 
 function setupButtons() {
+  on("addButton", "click", addProgramme);
 
-  const addButton =
-    $("addButton");
+  on("editButton", "click", openEditModal);
+  on("saveEditButton", "click", saveEdit);
+  on("cancelEditButton", "click", closeEditModal);
 
+  on("deleteButton", "click", deleteSelected);
+  on("closeButton", "click", closeEventModal);
 
-  if (
-    addButton
-  ) {
+  on("saveManpower", "click", saveManpower);
+  on("closeManpower", "click", closeManpowerModal);
 
-    addButton.addEventListener(
-      "click",
-      addProgramme
+  on("selectAllStaff", "click", () => {
+    document.querySelectorAll(
+      '#staffList input[type="checkbox"]'
+    ).forEach(input => {
+      input.checked = true;
+    });
+
+    updateStaffCount();
+    updateStaffStatus();
+  });
+
+  on("clearAllStaff", "click", () => {
+    document.querySelectorAll(
+      '#staffList input[type="checkbox"]'
+    ).forEach(input => {
+      input.checked = false;
+    });
+
+    updateStaffCount();
+    updateStaffStatus();
+  });
+
+  on("previousButton", "click", goPrevious);
+  on("nextButton", "click", goNext);
+  on("todayButton", "click", goToday);
+
+  on("calendarView", "change", changeCalendarView);
+
+  on("hbbSheetTab", "click", () => switchVenue("HBB"));
+  on("othSheetTab", "click", () => switchVenue("OTH"));
+
+  on("summarySheetTab", "click", () => {
+    summaryDate = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      1
     );
 
-  }
+    showSummaryView();
+  });
 
-   if (
-  exportCurrentMonthButton
-) {
+  on(
+    "summaryPreviousMonth",
+    "click",
+    summaryPreviousMonthHandler
+  );
 
-  exportCurrentMonthButton.addEventListener(
+  on(
+    "summaryNextMonth",
+    "click",
+    summaryNextMonthHandler
+  );
+
+  on(
+    "exportCurrentMonthButton",
     "click",
     exportCurrentMonthCSV
   );
 
-}
-
-
-if (
-  exportBothVenuesButton
-) {
-
-  exportBothVenuesButton.addEventListener(
+  on(
+    "exportBothVenuesButton",
     "click",
     exportBothVenuesCSV
   );
 
-}
-
-  const editButton =
-    $("editButton");
-
-
-  if (
-    editButton
-  ) {
-
-    editButton.addEventListener(
-      "click",
-      openEditModal
-    );
-
-  }
-
-
-  const saveEditButton =
-    $("saveEditButton");
-
-
-  if (
-    saveEditButton
-  ) {
-
-    saveEditButton.addEventListener(
-      "click",
-      saveEdit
-    );
-
-  }
-
-
-  const cancelEditButton =
-    $("cancelEditButton");
-
-
-  if (
-    cancelEditButton
-  ) {
-
-    cancelEditButton.addEventListener(
-      "click",
-      closeEditModal
-    );
-
-  }
-
-
-  const deleteButton =
-    $("deleteButton");
-
-
-  if (
-    deleteButton
-  ) {
-
-    deleteButton.addEventListener(
-      "click",
-      deleteSelected
-    );
-
-  }
-
-
-  const closeButton =
-    $("closeButton");
-
-
-  if (
-    closeButton
-  ) {
-
-    closeButton.addEventListener(
-      "click",
-      closeEventModal
-    );
-
-  }
-
-
-  const saveManpowerButton =
-    $("saveManpower");
-
-
-  if (
-    saveManpowerButton
-  ) {
-
-    saveManpowerButton.addEventListener(
-      "click",
-      saveManpower
-    );
-
-  }
-
-
-  const closeManpowerButton =
-    $("closeManpower");
-
-
-  if (
-    closeManpowerButton
-  ) {
-
-    closeManpowerButton.addEventListener(
-      "click",
-      closeManpowerModal
-    );
-
-  }
-
-
-  const selectAllStaff =
-    $("selectAllStaff");
-
-
-  if (
-    selectAllStaff
-  ) {
-
-    selectAllStaff.addEventListener(
-      "click",
-      function () {
-
-        document
-          .querySelectorAll(
-            '#staffList input[type="checkbox"]'
-          )
-          .forEach(
-            function (
-              checkbox
-            ) {
-
-              checkbox.checked =
-                true;
-
-            }
-          );
-
-
-        updateStaffCount();
-
-        updateStaffStatus();
-
-      }
-    );
-
-  }
-
-
-  const clearAllStaff =
-    $("clearAllStaff");
-
-
-  if (
-    clearAllStaff
-  ) {
-
-    clearAllStaff.addEventListener(
-      "click",
-      function () {
-
-        document
-          .querySelectorAll(
-            '#staffList input[type="checkbox"]'
-          )
-          .forEach(
-            function (
-              checkbox
-            ) {
-
-              checkbox.checked =
-                false;
-
-            }
-          );
-
-
-        updateStaffCount();
-
-        updateStaffStatus();
-
-      }
-    );
-
-  }
-
-
-  const previousButton =
-    $("previousButton");
-
-
-  if (
-    previousButton
-  ) {
-
-    previousButton.addEventListener(
-      "click",
-      goPrevious
-    );
-
-  }
-
-
-  const nextButton =
-    $("nextButton");
-
-
-  if (
-    nextButton
-  ) {
-
-    nextButton.addEventListener(
-      "click",
-      goNext
-    );
-
-  }
-
-
-  const todayButton =
-    $("todayButton");
-
-
-  if (
-    todayButton
-  ) {
-
-    todayButton.addEventListener(
-      "click",
-      goToday
-    );
-
-  }
-
-
-  const clearButton =
-    $("clearButton");
-
-
-  if (
-    clearButton
-  ) {
-
-    clearButton.addEventListener(
-      "click",
-      clearAllData
-    );
-
-  }
-
-
-  if (
-    calendarViewSelect
-  ) {
-
-    calendarViewSelect.addEventListener(
-      "change",
-      changeCalendarView
-    );
-
-  }
-
-
-  if (
-    hbbSheetTab
-  ) {
-
-    hbbSheetTab.addEventListener(
-      "click",
-      function () {
-
-        switchVenue(
-          "HBB"
-        );
-
-      }
-    );
-
-  }
-
-
-  if (
-    othSheetTab
-  ) {
-
-    othSheetTab.addEventListener(
-      "click",
-      function () {
-
-        switchVenue(
-          "OTH"
-        );
-
-      }
-    );
-
-  }
-
-
-  if (
-    summarySheetTab
-  ) {
-
-    summarySheetTab.addEventListener(
-      "click",
-      function () {
-
-        summaryDate =
-          new Date(
-            currentDate.getFullYear(),
-            currentDate.getMonth(),
-            1
-          );
-
-
-        showSummaryView();
-
-      }
-    );
-
-  }
-
-
-  if (
-    summaryPreviousMonth
-  ) {
-
-    summaryPreviousMonth.addEventListener(
-      "click",
-      summaryPreviousMonthHandler
-    );
-
-  }
-
-
-  if (
-    summaryNextMonth
-  ) {
-
-    summaryNextMonth.addEventListener(
-      "click",
-      summaryNextMonthHandler
-    );
-
-  }
-
+  on("clearButton", "click", clearAllData);
 }
 
 
 /* =========================================================
-   INITIALISE
+   40. INITIALISE
 ========================================================= */
 
 function initialise() {
-
   populateHours();
-
-
   setupProgrammeForm();
-
-
   setupButtons();
 
+  setValue("startDate", formatInputDate(new Date()));
 
-  if (
-    startDateInput
-  ) {
+  setValue("venue", currentVenue);
+  setValue("calendarView", activeCalendarView);
 
-    startDateInput.value =
-      formatInputDate(
-        new Date()
-      );
-
-  }
-
-
-  if (
-    venueSelect
-  ) {
-
-    venueSelect.value =
-      currentVenue;
-
-  }
-
-
-  if (
-    currentVenueLabel
-  ) {
-
-    currentVenueLabel.textContent =
-      currentVenue;
-
-  }
-
-
-  if (
-    calendarViewSelect
-  ) {
-
-    calendarViewSelect.value =
-      activeCalendarView;
-
-  }
-
-
-  updateSheetTabs();
-
-
+  updateVenueUI();
   renderCalendar();
-
 }
 
 
 /* =========================================================
-   START APPLICATION
+   41. START APPLICATION
 ========================================================= */
 
-initialise();
+async function startApplication() {
+  initialise();
 
-testSupabaseConnection();
+  if (!supabaseClient) {
+    alert(
+      "Supabase could not be initialised. " +
+      "Check that its library loads before script.js."
+    );
+    return;
+  }
 
-refreshProgrammesFromSupabase();
+  await testSupabaseConnection();
 
-loadManpowerFromSupabase();
+  await Promise.all([
+    refreshProgrammesFromSupabase(),
+    loadManpowerFromSupabase()
+  ]);
+
+  console.log("Calendar initialisation complete.");
+}
+
+startApplication();
