@@ -1060,10 +1060,19 @@ function buildProgrammeEvents(options) {
 
 
 /* =========================================================
-   24. ADD PROGRAMME
+24. ADD PROGRAMME
+   PRESERVE CURRENT CALENDAR MONTH
 ========================================================= */
 
 async function addProgramme() {
+
+  // Remember exactly where the user is viewing.
+  const preservedDate = new Date(currentDate);
+
+  const preservedView = activeCalendarView;
+
+  const preservedVenue = currentVenue;
+
   const selected = valueOf("programme");
 
   if (!selected) {
@@ -1081,6 +1090,111 @@ async function addProgramme() {
     alert("Please enter a programme name.");
     return;
   }
+
+  const venue = valueOf("venue", currentVenue);
+
+  const date = valueOf("startDate");
+
+  const time = getAddTime();
+
+  if (
+    !date ||
+    isNaN(parseInputDate(date).getTime())
+  ) {
+    alert("Please select a valid date.");
+    return;
+  }
+
+  if (!isValidHalfHourTime(time)) {
+    alert("Start time must end in :00 or :30.");
+    return;
+  }
+
+  let customDurationValue =
+    valueOf("durationPreset", "60");
+
+  if (customDurationValue === "custom") {
+    customDurationValue = valueOf("customDuration");
+  }
+
+  const duration = isCustom
+    ? Number(customDurationValue)
+    : getProgrammeDuration(programmeName);
+
+  if (
+    !Number.isFinite(duration) ||
+    duration <= 0
+  ) {
+    alert("Please enter a valid duration.");
+    return;
+  }
+
+  if (!supabaseClient) {
+    alert("Supabase is not connected.");
+    return;
+  }
+
+  const newEvents = buildProgrammeEvents({
+    programmeName,
+    venue,
+    startDate: date,
+    time,
+    duration,
+    status: valueOf("status"),
+    remarks: valueOf("remarks").trim(),
+    seriesId: makeId("series")
+  });
+
+  const { data, error } = await supabaseClient
+    .from("programmes")
+    .insert(
+      newEvents.map(mapProgrammeToDatabase)
+    )
+    .select();
+
+  if (error) {
+    console.error(
+      "Unable to save programme:",
+      error
+    );
+
+    alert(
+      `Unable to save programme: ${error.message}`
+    );
+
+    return;
+  }
+
+  events.push(
+    ...(data || []).map(convertDatabaseProgramme)
+  );
+
+  // Restore calendar position.
+  currentDate = preservedDate;
+
+  activeCalendarView = preservedView;
+
+  currentVenue = preservedVenue;
+
+  // Save the preserved date for page refreshes.
+  saveCalendarDate();
+
+  // Reset only the Add Programme form.
+  resetProgrammeForm();
+
+  // Restore venue and calendar controls.
+  updateVenueUI();
+
+  setValue(
+    "calendarView",
+    activeCalendarView
+  );
+
+  // Refresh without changing the selected month.
+  renderCurrentScreen();
+
+  alert("Programme saved successfully.");
+}
 
   const venue = valueOf("venue", currentVenue);
   const date = valueOf("startDate");
