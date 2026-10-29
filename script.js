@@ -1263,27 +1263,52 @@ async function addProgramme() {
 
 
 /* =========================================================
-   25. RESET ADD PROGRAMME FORM
+   RESET PROGRAMME FORM
+   KEEP LAST SELECTED START DATE
 ========================================================= */
 
 function resetProgrammeForm() {
-  setValue("programme", "");
-  setValue("customProgramme", "");
-  setValue("durationPreset", "60");
-  setValue("customDuration", "");
-  setValue("startDate", formatInputDate(new Date()));
-  setValue("startHour", "09");
-  setValue("startMinute", "00");
-  setValue("startTime", "09:00");
-  setValue("remarks", "");
-  setValue("status", "Uploaded (100% Created)");
 
+  // Remember the date selected by the user
+  const selectedStartDate = valueOf("startDate");
+
+  // Reset programme selection
+  setValue("programme", "");
+
+  setValue("customProgramme", "");
+
+  // Reset duration
+  setValue("durationPreset", "60");
+
+  setValue("customDuration", "");
+
+  // Keep the previously selected date
+  setValue("startDate", selectedStartDate);
+
+  // Reset time
+  setValue("startHour", "09");
+
+  setValue("startMinute", "00");
+
+  setValue("startTime", "09:00");
+
+  // Reset remarks and status
+  setValue("remarks", "");
+
+  setValue(
+    "status",
+    "Uploaded (100% Created)"
+  );
+
+  // Hide custom programme fields
   toggleHidden("customProgrammeGroup", true);
+
   toggleHidden("durationGroup", true);
 
   if ($("customDuration")) {
     $("customDuration").disabled = true;
   }
+
 }
 
 
