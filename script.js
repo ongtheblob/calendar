@@ -1,22 +1,25 @@
+
 /* =========================================================
    ACTIVE HEALTH PROGRAMME CALENDAR
-   HBB / OTH
+   COMPLETE REPLACEMENT - VERSION 144
 
-   Features:
-   - Supabase database
-   - Month / Week / Day calendar
-   - Remember selected calendar month
-   - Add, edit and delete programmes
-   - Rolling programme schedules
-   - Additional Week 14 sessions
-   - Staff on duty and manpower
-   - Monthly programme summary
-   - CSV exports for HBB and OTH
+   HBB / OTH
+   Month / Week / Day
+   Supabase
+   Programme management
+   Manpower
+   Monthly summary
+   CSV exports
+
+   IMPORTANT:
+   - Calendar month stays selected after saving.
+   - Add Programme date stays selected after saving.
+   - No duplicate addProgramme functions.
 ========================================================= */
 
 
 /* =========================================================
-   1. SUPABASE CONFIGURATION
+   1. SUPABASE
 ========================================================= */
 
 const SUPABASE_URL =
@@ -25,13 +28,12 @@ const SUPABASE_URL =
 const SUPABASE_PUBLISHABLE_KEY =
   "sb_publishable_jxGJEa2GF2dM8q4-bAO1eA_0SrLus17";
 
-const supabaseClient =
-  window.supabase?.createClient
-    ? window.supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_PUBLISHABLE_KEY
-      )
-    : null;
+const supabaseClient = window.supabase?.createClient
+  ? window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_PUBLISHABLE_KEY
+    )
+  : null;
 
 if (!supabaseClient) {
   console.error("Supabase library was not loaded.");
@@ -39,7 +41,7 @@ if (!supabaseClient) {
 
 
 /* =========================================================
-   2. SETTINGS
+   2. PROGRAMME SETTINGS
 ========================================================= */
 
 const REQUIRED_MANPOWER = 2;
@@ -102,19 +104,23 @@ function valueOf(id, fallback = "") {
 }
 
 function setValue(id, value) {
-  if ($(id)) $(id).value = value;
+  if ($(id)) {
+    $(id).value = value;
+  }
 }
 
 function setText(id, value) {
-  if ($(id)) $(id).textContent = value;
+  if ($(id)) {
+    $(id).textContent = value;
+  }
 }
 
 function toggleHidden(id, hidden) {
   $(id)?.classList.toggle("hidden", hidden);
 }
 
-function on(id, eventName, handler) {
-  $(id)?.addEventListener(eventName, handler);
+function on(id, eventName, callback) {
+  $(id)?.addEventListener(eventName, callback);
 }
 
 
@@ -123,7 +129,10 @@ function on(id, eventName, handler) {
 ========================================================= */
 
 function parseInputDate(value) {
-  const parts = String(value).slice(0, 10).split("-").map(Number);
+  const parts = String(value || "")
+    .slice(0, 10)
+    .split("-")
+    .map(Number);
 
   if (
     parts.length !== 3 ||
@@ -132,7 +141,11 @@ function parseInputDate(value) {
     return new Date(NaN);
   }
 
-  const date = new Date(parts[0], parts[1] - 1, parts[2]);
+  const date = new Date(
+    parts[0],
+    parts[1] - 1,
+    parts[2]
+  );
 
   if (
     date.getFullYear() !== parts[0] ||
@@ -170,8 +183,8 @@ function isSameDay(a, b) {
   return formatInputDate(a) === formatInputDate(b);
 }
 
-function formatShortDate(dateString) {
-  const date = parseInputDate(dateString);
+function formatShortDate(value) {
+  const date = parseInputDate(value);
 
   return [
     String(date.getDate()).padStart(2, "0"),
@@ -180,15 +193,18 @@ function formatShortDate(dateString) {
   ].join("/");
 }
 
-function formatMonth(dateString) {
-  return parseInputDate(dateString).toLocaleDateString(
+function formatMonth(value) {
+  return parseInputDate(value).toLocaleDateString(
     "en-SG",
-    { month: "long", year: "numeric" }
+    {
+      month: "long",
+      year: "numeric"
+    }
   );
 }
 
-function formatDisplayDate(dateString) {
-  return parseInputDate(dateString).toLocaleDateString(
+function formatDisplayDate(value) {
+  return parseInputDate(value).toLocaleDateString(
     "en-SG",
     {
       weekday: "short",
@@ -201,13 +217,15 @@ function formatDisplayDate(dateString) {
 
 
 /* =========================================================
-   5. REMEMBER SELECTED CALENDAR DATE
+   5. CALENDAR DATE MEMORY
 ========================================================= */
 
 let currentDate = new Date();
 
 try {
-  const savedDate = localStorage.getItem("selectedCalendarDate");
+  const savedDate = localStorage.getItem(
+    "selectedCalendarDate"
+  );
 
   if (savedDate) {
     const parsed = parseInputDate(savedDate);
@@ -217,7 +235,7 @@ try {
     }
   }
 } catch (error) {
-  console.warn("Calendar date could not be restored.", error);
+  console.warn("Unable to restore calendar date:", error);
 }
 
 function saveCalendarDate() {
@@ -227,13 +245,85 @@ function saveCalendarDate() {
       formatInputDate(currentDate)
     );
   } catch (error) {
-    console.warn("Calendar date could not be saved.", error);
+    console.warn("Unable to save calendar date:", error);
   }
 }
 
 
 /* =========================================================
-   6. APPLICATION STATE
+   6. ADD PROGRAMME DATE MEMORY
+========================================================= */
+
+const START_DATE_STORAGE_KEY =
+  "activeHealthSelectedStartDate";
+
+function getPlanningDate() {
+  const today = new Date();
+
+  if (
+    currentDate.getFullYear() === today.getFullYear() &&
+    currentDate.getMonth() === today.getMonth()
+  ) {
+    return formatInputDate(today);
+  }
+
+  return formatInputDate(
+    new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      1
+    )
+  );
+}
+
+function getSavedStartDate() {
+  try {
+    const saved = localStorage.getItem(
+      START_DATE_STORAGE_KEY
+    );
+
+    if (
+      saved &&
+      !isNaN(parseInputDate(saved).getTime())
+    ) {
+      return saved;
+    }
+  } catch (error) {
+    console.warn("Unable to restore start date:", error);
+  }
+
+  return getPlanningDate();
+}
+
+function saveSelectedStartDate() {
+  const date = valueOf("startDate");
+
+  if (
+    !date ||
+    isNaN(parseInputDate(date).getTime())
+  ) {
+    return;
+  }
+
+  try {
+    localStorage.setItem(
+      START_DATE_STORAGE_KEY,
+      date
+    );
+  } catch (error) {
+    console.warn("Unable to save start date:", error);
+  }
+}
+
+function initialiseStartDate() {
+  setValue("startDate", getSavedStartDate());
+
+  on("startDate", "change", saveSelectedStartDate);
+}
+
+
+/* =========================================================
+   7. APPLICATION STATE
 ========================================================= */
 
 let events = [];
@@ -255,12 +345,13 @@ let manpowerLoaded = false;
 
 
 /* =========================================================
-   7. TIME HELPERS
+   8. TIME HELPERS
 ========================================================= */
 
 function populateHours() {
   ["startHour", "editStartHour"].forEach(id => {
     const select = $(id);
+
     if (!select) return;
 
     select.innerHTML = "";
@@ -283,7 +374,11 @@ function populateHours() {
 
 function getAddTime() {
   if ($("startHour") && $("startMinute")) {
-    return `${valueOf("startHour")}:${valueOf("startMinute")}`;
+    return (
+      valueOf("startHour") +
+      ":" +
+      valueOf("startMinute")
+    );
   }
 
   return valueOf("startTime").slice(0, 5);
@@ -291,7 +386,11 @@ function getAddTime() {
 
 function getEditTime() {
   if ($("editStartHour") && $("editStartMinute")) {
-    return `${valueOf("editStartHour")}:${valueOf("editStartMinute")}`;
+    return (
+      valueOf("editStartHour") +
+      ":" +
+      valueOf("editStartMinute")
+    );
   }
 
   return valueOf("editStartTime").slice(0, 5);
@@ -304,7 +403,10 @@ function isValidHalfHourTime(time) {
 function addMinutesToTime(time, minutes) {
   const [hour, minute] = time.split(":").map(Number);
 
-  const total = hour * 60 + minute + Number(minutes);
+  const total =
+    hour * 60 +
+    minute +
+    Number(minutes);
 
   return [
     String(Math.floor(total / 60) % 24).padStart(2, "0"),
@@ -328,25 +430,33 @@ function formatTime(time) {
 function formatDuration(minutes) {
   const value = Number(minutes);
 
-  if (value < 60) return `${value} min`;
+  if (value < 60) {
+    return value + " min";
+  }
 
   const hours = Math.floor(value / 60);
   const remaining = value % 60;
 
-  return remaining
-    ? `${hours} hr ${remaining} min`
-    : `${hours} hour${hours === 1 ? "" : "s"}`;
+  if (remaining) {
+    return hours + " hr " + remaining + " min";
+  }
+
+  return hours + (hours === 1 ? " hour" : " hours");
 }
 
 
 /* =========================================================
-   8. GENERAL HELPERS
+   9. GENERAL HELPERS
 ========================================================= */
 
 function makeId(prefix) {
-  return `${prefix}_${Date.now()}_${Math.random()
-    .toString(36)
-    .slice(2, 12)}`;
+  return (
+    prefix +
+    "_" +
+    Date.now() +
+    "_" +
+    Math.random().toString(36).slice(2, 12)
+  );
 }
 
 function escapeHtml(value) {
@@ -359,27 +469,42 @@ function escapeHtml(value) {
 }
 
 function dateTimeValue(event) {
-  return new Date(`${event.date}T${event.time}`).getTime();
+  return new Date(
+    event.date + "T" + event.time
+  ).getTime();
 }
 
 function getPax(programme) {
-  return Object.prototype.hasOwnProperty.call(PAX, programme)
+  return Object.prototype.hasOwnProperty.call(
+    PAX,
+    programme
+  )
     ? PAX[programme]
     : "";
 }
 
 function isKnownProgramme(programme) {
-  return Object.prototype.hasOwnProperty.call(PAX, programme);
+  return Object.prototype.hasOwnProperty.call(
+    PAX,
+    programme
+  );
 }
 
 function needsWeek14Session(programme) {
   return WEEK_14_PROGRAMMES.includes(programme);
 }
 
-function getProgrammeDuration(programme, customValue = 60) {
-  if (programme === "Body Composition Assessment") return 30;
+function getProgrammeDuration(
+  programme,
+  customValue = 60
+) {
+  if (programme === "Body Composition Assessment") {
+    return 30;
+  }
 
-  if (isKnownProgramme(programme)) return 60;
+  if (isKnownProgramme(programme)) {
+    return 60;
+  }
 
   return Number(customValue);
 }
@@ -390,13 +515,13 @@ function getSessionLabel(event) {
   }
 
   return event.sessionNumber
-    ? `Week ${event.sessionNumber}`
+    ? "Week " + event.sessionNumber
     : "Series";
 }
 
 
 /* =========================================================
-   9. DATABASE MAPPING
+   10. DATABASE MAPPING
 ========================================================= */
 
 function mapProgrammeToDatabase(event) {
@@ -408,9 +533,10 @@ function mapProgrammeToDatabase(event) {
     date: event.date,
     time: event.time,
     duration: Number(event.duration),
-    pax: event.pax === "" || event.pax == null
-      ? null
-      : Number(event.pax),
+    pax:
+      event.pax === "" || event.pax == null
+        ? null
+        : Number(event.pax),
     status: event.status || null,
     remarks: event.remarks || null,
     session_number: event.sessionNumber ?? null,
@@ -439,13 +565,13 @@ function convertDatabaseProgramme(row) {
 
 
 /* =========================================================
-   10. SUPABASE LOADING
+   11. LOAD PROGRAMMES
 ========================================================= */
 
 async function testSupabaseConnection() {
   if (!supabaseClient) return;
 
-  const { data, error } = await supabaseClient
+  const { error } = await supabaseClient
     .from("programmes")
     .select("id")
     .limit(1);
@@ -453,14 +579,14 @@ async function testSupabaseConnection() {
   if (error) {
     console.error("Supabase connection failed:", error);
   } else {
-    console.log("Supabase connection successful.", data);
+    console.log("Supabase connection successful.");
   }
 }
 
 async function loadProgrammesFromSupabase() {
   if (!supabaseClient) return false;
 
-  const allRows = [];
+  const rows = [];
   const pageSize = 1000;
 
   for (let offset = 0; ; offset += pageSize) {
@@ -477,12 +603,14 @@ async function loadProgrammesFromSupabase() {
       return false;
     }
 
-    allRows.push(...(data || []));
+    rows.push(...(data || []));
 
-    if (!data || data.length < pageSize) break;
+    if (!data || data.length < pageSize) {
+      break;
+    }
   }
 
-  events = allRows.map(convertDatabaseProgramme);
+  events = rows.map(convertDatabaseProgramme);
   programmesLoaded = true;
 
   return true;
@@ -498,10 +626,27 @@ async function refreshProgrammesFromSupabase() {
   return success;
 }
 
+
+/* =========================================================
+   12. LOAD MANPOWER
+========================================================= */
+
+function manpowerKey(venue, date) {
+  return venue + "__" + date;
+}
+
+function getManpower(venue, date) {
+  return manpower[manpowerKey(venue, date)] || {
+    staff: [],
+    required: REQUIRED_MANPOWER,
+    notes: ""
+  };
+}
+
 async function loadManpowerFromSupabase() {
   if (!supabaseClient) return false;
 
-  const allRows = [];
+  const rows = [];
   const pageSize = 1000;
 
   for (let offset = 0; ; offset += pageSize) {
@@ -517,14 +662,16 @@ async function loadManpowerFromSupabase() {
       return false;
     }
 
-    allRows.push(...(data || []));
+    rows.push(...(data || []));
 
-    if (!data || data.length < pageSize) break;
+    if (!data || data.length < pageSize) {
+      break;
+    }
   }
 
   manpower = {};
 
-  allRows.forEach(row => {
+  rows.forEach(row => {
     const date = String(row.date).slice(0, 10);
 
     manpower[manpowerKey(row.venue, date)] = {
@@ -535,29 +682,24 @@ async function loadManpowerFromSupabase() {
   });
 
   manpowerLoaded = true;
-  renderCurrentScreen();
 
+  renderCurrentScreen();
   return true;
 }
 
 
 /* =========================================================
-   11. CALENDAR EVENT FILTERING
+   13. CALENDAR FILTERING
 ========================================================= */
 
-function getDayEvents(dateString) {
+function getDayEvents(date) {
   return events
     .filter(event =>
-      event.date === dateString &&
+      event.date === date &&
       event.venue === currentVenue
     )
     .sort((a, b) => a.time.localeCompare(b.time));
 }
-
-
-/* =========================================================
-   12. CALENDAR DATE LABEL
-========================================================= */
 
 function getViewDateLabel() {
   if (activeCalendarView === "day") {
@@ -595,14 +737,14 @@ function getViewDateLabel() {
 
 
 /* =========================================================
-   13. MASTER CALENDAR RENDER
+   14. MASTER CALENDAR RENDER
 ========================================================= */
 
 function renderCalendar() {
   const grid = $("calendarGrid");
 
   if (!grid) {
-    console.error("calendarGrid element not found.");
+    console.error("calendarGrid not found.");
     return;
   }
 
@@ -619,12 +761,14 @@ function renderCalendar() {
 
 
 /* =========================================================
-   14. MONTH VIEW
+   15. MONTH VIEW
 ========================================================= */
 
 function renderMonthView() {
   const grid = $("calendarGrid");
-  const header = $("weekHeader") ||
+
+  const header =
+    $("weekHeader") ||
     document.querySelector(".week-header");
 
   grid.className = "calendar-grid";
@@ -634,8 +778,14 @@ function renderMonthView() {
     header.className = "week-header";
 
     header.innerHTML = [
-      "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
-    ].map(day => `<div>${day}</div>`).join("");
+      "Sun",
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri",
+      "Sat"
+    ].map(day => "<div>" + day + "</div>").join("");
   }
 
   setText("monthTitle", getViewDateLabel());
@@ -643,7 +793,12 @@ function renderMonthView() {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
 
-  const firstWeekday = new Date(year, month, 1).getDay();
+  const firstWeekday = new Date(
+    year,
+    month,
+    1
+  ).getDay();
+
   const firstGridDate = new Date(
     year,
     month,
@@ -671,7 +826,7 @@ function renderMonthView() {
 
     cell.appendChild(number);
 
-    // Staff always appears before programmes.
+    // Staff appears above programmes.
     cell.appendChild(
       createManpowerSection(currentVenue, dateString)
     );
@@ -686,7 +841,7 @@ function renderMonthView() {
 
 
 /* =========================================================
-   15. WEEK VIEW
+   16. WEEK VIEW
 ========================================================= */
 
 function renderWeekView() {
@@ -709,17 +864,11 @@ function renderWeekView() {
   dates.forEach(date => {
     grid.appendChild(renderDayColumn(date));
   });
-
-  console.log(
-    "Week view rendered:",
-    grid.children.length,
-    "columns"
-  );
 }
 
 
 /* =========================================================
-   16. DAY VIEW
+   17. DAY VIEW
 ========================================================= */
 
 function renderDayView() {
@@ -733,21 +882,16 @@ function renderDayView() {
   renderFlexibleHeader([currentDate]);
 
   grid.appendChild(renderDayColumn(currentDate));
-
-  console.log(
-    "Day view rendered:",
-    grid.children.length,
-    "column"
-  );
 }
 
 
 /* =========================================================
-   17. WEEK / DAY HEADERS
+   18. WEEK / DAY HEADER
 ========================================================= */
 
 function renderFlexibleHeader(dates) {
-  const header = $("weekHeader") ||
+  const header =
+    $("weekHeader") ||
     document.querySelector(".week-header");
 
   if (!header) return;
@@ -765,13 +909,17 @@ function renderFlexibleHeader(dates) {
     button.type = "button";
     button.className = "calendar-date-header";
 
-    button.textContent = date.toLocaleDateString("en-SG", {
-      weekday: activeCalendarView === "day"
-        ? "long"
-        : "short",
-      day: "numeric",
-      month: "short"
-    });
+    button.textContent = date.toLocaleDateString(
+      "en-SG",
+      {
+        weekday:
+          activeCalendarView === "day"
+            ? "long"
+            : "short",
+        day: "numeric",
+        month: "short"
+      }
+    );
 
     if (isSameDay(date, new Date())) {
       button.classList.add("today-header");
@@ -794,7 +942,7 @@ function renderFlexibleHeader(dates) {
 
 
 /* =========================================================
-   18. DAY COLUMN
+   19. DAY COLUMN
 ========================================================= */
 
 function renderDayColumn(date) {
@@ -812,7 +960,6 @@ function renderDayColumn(date) {
 
   const dateString = formatInputDate(date);
 
-  // Staff on duty comes first.
   column.appendChild(
     createManpowerSection(currentVenue, dateString)
   );
@@ -845,7 +992,7 @@ function renderDayColumn(date) {
 
 
 /* =========================================================
-   19. PROGRAMME CARD
+   20. PROGRAMME CARD
 ========================================================= */
 
 function createEventElement(event) {
@@ -871,9 +1018,11 @@ function createEventElement(event) {
 
     <div class="event-meta">
       ${escapeHtml(getSessionLabel(event))}
-      ${event.pax !== ""
-        ? ` · ${escapeHtml(event.pax)} pax`
-        : ""}
+      ${
+        event.pax !== ""
+          ? " · " + escapeHtml(event.pax) + " pax"
+          : ""
+      }
     </div>
   `;
 
@@ -883,23 +1032,6 @@ function createEventElement(event) {
   });
 
   return element;
-}
-
-
-/* =========================================================
-   20. MANPOWER HELPERS
-========================================================= */
-
-function manpowerKey(venue, date) {
-  return `${venue}__${date}`;
-}
-
-function getManpower(venue, date) {
-  return manpower[manpowerKey(venue, date)] || {
-    staff: [],
-    required: REQUIRED_MANPOWER,
-    notes: ""
-  };
 }
 
 
@@ -944,12 +1076,18 @@ function createManpowerSection(venue, date) {
   const present = record.staff.length;
 
   button.textContent = present
-    ? `👥 ${present} staff / ${REQUIRED_MANPOWER} req.`
+    ? "👥 " +
+      present +
+      " staff / " +
+      REQUIRED_MANPOWER +
+      " req."
     : "👥 Set manpower";
 
   if (present > 0) {
     button.classList.add(
-      present >= REQUIRED_MANPOWER ? "good" : "warning"
+      present >= REQUIRED_MANPOWER
+        ? "good"
+        : "warning"
     );
   }
 
@@ -970,7 +1108,8 @@ function createManpowerSection(venue, date) {
 
 function setupProgrammeForm() {
   on("programme", "change", () => {
-    const custom = valueOf("programme") === "Others";
+    const custom =
+      valueOf("programme") === "Others";
 
     toggleHidden("customProgrammeGroup", !custom);
     toggleHidden("durationGroup", !custom);
@@ -987,7 +1126,8 @@ function setupProgrammeForm() {
   });
 
   on("durationPreset", "change", () => {
-    const custom = valueOf("durationPreset") === "custom";
+    const custom =
+      valueOf("durationPreset") === "custom";
 
     if ($("customDuration")) {
       $("customDuration").disabled = !custom;
@@ -1005,7 +1145,7 @@ function setupProgrammeForm() {
 
 
 /* =========================================================
-   23. BUILD PROGRAMME SESSIONS
+   23. BUILD ROLLING PROGRAMMES
 ========================================================= */
 
 function buildProgrammeEvents(options) {
@@ -1020,9 +1160,11 @@ function buildProgrammeEvents(options) {
     seriesId
   } = options;
 
-  const normalSessions = SERIES_WEEKS[programmeName] || 1;
+  const normalSessions =
+    SERIES_WEEKS[programmeName] || 1;
 
-  const extraWeek14 = needsWeek14Session(programmeName);
+  const extraWeek14 =
+    needsWeek14Session(programmeName);
 
   const totalSessions =
     normalSessions + (extraWeek14 ? 1 : 0);
@@ -1032,7 +1174,9 @@ function buildProgrammeEvents(options) {
     (_, i) => i + 1
   );
 
-  if (extraWeek14) weekNumbers.push(14);
+  if (extraWeek14) {
+    weekNumbers.push(14);
+  }
 
   return weekNumbers.map(week => {
     const date = addDays(
@@ -1051,27 +1195,30 @@ function buildProgrammeEvents(options) {
       pax: getPax(programmeName),
       status,
       remarks,
-      sessionNumber: totalSessions > 1 ? week : null,
+      sessionNumber:
+        totalSessions > 1 ? week : null,
       totalSessions,
-      type: totalSessions > 1 ? "Series" : "Stand-alone"
+      type:
+        totalSessions > 1
+          ? "Series"
+          : "Stand-alone"
     };
   });
 }
 
 
 /* =========================================================
-24. ADD PROGRAMME
-   PRESERVE CURRENT CALENDAR MONTH
+   24. ADD PROGRAMME
+   PRESERVE CALENDAR MONTH AND START DATE
 ========================================================= */
 
 async function addProgramme() {
-
-  // Remember exactly where the user is viewing.
   const preservedDate = new Date(currentDate);
-
   const preservedView = activeCalendarView;
-
   const preservedVenue = currentVenue;
+
+  const preservedStartDate =
+    valueOf("startDate");
 
   const selected = valueOf("programme");
 
@@ -1092,9 +1239,7 @@ async function addProgramme() {
   }
 
   const venue = valueOf("venue", currentVenue);
-
   const date = valueOf("startDate");
-
   const time = getAddTime();
 
   if (
@@ -1145,154 +1290,106 @@ async function addProgramme() {
     seriesId: makeId("series")
   });
 
-  const { data, error } = await supabaseClient
-    .from("programmes")
-    .insert(
-      newEvents.map(mapProgrammeToDatabase)
-    )
-    .select();
+  const addButton = $("addButton");
 
-  if (error) {
+  if (addButton) {
+    addButton.disabled = true;
+  }
+
+  try {
+    const { data, error } = await supabaseClient
+      .from("programmes")
+      .insert(
+        newEvents.map(mapProgrammeToDatabase)
+      )
+      .select();
+
+    if (error) {
+      throw error;
+    }
+
+    if (
+      !data ||
+      data.length !== newEvents.length
+    ) {
+      throw new Error(
+        "Not all sessions were confirmed by Supabase."
+      );
+    }
+
+    events.push(
+      ...data.map(convertDatabaseProgramme)
+    );
+
+    // Preserve the calendar's selected month.
+    currentDate = preservedDate;
+    activeCalendarView = preservedView;
+    currentVenue = preservedVenue;
+
+    saveCalendarDate();
+
+    // Reset programme fields only.
+    resetProgrammeForm();
+
+    // Preserve exact Start Date.
+    setValue("startDate", preservedStartDate);
+    saveSelectedStartDate();
+
+    updateVenueUI();
+
+    setValue(
+      "calendarView",
+      activeCalendarView
+    );
+
+    renderCurrentScreen();
+
+    alert("Programme saved successfully.");
+
+  } catch (error) {
     console.error(
       "Unable to save programme:",
       error
     );
 
     alert(
-      `Unable to save programme: ${error.message}`
+      "Unable to save programme: " +
+      error.message
     );
 
-    return;
+    // Reload in case Supabase saved some rows.
+    await refreshProgrammesFromSupabase();
+
+  } finally {
+    if (addButton) {
+      addButton.disabled = false;
+    }
   }
-
-  events.push(
-    ...(data || []).map(convertDatabaseProgramme)
-  );
-
-  // Restore calendar position.
-  currentDate = preservedDate;
-
-  activeCalendarView = preservedView;
-
-  currentVenue = preservedVenue;
-
-  // Save the preserved date for page refreshes.
-  saveCalendarDate();
-
-  // Reset only the Add Programme form.
-  resetProgrammeForm();
-
-  // Restore venue and calendar controls.
-  updateVenueUI();
-
-  setValue(
-    "calendarView",
-    activeCalendarView
-  );
-
-  // Refresh without changing the selected month.
-  renderCurrentScreen();
-
-  alert("Programme saved successfully.");
-}
-
-  const venue = valueOf("venue", currentVenue);
-  const date = valueOf("startDate");
-  const time = getAddTime();
-
-  if (!date || isNaN(parseInputDate(date).getTime())) {
-    alert("Please select a valid date.");
-    return;
-  }
-
-  if (!isValidHalfHourTime(time)) {
-    alert("Start time must end in :00 or :30.");
-    return;
-  }
-
-  let customDurationValue = valueOf("durationPreset", "60");
-
-  if (customDurationValue === "custom") {
-    customDurationValue = valueOf("customDuration");
-  }
-
-  const duration = isCustom
-    ? Number(customDurationValue)
-    : getProgrammeDuration(programmeName);
-
-  if (!Number.isFinite(duration) || duration <= 0) {
-    alert("Please enter a valid duration.");
-    return;
-  }
-
-  if (!supabaseClient) {
-    alert("Supabase is not connected.");
-    return;
-  }
-
-  const newEvents = buildProgrammeEvents({
-    programmeName,
-    venue,
-    startDate: date,
-    time,
-    duration,
-    status: valueOf("status"),
-    remarks: valueOf("remarks").trim(),
-    seriesId: makeId("series")
-  });
-
-  const { data, error } = await supabaseClient
-    .from("programmes")
-    .insert(newEvents.map(mapProgrammeToDatabase))
-    .select();
-
-  if (error) {
-    console.error(error);
-    alert(`Unable to save programme: ${error.message}`);
-    return;
-  }
-
-  events.push(...(data || []).map(convertDatabaseProgramme));
-
-  // Preserve the month currently selected.
-  resetProgrammeForm();
-  renderCurrentScreen();
-
-  alert("Programme saved successfully.");
 }
 
 
 /* =========================================================
-   RESET PROGRAMME FORM
-   KEEP LAST SELECTED START DATE
+   25. RESET PROGRAMME FORM
+   KEEP SELECTED START DATE
 ========================================================= */
 
 function resetProgrammeForm() {
+  const selectedStartDate =
+    valueOf("startDate");
 
-  // Remember the date selected by the user
-  const selectedStartDate = valueOf("startDate");
-
-  // Reset programme selection
   setValue("programme", "");
-
   setValue("customProgramme", "");
 
-  // Reset duration
   setValue("durationPreset", "60");
-
   setValue("customDuration", "");
 
-  // Keep the previously selected date
+  // Do not reset Start Date to today.
   setValue("startDate", selectedStartDate);
 
-  // Reset time
   setValue("startHour", "09");
-
   setValue("startMinute", "00");
-
   setValue("startTime", "09:00");
 
-  // Reset remarks and status
   setValue("remarks", "");
 
   setValue(
@@ -1300,20 +1397,17 @@ function resetProgrammeForm() {
     "Uploaded (100% Created)"
   );
 
-  // Hide custom programme fields
   toggleHidden("customProgrammeGroup", true);
-
   toggleHidden("durationGroup", true);
 
   if ($("customDuration")) {
     $("customDuration").disabled = true;
   }
-
 }
 
 
 /* =========================================================
-   26. PROGRAMME DETAILS MODAL
+   26. EVENT MODAL
 ========================================================= */
 
 function openEventModal(event) {
@@ -1321,23 +1415,41 @@ function openEventModal(event) {
 
   setText("modalProgramme", event.programme);
   setText("modalVenue", event.venue);
-  setText("modalDate", formatDisplayDate(event.date));
+
+  setText(
+    "modalDate",
+    formatDisplayDate(event.date)
+  );
 
   setText(
     "modalTime",
-    `${formatTime(event.time)} - ${formatTime(
-      addMinutesToTime(event.time, event.duration)
-    )}`
+    formatTime(event.time) +
+      " - " +
+      formatTime(
+        addMinutesToTime(
+          event.time,
+          event.duration
+        )
+      )
   );
 
-  setText("modalDuration", formatDuration(event.duration));
+  setText(
+    "modalDuration",
+    formatDuration(event.duration)
+  );
 
   setText(
     "modalPax",
-    event.pax === "" ? "Not specified" : `${event.pax} pax`
+    event.pax === ""
+      ? "Not specified"
+      : event.pax + " pax"
   );
 
-  setText("modalSession", getSessionLabel(event));
+  setText(
+    "modalSession",
+    getSessionLabel(event)
+  );
+
   setText("modalStatus", event.status || "");
   setText("modalRemarks", event.remarks || "—");
 
@@ -1365,12 +1477,18 @@ function openEditModal() {
   }
 
   const series = events
-    .filter(event => event.seriesId === selected.seriesId)
-    .sort((a, b) => dateTimeValue(a) - dateTimeValue(b));
+    .filter(
+      event => event.seriesId === selected.seriesId
+    )
+    .sort(
+      (a, b) => dateTimeValue(a) - dateTimeValue(b)
+    );
 
   const first = series[0] || selected;
 
-  const known = isKnownProgramme(first.programme);
+  const known = isKnownProgramme(
+    first.programme
+  );
 
   setValue(
     "editProgramme",
@@ -1382,7 +1500,11 @@ function openEditModal() {
     known ? "" : first.programme
   );
 
-  toggleHidden("editCustomProgrammeGroup", known);
+  toggleHidden(
+    "editCustomProgrammeGroup",
+    known
+  );
+
   toggleHidden("editDurationGroup", known);
 
   setValue("editVenue", first.venue);
@@ -1396,7 +1518,12 @@ function openEditModal() {
 
   setValue("editDuration", first.duration);
   setValue("editRemarks", first.remarks);
-  setValue("editStatus", first.status);
+
+  setValue(
+    "editStatus",
+    first.status ||
+      "Uploaded (100% Created)"
+  );
 
   // Hide details without clearing selectedEventId.
   $("eventModal")?.classList.remove("visible");
@@ -1412,7 +1539,6 @@ function closeEditModal() {
 
 /* =========================================================
    28. SAVE EDIT
-   Updates existing rows before adding/removing sessions.
 ========================================================= */
 
 async function saveEdit() {
@@ -1430,9 +1556,14 @@ async function saveEdit() {
     return;
   }
 
+  const preservedDate = new Date(currentDate);
+  const preservedView = activeCalendarView;
+  const preservedVenue = currentVenue;
+
   const selectedName = valueOf("editProgramme");
 
-  const isCustom = selectedName === "__CUSTOM__";
+  const isCustom =
+    selectedName === "__CUSTOM__";
 
   const programmeName = isCustom
     ? valueOf("editCustomProgramme").trim()
@@ -1463,7 +1594,10 @@ async function saveEdit() {
     ? Number(valueOf("editDuration"))
     : getProgrammeDuration(programmeName);
 
-  if (!Number.isFinite(duration) || duration <= 0) {
+  if (
+    !Number.isFinite(duration) ||
+    duration <= 0
+  ) {
     alert("Please enter a valid duration.");
     return;
   }
@@ -1471,8 +1605,12 @@ async function saveEdit() {
   const oldSeriesId = selected.seriesId;
 
   const existing = events
-    .filter(event => event.seriesId === oldSeriesId)
-    .sort((a, b) => dateTimeValue(a) - dateTimeValue(b));
+    .filter(
+      event => event.seriesId === oldSeriesId
+    )
+    .sort(
+      (a, b) => dateTimeValue(a) - dateTimeValue(b)
+    );
 
   const replacement = buildProgrammeEvents({
     programmeName,
@@ -1485,12 +1623,12 @@ async function saveEdit() {
     seriesId: oldSeriesId
   });
 
-  // Match existing sessions by week number where possible.
   const existingByWeek = new Map();
 
   existing.forEach(event => {
-    const key = event.sessionNumber ?? 1;
-    existingByWeek.set(key, event);
+    const week = event.sessionNumber ?? 1;
+
+    existingByWeek.set(week, event);
   });
 
   const updates = [];
@@ -1498,11 +1636,12 @@ async function saveEdit() {
   const retainedIds = new Set();
 
   replacement.forEach(event => {
-    const key = event.sessionNumber ?? 1;
-    const old = existingByWeek.get(key);
+    const week = event.sessionNumber ?? 1;
+    const old = existingByWeek.get(week);
 
     if (old) {
       event.id = old.id;
+
       retainedIds.add(old.id);
       updates.push(event);
     } else {
@@ -1514,12 +1653,17 @@ async function saveEdit() {
     event => !retainedIds.has(event.id)
   );
 
-  // Save the previous values for rollback if an update fails.
-  const originalRows = existing.map(mapProgrammeToDatabase);
+  const saveButton = $("saveEditButton");
+
+  if (saveButton) {
+    saveButton.disabled = true;
+  }
 
   try {
+    // Update existing sessions.
     for (const event of updates) {
       const row = mapProgrammeToDatabase(event);
+
       const { id, ...changes } = row;
 
       const { data, error } = await supabaseClient
@@ -1532,26 +1676,33 @@ async function saveEdit() {
 
       if (!data || data.length !== 1) {
         throw new Error(
-          "Update was not confirmed. Check database permissions."
+          "Programme update was not confirmed."
         );
       }
     }
 
+    // Insert new sessions.
     if (inserts.length > 0) {
       const { data, error } = await supabaseClient
         .from("programmes")
-        .insert(inserts.map(mapProgrammeToDatabase))
+        .insert(
+          inserts.map(mapProgrammeToDatabase)
+        )
         .select("id");
 
       if (error) throw error;
 
-      if (!data || data.length !== inserts.length) {
+      if (
+        !data ||
+        data.length !== inserts.length
+      ) {
         throw new Error(
-          "Not all new sessions were confirmed."
+          "New sessions were not fully confirmed."
         );
       }
     }
 
+    // Remove obsolete sessions.
     if (obsolete.length > 0) {
       const ids = obsolete.map(event => event.id);
 
@@ -1563,44 +1714,62 @@ async function saveEdit() {
 
       if (error) throw error;
 
-      if (!data || data.length !== ids.length) {
+      if (
+        !data ||
+        data.length !== ids.length
+      ) {
         throw new Error(
-          "Not all obsolete sessions were deleted."
+          "Old sessions were not fully removed."
         );
       }
     }
 
-  } catch (error) {
-    console.error("Unable to save edited programme:", error);
+    const reloaded =
+      await refreshProgrammesFromSupabase();
 
-    // Reload the actual database state rather than
-    // displaying unconfirmed local changes.
+    if (!reloaded) {
+      throw new Error(
+        "Unable to reload the saved programme."
+      );
+    }
+
+    // Preserve calendar position.
+    currentDate = preservedDate;
+    activeCalendarView = preservedView;
+    currentVenue = preservedVenue;
+
+    saveCalendarDate();
+
+    closeEditModal();
+
+    updateVenueUI();
+
+    setValue(
+      "calendarView",
+      activeCalendarView
+    );
+
+    renderCurrentScreen();
+
+    alert("Programme updated successfully.");
+
+  } catch (error) {
+    console.error("Programme edit failed:", error);
+
     await refreshProgrammesFromSupabase();
 
     alert(
       "Unable to complete programme edit: " +
       error.message +
-      "\n\nSome changes may have been saved. Please review the series."
+      "\nSome changes may have been saved. " +
+      "Please review the series."
     );
 
-    return;
+  } finally {
+    if (saveButton) {
+      saveButton.disabled = false;
+    }
   }
-
-  const reloaded = await refreshProgrammesFromSupabase();
-
-  if (!reloaded) {
-    alert(
-      "Changes were submitted, but the calendar could not reload. " +
-      "Refresh the page to verify them."
-    );
-    return;
-  }
-
-  // Keep the selected calendar month unchanged.
-  closeEditModal();
-  renderCurrentScreen();
-
-  alert("Programme updated successfully.");
 }
 
 
@@ -1615,7 +1784,8 @@ async function deleteSelected() {
 
   if (!selected) return;
 
-  const wholeSeries = Number(selected.totalSessions) > 1;
+  const wholeSeries =
+    Number(selected.totalSessions) > 1;
 
   const confirmed = confirm(
     wholeSeries
@@ -1630,44 +1800,55 @@ async function deleteSelected() {
     return;
   }
 
-  const query = supabaseClient
+  let query = supabaseClient
     .from("programmes")
     .delete();
 
-  const filteredQuery = wholeSeries
+  query = wholeSeries
     ? query.eq("series_id", selected.seriesId)
     : query.eq("id", selected.id);
 
-  const { data, error } = await filteredQuery.select("id");
+  const { data, error } = await query.select("id");
 
   if (error) {
-    alert(`Unable to delete programme: ${error.message}`);
-    return;
-  }
+    alert(
+      "Unable to delete programme: " +
+      error.message
+    );
 
-  if (!data || data.length === 0) {
-    alert("No programme rows were deleted. Check permissions.");
     return;
   }
 
   const expectedCount = wholeSeries
-    ? events.filter(e => e.seriesId === selected.seriesId).length
+    ? events.filter(
+        event => event.seriesId === selected.seriesId
+      ).length
     : 1;
 
-  if (data.length !== expectedCount) {
+  if (
+    !data ||
+    data.length !== expectedCount
+  ) {
     await refreshProgrammesFromSupabase();
+
     alert(
-      "Only some programme rows were deleted. " +
-      "Please check the calendar."
+      "Deletion could not be fully confirmed. " +
+      "Please review the calendar."
     );
+
     return;
   }
 
-  const deletedIds = new Set(data.map(row => row.id));
+  const deletedIds = new Set(
+    data.map(row => row.id)
+  );
 
-  events = events.filter(event => !deletedIds.has(event.id));
+  events = events.filter(
+    event => !deletedIds.has(event.id)
+  );
 
   closeEventModal();
+
   renderCurrentScreen();
 
   alert("Programme deleted successfully.");
@@ -1678,6 +1859,14 @@ async function deleteSelected() {
    30. STAFF CHECKLIST
 ========================================================= */
 
+function selectedStaff() {
+  return Array.from(
+    document.querySelectorAll(
+      '#staffList input[type="checkbox"]:checked'
+    )
+  ).map(input => input.value);
+}
+
 function renderStaffChecklist(selected = []) {
   const container = $("staffList");
 
@@ -1687,6 +1876,7 @@ function renderStaffChecklist(selected = []) {
 
   STAFF_LIST.forEach(name => {
     const label = document.createElement("label");
+
     label.className = "staff-option";
 
     const checkbox = document.createElement("input");
@@ -1708,16 +1898,11 @@ function renderStaffChecklist(selected = []) {
   });
 }
 
-function selectedStaff() {
-  return Array.from(
-    document.querySelectorAll(
-      '#staffList input[type="checkbox"]:checked'
-    )
-  ).map(input => input.value);
-}
-
 function updateStaffCount() {
-  setText("presentCount", selectedStaff().length);
+  setText(
+    "presentCount",
+    selectedStaff().length
+  );
 }
 
 function updateStaffStatus() {
@@ -1734,8 +1919,10 @@ function updateStaffStatus() {
     status.textContent = "✓ Adequately staffed";
   } else {
     status.classList.add("warning");
+
     status.textContent =
-      `⚠ Understaffed by ${REQUIRED_MANPOWER - present}`;
+      "⚠ Understaffed by " +
+      (REQUIRED_MANPOWER - present);
   }
 }
 
@@ -1751,10 +1938,21 @@ function openManpowerModal(venue, date) {
   const record = getManpower(venue, date);
 
   setText("manpowerVenue", venue);
-  setText("manpowerDate", formatDisplayDate(date));
 
-  setValue("requiredManpower", REQUIRED_MANPOWER);
-  setValue("manpowerNotes", record.notes);
+  setText(
+    "manpowerDate",
+    formatDisplayDate(date)
+  );
+
+  setValue(
+    "requiredManpower",
+    REQUIRED_MANPOWER
+  );
+
+  setValue(
+    "manpowerNotes",
+    record.notes
+  );
 
   renderStaffChecklist(record.staff);
 
@@ -1772,7 +1970,9 @@ function closeManpowerModal() {
 }
 
 async function saveManpower() {
-  if (!manpowerVenue || !manpowerDate) return;
+  if (!manpowerVenue || !manpowerDate) {
+    return;
+  }
 
   if (!supabaseClient) {
     alert("Supabase is not connected.");
@@ -1787,40 +1987,59 @@ async function saveManpower() {
     notes: valueOf("manpowerNotes").trim()
   };
 
-  const { error } = await supabaseClient
+  const { data, error } = await supabaseClient
     .from("manpower")
     .upsert(record, {
       onConflict: "venue,date"
-    });
+    })
+    .select("venue,date");
 
   if (error) {
-    alert(`Unable to save manpower: ${error.message}`);
+    alert(
+      "Unable to save manpower: " +
+      error.message
+    );
+
     return;
   }
 
-  // Confirm saved state by reloading from Supabase.
-  const reloaded = await loadManpowerFromSupabase();
+  if (!data || data.length !== 1) {
+    alert(
+      "Manpower save was not confirmed. " +
+      "Please check your database permissions."
+    );
+
+    return;
+  }
+
+  const reloaded =
+    await loadManpowerFromSupabase();
 
   if (!reloaded) {
     alert(
-      "Manpower was submitted, but could not be reloaded. " +
-      "Please refresh to verify."
+      "Manpower was submitted but could not be reloaded."
     );
+
     return;
   }
 
   closeManpowerModal();
+
   renderCurrentScreen();
 }
 
 
 /* =========================================================
-   32. VENUE AND CALENDAR NAVIGATION
+   32. VENUE NAVIGATION
 ========================================================= */
 
 function updateVenueUI() {
   setValue("venue", currentVenue);
-  setText("currentVenueLabel", currentVenue);
+
+  setText(
+    "currentVenueLabel",
+    currentVenue
+  );
 
   updateSheetTabs();
 }
@@ -1829,33 +2048,36 @@ function switchVenue(venue) {
   currentVenue = venue;
 
   updateVenueUI();
+
   showCalendarView();
 }
 
+
+/* =========================================================
+   33. CALENDAR VIEW NAVIGATION
+========================================================= */
+
 function changeCalendarView() {
-  activeCalendarView = valueOf("calendarView", "month");
+  activeCalendarView = valueOf(
+    "calendarView",
+    "month"
+  );
 
   showCalendarView();
 }
 
 function goPrevious() {
   if (showingSummary) {
-    summaryDate = new Date(
-      summaryDate.getFullYear(),
-      summaryDate.getMonth() - 1,
-      1
-    );
-
-    currentDate = new Date(summaryDate);
-    saveCalendarDate();
-    renderProgrammeSummary();
+    summaryPreviousMonthHandler();
     return;
   }
 
   if (activeCalendarView === "day") {
     currentDate = addDays(currentDate, -1);
+
   } else if (activeCalendarView === "week") {
     currentDate = addDays(currentDate, -7);
+
   } else {
     currentDate = new Date(
       currentDate.getFullYear(),
@@ -1865,26 +2087,22 @@ function goPrevious() {
   }
 
   renderCalendar();
+
+  // Do not change the Add Programme Start Date.
 }
 
 function goNext() {
   if (showingSummary) {
-    summaryDate = new Date(
-      summaryDate.getFullYear(),
-      summaryDate.getMonth() + 1,
-      1
-    );
-
-    currentDate = new Date(summaryDate);
-    saveCalendarDate();
-    renderProgrammeSummary();
+    summaryNextMonthHandler();
     return;
   }
 
   if (activeCalendarView === "day") {
     currentDate = addDays(currentDate, 1);
+
   } else if (activeCalendarView === "week") {
     currentDate = addDays(currentDate, 7);
+
   } else {
     currentDate = new Date(
       currentDate.getFullYear(),
@@ -1894,6 +2112,8 @@ function goNext() {
   }
 
   renderCalendar();
+
+  // Do not change the Add Programme Start Date.
 }
 
 function goToday() {
@@ -1912,11 +2132,13 @@ function goToday() {
   }
 
   saveCalendarDate();
+
+  // Do not reset the Add Programme Start Date.
 }
 
 
 /* =========================================================
-   33. CALENDAR / SUMMARY VISIBILITY
+   34. SCREEN VISIBILITY
 ========================================================= */
 
 function showCalendarView() {
@@ -1926,12 +2148,14 @@ function showCalendarView() {
   toggleHidden("calendarArea", false);
   toggleHidden("calendarGrid", false);
 
-  const header = $("weekHeader") ||
+  const header =
+    $("weekHeader") ||
     document.querySelector(".week-header");
 
   header?.classList.remove("hidden");
 
   updateSheetTabs();
+
   renderCalendar();
 }
 
@@ -1942,6 +2166,7 @@ function showSummaryView() {
   toggleHidden("summaryPanel", false);
 
   updateSheetTabs();
+
   renderProgrammeSummary();
 }
 
@@ -1972,7 +2197,7 @@ function updateSheetTabs() {
 
 
 /* =========================================================
-   34. MONTHLY PROGRAMME SUMMARY
+   35. MONTHLY PROGRAMME SUMMARY
 ========================================================= */
 
 function renderProgrammeSummary() {
@@ -1985,18 +2210,26 @@ function renderProgrammeSummary() {
 
   setText(
     "summaryMonth",
-    summaryDate.toLocaleDateString("en-SG", {
-      month: "long",
-      year: "numeric"
-    })
+    summaryDate.toLocaleDateString(
+      "en-SG",
+      {
+        month: "long",
+        year: "numeric"
+      }
+    )
   );
 
-  setText("summarySubtitle", `Venue: ${currentVenue}`);
+  setText(
+    "summarySubtitle",
+    "Venue: " + currentVenue
+  );
 
   const counts = new Map();
 
   events.forEach(event => {
-    if (event.venue !== currentVenue) return;
+    if (event.venue !== currentVenue) {
+      return;
+    }
 
     const date = parseInputDate(event.date);
 
@@ -2007,18 +2240,22 @@ function renderProgrammeSummary() {
       return;
     }
 
-    const name = event.programme || "Unnamed Programme";
+    const name =
+      event.programme || "Unnamed Programme";
 
-    counts.set(name, (counts.get(name) || 0) + 1);
+    counts.set(
+      name,
+      (counts.get(name) || 0) + 1
+    );
   });
 
   body.innerHTML = "";
 
   let total = 0;
 
-  const names = Array.from(counts.keys()).sort(
-    (a, b) => a.localeCompare(b)
-  );
+  const names = Array.from(
+    counts.keys()
+  ).sort((a, b) => a.localeCompare(b));
 
   if (names.length === 0) {
     const row = document.createElement("tr");
@@ -2026,7 +2263,9 @@ function renderProgrammeSummary() {
 
     cell.colSpan = 2;
     cell.className = "summary-zero";
-    cell.textContent = "No programmes scheduled this month.";
+
+    cell.textContent =
+      "No programmes scheduled this month.";
 
     row.appendChild(cell);
     body.appendChild(row);
@@ -2034,14 +2273,19 @@ function renderProgrammeSummary() {
 
   names.forEach(name => {
     const count = counts.get(name);
+
     total += count;
 
     const row = document.createElement("tr");
 
-    const nameCell = document.createElement("td");
+    const nameCell =
+      document.createElement("td");
+
     nameCell.textContent = name;
 
-    const countCell = document.createElement("td");
+    const countCell =
+      document.createElement("td");
+
     countCell.textContent = count;
 
     row.append(nameCell, countCell);
@@ -2061,6 +2305,7 @@ function summaryPreviousMonthHandler() {
   currentDate = new Date(summaryDate);
 
   saveCalendarDate();
+
   renderProgrammeSummary();
 }
 
@@ -2074,35 +2319,64 @@ function summaryNextMonthHandler() {
   currentDate = new Date(summaryDate);
 
   saveCalendarDate();
+
   renderProgrammeSummary();
 }
 
 
 /* =========================================================
-   35. CSV HELPERS
+   36. CSV EXPORT
 ========================================================= */
 
+const CSV_HEADERS = [
+  "Month",
+  "Remarks",
+  "Programme Name",
+  "Date/ Week 1",
+  "Time",
+  "Pax",
+  "Status",
+  "W1",
+  "W2",
+  "W3",
+  "W4",
+  "W5",
+  "W6",
+  "W7",
+  "W8"
+];
+
 function csvEscape(value) {
-  return `"${String(value ?? "").replace(/"/g, '""')}"`;
+  return (
+    '"' +
+    String(value ?? "").replace(/"/g, '""') +
+    '"'
+  );
 }
 
 function downloadCSV(csv, filename) {
   const blob = new Blob(
     ["\uFEFF", csv],
-    { type: "text/csv;charset=utf-8;" }
+    {
+      type: "text/csv;charset=utf-8;"
+    }
   );
 
   const url = URL.createObjectURL(blob);
 
   const link = document.createElement("a");
+
   link.href = url;
   link.download = filename;
 
   document.body.appendChild(link);
+
   link.click();
   link.remove();
 
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  setTimeout(() => {
+    URL.revokeObjectURL(url);
+  }, 1000);
 }
 
 function getExportMonthDate() {
@@ -2123,7 +2397,7 @@ function isDateInExportMonth(dateString) {
 
 
 /* =========================================================
-   36. CSV SERIES GROUPING
+   37. GROUP ROLLING PROGRAMMES
 ========================================================= */
 
 function getVenueSeries(venue) {
@@ -2156,13 +2430,15 @@ function buildVenueExportRows(venue) {
 
     const first = series[0];
 
-    // Only include a rolling programme in the
-    // month in which its Week 1 begins.
-    if (!isDateInExportMonth(first.date)) return;
+    // Export only when Week 1 starts
+    // in the selected month.
+    if (!isDateInExportMonth(first.date)) {
+      return;
+    }
 
     const row = [
       formatMonth(first.date),
-      "", // Remarks always blank
+      "", // Remarks always blank.
       first.programme || "",
       formatShortDate(first.date),
       formatTime(first.time),
@@ -2176,10 +2452,13 @@ function buildVenueExportRows(venue) {
 
     if (rolling) {
       series.forEach(event => {
-        const week = Number(event.sessionNumber);
+        const week = Number(
+          event.sessionNumber
+        );
 
         if (week >= 1 && week <= 8) {
-          row[7 + week - 1] = formatShortDate(event.date);
+          row[7 + week - 1] =
+            formatShortDate(event.date);
         }
       });
     }
@@ -2191,44 +2470,30 @@ function buildVenueExportRows(venue) {
     });
   });
 
-  rows.sort((a, b) =>
-    `${a.date}T${a.time}`.localeCompare(
-      `${b.date}T${b.time}`
-    )
-  );
+  rows.sort((a, b) => {
+    const first = a.date + "T" + a.time;
+    const second = b.date + "T" + b.time;
+
+    return first.localeCompare(second);
+  });
 
   return rows.map(item => item.row);
 }
 
 
 /* =========================================================
-   37. EXPORT CSV
+   38. CSV DOWNLOAD FUNCTIONS
 ========================================================= */
-
-const CSV_HEADERS = [
-  "Month",
-  "Remarks",
-  "Programme Name",
-  "Date/ Week 1",
-  "Time",
-  "Pax",
-  "Status",
-  "W1",
-  "W2",
-  "W3",
-  "W4",
-  "W5",
-  "W6",
-  "W7",
-  "W8"
-];
 
 function makeVenueCSV(venue) {
   const rows = buildVenueExportRows(venue);
 
   if (!rows.length) return null;
 
-  return [CSV_HEADERS, ...rows]
+  return [
+    CSV_HEADERS,
+    ...rows
+  ]
     .map(row => row.map(csvEscape).join(","))
     .join("\r\n");
 }
@@ -2237,9 +2502,19 @@ function getExportFilename(venue) {
   const date = getExportMonthDate();
 
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
 
-  return `${venue}_${year}-${month}_programme_schedule.csv`;
+  const month = String(
+    date.getMonth() + 1
+  ).padStart(2, "0");
+
+  return (
+    venue +
+    "_" +
+    year +
+    "-" +
+    month +
+    "_programme_schedule.csv"
+  );
 }
 
 function exportVenueMonthCSV(venue) {
@@ -2251,11 +2526,20 @@ function exportVenueMonthCSV(venue) {
   const csv = makeVenueCSV(venue);
 
   if (!csv) {
-    alert(`No ${venue} programmes begin in the selected month.`);
+    alert(
+      "No " +
+      venue +
+      " programmes begin in the selected month."
+    );
+
     return false;
   }
 
-  downloadCSV(csv, getExportFilename(venue));
+  downloadCSV(
+    csv,
+    getExportFilename(venue)
+  );
+
   return true;
 }
 
@@ -2273,51 +2557,83 @@ function exportBothVenuesCSV() {
   const oth = makeVenueCSV("OTH");
 
   if (!hbb && !oth) {
-    alert("No programmes begin in the selected month.");
+    alert(
+      "No programmes begin in the selected month."
+    );
+
     return;
   }
 
-  // Two downloads may require permission in some browsers.
   if (hbb) {
-    downloadCSV(hbb, getExportFilename("HBB"));
+    downloadCSV(
+      hbb,
+      getExportFilename("HBB")
+    );
   }
 
   if (oth) {
-    downloadCSV(oth, getExportFilename("OTH"));
+    downloadCSV(
+      oth,
+      getExportFilename("OTH")
+    );
   }
 }
 
 
 /* =========================================================
-   38. CLEAR ALL DATA
-   Disabled to prevent accidental deletion of
-   the entire shared Supabase calendar.
+   39. CLEAR ALL DATA
+   DISABLED FOR SHARED CALENDAR SAFETY
 ========================================================= */
 
 function clearAllData() {
   alert(
-    "Clear All Data is disabled for safety. " +
-    "Delete individual programmes using their calendar cards."
+    "Clear All Data is disabled to protect " +
+    "the shared calendar."
   );
 }
 
 
 /* =========================================================
-   39. BUTTON LISTENERS
+   40. BUTTON LISTENERS
 ========================================================= */
 
 function setupButtons() {
-  on("addButton", "click", addProgramme);
+  // Add Programme
+  on("addButton", "click", function(event) {
+    event.preventDefault();
+    addProgramme();
+  });
 
+  // Edit Programme
   on("editButton", "click", openEditModal);
-  on("saveEditButton", "click", saveEdit);
-  on("cancelEditButton", "click", closeEditModal);
 
+  on("saveEditButton", "click", function(event) {
+    event.preventDefault();
+    saveEdit();
+  });
+
+  on(
+    "cancelEditButton",
+    "click",
+    closeEditModal
+  );
+
+  // Delete Programme
   on("deleteButton", "click", deleteSelected);
+
   on("closeButton", "click", closeEventModal);
 
-  on("saveManpower", "click", saveManpower);
-  on("closeManpower", "click", closeManpowerModal);
+  // Manpower
+  on("saveManpower", "click", function(event) {
+    event.preventDefault();
+    saveManpower();
+  });
+
+  on(
+    "closeManpower",
+    "click",
+    closeManpowerModal
+  );
 
   on("selectAllStaff", "click", () => {
     document.querySelectorAll(
@@ -2341,15 +2657,27 @@ function setupButtons() {
     updateStaffStatus();
   });
 
+  // Calendar navigation
   on("previousButton", "click", goPrevious);
   on("nextButton", "click", goNext);
   on("todayButton", "click", goToday);
 
-  on("calendarView", "change", changeCalendarView);
+  on(
+    "calendarView",
+    "change",
+    changeCalendarView
+  );
 
-  on("hbbSheetTab", "click", () => switchVenue("HBB"));
-  on("othSheetTab", "click", () => switchVenue("OTH"));
+  // Venue tabs
+  on("hbbSheetTab", "click", () => {
+    switchVenue("HBB");
+  });
 
+  on("othSheetTab", "click", () => {
+    switchVenue("OTH");
+  });
+
+  // Monthly summary
   on("summarySheetTab", "click", () => {
     summaryDate = new Date(
       currentDate.getFullYear(),
@@ -2372,6 +2700,7 @@ function setupButtons() {
     summaryNextMonthHandler
   );
 
+  // CSV exports
   on(
     "exportCurrentMonthButton",
     "click",
@@ -2384,41 +2713,55 @@ function setupButtons() {
     exportBothVenuesCSV
   );
 
-  on("clearButton", "click", clearAllData);
+  // Clear All disabled
+  on(
+    "clearButton",
+    "click",
+    clearAllData
+  );
 }
 
 
 /* =========================================================
-   40. INITIALISE
+   41. INITIALISE
 ========================================================= */
 
 function initialise() {
   populateHours();
+
   setupProgrammeForm();
+
   setupButtons();
 
-  setValue("startDate", formatInputDate(new Date()));
+  // Restore last selected Add Programme date.
+  initialiseStartDate();
 
   setValue("venue", currentVenue);
-  setValue("calendarView", activeCalendarView);
+
+  setValue(
+    "calendarView",
+    activeCalendarView
+  );
 
   updateVenueUI();
+
   renderCalendar();
 }
 
 
 /* =========================================================
-   41. START APPLICATION
+   42. START APPLICATION
 ========================================================= */
 
 async function startApplication() {
   initialise();
 
   if (!supabaseClient) {
-    alert(
+    console.error(
       "Supabase could not be initialised. " +
       "Check that its library loads before script.js."
     );
+
     return;
   }
 
@@ -2429,7 +2772,17 @@ async function startApplication() {
     loadManpowerFromSupabase()
   ]);
 
-  console.log("Calendar initialisation complete.");
+  console.log(
+    "Active Health Work Calendar initialised."
+  );
 }
 
-startApplication();
+if (document.readyState === "loading") {
+  document.addEventListener(
+    "DOMContentLoaded",
+    startApplication,
+    { once: true }
+  );
+} else {
+  startApplication();
+}
