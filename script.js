@@ -2583,6 +2583,7 @@ function exportBothVenuesCSV() {
 /* =========================================================
    39. CLEAR ALL DATA
 ========================================================= */
+
 async function clearAllData() {
   if (!supabaseClient) {
     alert("Supabase is not connected.");
@@ -2590,16 +2591,20 @@ async function clearAllData() {
   }
 
   const confirmed = confirm(
-    "WARNING: This will permanently delete ALL programmes " +
-    "and manpower records for BOTH HBB and OTH.\n\n" +
-    "This affects everyone using the shared calendar.\n\n" +
-    "Do you want to continue?"
+    "WARNING: DELETE ALL DATA\n\n" +
+    "This will permanently delete:\n" +
+    "- ALL HBB programmes\n" +
+    "- ALL OTH programmes\n" +
+    "- ALL manpower records\n" +
+    "- ALL staff assignments and notes\n\n" +
+    "This affects EVERYONE using the shared calendar.\n\n" +
+    "Continue?"
   );
 
   if (!confirmed) return;
 
   const verification = prompt(
-    'Type DELETE ALL DATA to confirm:'
+    'Type "DELETE ALL DATA" to confirm:'
   );
 
   if (verification !== "DELETE ALL DATA") {
@@ -2607,13 +2612,74 @@ async function clearAllData() {
     return;
   }
 
-  alert(
-    "Deletion requires an administrator-authorised " +
-    "database operation. No data has been deleted."
-  );
+  const clearButton = $("clearButton");
+
+  if (clearButton) clearButton.disabled = true;
+
+  try {
+    // Delete all programme records
+    const programmesResult = await supabaseClient
+      .from("programmes")
+      .delete()
+      .not("id", "is", null);
+
+    if (programmesResult.error) {
+      throw programmesResult.error;
+    }
+
+    // Delete all manpower records
+    const manpowerResult = await supabaseClient
+      .from("manpower")
+      .delete()
+      .not("venue", "is", null);
+
+    if (manpowerResult.error) {
+      throw manpowerResult.error;
+    }
+
+    // Clear local application state
+    events = [];
+    manpower = {};
+
+    selectedEventId = null;
+    manpowerDate = null;
+    manpowerVenue = null;
+
+    // Clear browser preferences
+    localStorage.removeItem("selectedCalendarDate");
+    localStorage.removeItem(
+      "activeHealthSelectedStartDate"
+    );
+
+    currentDate = new Date();
+    summaryDate = new Date(currentDate);
+
+    renderCurrentScreen();
+
+    alert(
+      "Clear operation submitted. " +
+      "Verify both database tables are empty."
+    );
+
+  } catch (error) {
+    console.error("Clear All Data failed:", error);
+
+    alert(
+      "Unable to clear all data: " +
+      error.message +
+      "\nSome records may already have been deleted."
+    );
+
+  } finally {
+    if (clearButton) clearButton.disabled = false;
+
+    // Reload actual database state
+    await Promise.all([
+      refreshProgrammesFromSupabase(),
+      loadManpowerFromSupabase()
+    ]);
+  }
 }
-
-
 
 /* =========================================================
    40. BUTTON LISTENERS
