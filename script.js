@@ -2582,15 +2582,37 @@ function exportBothVenuesCSV() {
 
 /* =========================================================
    39. CLEAR ALL DATA
-   DISABLED FOR SHARED CALENDAR SAFETY
 ========================================================= */
+async function clearAllData() {
+  if (!supabaseClient) {
+    alert("Supabase is not connected.");
+    return;
+  }
 
-function clearAllData() {
+  const confirmed = confirm(
+    "WARNING: This will permanently delete ALL programmes " +
+    "and manpower records for BOTH HBB and OTH.\n\n" +
+    "This affects everyone using the shared calendar.\n\n" +
+    "Do you want to continue?"
+  );
+
+  if (!confirmed) return;
+
+  const verification = prompt(
+    'Type DELETE ALL DATA to confirm:'
+  );
+
+  if (verification !== "DELETE ALL DATA") {
+    alert("Deletion cancelled.");
+    return;
+  }
+
   alert(
-    "Clear All Data is disabled to protect " +
-    "the shared calendar."
+    "Deletion requires an administrator-authorised " +
+    "database operation. No data has been deleted."
   );
 }
+
 
 
 /* =========================================================
