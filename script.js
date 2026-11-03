@@ -1394,7 +1394,7 @@ function resetProgrammeForm() {
 
   setValue(
     "status",
-    "Uploaded (100% Created)"
+    "Confirmed)"
   );
 
   toggleHidden("customProgrammeGroup", true);
@@ -1522,7 +1522,7 @@ function openEditModal() {
   setValue(
     "editStatus",
     first.status ||
-      "Uploaded (100% Created)"
+      "Confirmed"
   );
 
   // Hide details without clearing selectedEventId.
