@@ -65,9 +65,7 @@ function renderCalendar() {
     renderWeekView();
   } else if (activeCalendarView === "day") {
     renderDayView();
-  } else {
-    renderMonthView();
-  }
+  } 
 }
 
 /* =========================================================
