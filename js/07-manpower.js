@@ -1,15 +1,17 @@
+
 /* =========================================================
    30. PRESENT STAFF CHECKLIST
 ========================================================= */
 
 let manpowerModalMode = "manpower";
 
-// Keep the draft in one place for the lifetime of the open modal.
-// This variable is declared in 03-state.js.
+// draftLeaveEntries is declared in 03-state.js.
+// Do not declare it again in this file.
 function getLeaveDraft() {
     if (!Array.isArray(draftLeaveEntries)) {
         draftLeaveEntries = [];
     }
+
     return draftLeaveEntries;
 }
 
@@ -112,7 +114,9 @@ function renderLeaveEntries() {
     if (!entries.length) {
         const empty = document.createElement("div");
         empty.className = "leave-empty";
-        empty.textContent = "No Off / Leave entries for this day.";
+        empty.textContent =
+            "No Off / Leave entries for this day.";
+
         container.appendChild(empty);
         return;
     }
@@ -122,12 +126,14 @@ function renderLeaveEntries() {
         item.className = "leave-entry-item";
 
         const details = document.createElement("span");
-        details.textContent = entry.staff + " — " + entry.reason;
+        details.textContent =
+            entry.staff + " — " + entry.reason;
 
         const remove = document.createElement("button");
         remove.type = "button";
         remove.className = "small-btn";
         remove.textContent = "Remove";
+
         remove.setAttribute(
             "aria-label",
             "Remove " + entry.staff + " leave entry"
@@ -136,6 +142,11 @@ function renderLeaveEntries() {
         remove.addEventListener("click", () => {
             getLeaveDraft().splice(index, 1);
             renderLeaveEntries();
+
+            console.log(
+                "Off / Leave draft after removal:",
+                JSON.stringify(getLeaveDraft())
+            );
         });
 
         item.append(details, remove);
@@ -150,7 +161,8 @@ function renderLeaveEntries() {
 
 function addLeaveEntry() {
     const staff = valueOf("leaveStaff").trim();
-    const reason = valueOf("leaveReason", "Off Day").trim() || "Off Day";
+    const reason =
+        valueOf("leaveReason", "Off Day").trim() || "Off Day";
 
     console.log("ADD OFF / LEAVE clicked", {
         staff,
@@ -160,19 +172,13 @@ function addLeaveEntry() {
         date: manpowerDate
     });
 
-    if (manpowerModalMode !== "leave") {
-        console.warn(
-            "Add Off / Leave was clicked while modal mode is:",
-            manpowerModalMode
-        );
-    }
-
     if (!staff) {
         alert("Please select a staff member for Off / Leave.");
         return;
     }
 
     const entries = getLeaveDraft();
+
     const existingIndex = entries.findIndex(
         entry => entry.staff === staff
     );
@@ -180,10 +186,16 @@ function addLeaveEntry() {
     if (existingIndex >= 0) {
         entries[existingIndex].reason = reason;
     } else {
-        entries.push({ staff, reason });
+        entries.push({
+            staff,
+            reason
+        });
     }
 
-    console.log("Off / Leave draft after adding:", JSON.stringify(entries));
+    console.log(
+        "Off / Leave draft after adding:",
+        JSON.stringify(entries)
+    );
 
     setValue("leaveStaff", "");
     renderLeaveEntries();
@@ -203,37 +215,47 @@ function openLeaveModal(venue, date) {
 }
 
 function openManpowerSection(venue, date, mode) {
-    const requestedMode = mode === "leave" ? "leave" : "manpower";
+    const requestedMode =
+        mode === "leave" ? "leave" : "manpower";
 
     manpowerVenue = venue;
     manpowerDate = date;
     manpowerModalMode = requestedMode;
 
-    // Load the existing record for this exact venue/date.
     const record = getManpower(venue, date) || {};
 
     setText("manpowerVenue", venue);
     setText("manpowerDate", formatDisplayDate(date));
+
     setValue("requiredManpower", REQUIRED_MANPOWER);
     setValue("manpowerNotes", record.notes || "");
 
-    // Start a fresh draft from the records currently loaded from Supabase.
+    // Load existing leave entries for this venue/date.
+    // This happens when opening the modal, not when saving.
     draftLeaveEntries = Array.isArray(record.leaveEntries)
-        ? record.leaveEntries.map(entry => ({
-            staff: String(entry.staff || entry.name || "").trim(),
-            reason: String(entry.reason || "Off Day")
-        })).filter(entry => entry.staff)
+        ? record.leaveEntries
+            .map(entry => ({
+                staff: String(
+                    entry.staff || entry.name || ""
+                ).trim(),
+                reason: String(
+                    entry.reason || "Off Day"
+                )
+            }))
+            .filter(entry => entry.staff)
         : [];
 
     renderStaffChecklist(record.staff || []);
     renderLeaveStaffOptions();
     renderLeaveEntries();
+
     updateStaffCount();
     updateStaffStatus();
 
     const presentSection = $("presentManpowerSection");
     const notesSection = $("manpowerNotesSection");
-    const leaveSection = document.querySelector(".leave-management");
+    const leaveSection =
+        document.querySelector(".leave-management");
     const clearDayButton = $("clearManpowerDay");
 
     const showPresent = requestedMode === "manpower";
@@ -241,17 +263,20 @@ function openManpowerSection(venue, date, mode) {
 
     if (presentSection) {
         presentSection.hidden = !showPresent;
-        presentSection.style.display = showPresent ? "" : "none";
+        presentSection.style.display =
+            showPresent ? "" : "none";
     }
 
     if (notesSection) {
         notesSection.hidden = !showPresent;
-        notesSection.style.display = showPresent ? "" : "none";
+        notesSection.style.display =
+            showPresent ? "" : "none";
     }
 
     if (leaveSection) {
         leaveSection.hidden = !showLeave;
-        leaveSection.style.display = showLeave ? "" : "none";
+        leaveSection.style.display =
+            showLeave ? "" : "none";
     }
 
     if (clearDayButton) {
@@ -264,19 +289,20 @@ function openManpowerSection(venue, date, mode) {
     );
 
     const saveButton = $("saveManpower");
+
     if (saveButton) {
         saveButton.textContent = showLeave
             ? "Save Off / Leave"
             : "Save Manpower";
+
         saveButton.dataset.mode = requestedMode;
     }
 
     console.log("Manpower modal opened:", {
         mode: manpowerModalMode,
-        buttonMode: saveButton?.dataset.mode,
         venue: manpowerVenue,
         date: manpowerDate,
-        draft: JSON.stringify(draftLeaveEntries)
+        draft: JSON.stringify(getLeaveDraft())
     });
 
     $("manpowerModal")?.classList.add("visible");
@@ -292,7 +318,8 @@ function closeManpowerModal() {
 
     const presentSection = $("presentManpowerSection");
     const notesSection = $("manpowerNotesSection");
-    const leaveSection = document.querySelector(".leave-management");
+    const leaveSection =
+        document.querySelector(".leave-management");
     const clearDayButton = $("clearManpowerDay");
 
     if (presentSection) {
@@ -320,6 +347,7 @@ function closeManpowerModal() {
     draftLeaveEntries = [];
 
     const saveButton = $("saveManpower");
+
     if (saveButton) {
         saveButton.textContent = "Save Manpower";
         saveButton.dataset.mode = "manpower";
@@ -329,6 +357,8 @@ function closeManpowerModal() {
 
 /* =========================================================
    36. SAVE PRESENT MANPOWER
+
+   Only modifies the manpower table.
 ========================================================= */
 
 async function savePresentManpower() {
@@ -343,12 +373,13 @@ async function savePresentManpower() {
         notes: valueOf("manpowerNotes").trim()
     };
 
-    const { data: existing, error: readError } = await supabaseClient
-        .from("manpower")
-        .select("venue,date")
-        .eq("venue", venue)
-        .eq("date", date)
-        .maybeSingle();
+    const { data: existing, error: readError } =
+        await supabaseClient
+            .from("manpower")
+            .select("venue,date")
+            .eq("venue", venue)
+            .eq("date", date)
+            .maybeSingle();
 
     if (readError) throw readError;
 
@@ -376,7 +407,8 @@ async function savePresentManpower() {
 
     if (!result.data || result.data.length !== 1) {
         throw new Error(
-            "Supabase did not confirm the manpower save. Check table permissions and RLS."
+            "Supabase did not confirm the manpower save. " +
+            "Check table permissions and RLS."
         );
     }
 }
@@ -384,6 +416,11 @@ async function savePresentManpower() {
 
 /* =========================================================
    37. SAVE OFF / LEAVE ENTRIES
+
+   Uses manpower_leave_entries table.
+
+   An empty draft is valid:
+   it means delete all leave entries for this venue/date.
 ========================================================= */
 
 async function saveLeaveEntries() {
@@ -391,7 +428,9 @@ async function saveLeaveEntries() {
     const date = manpowerDate;
 
     if (!venue || !date) {
-        throw new Error("Missing venue or date.");
+        throw new Error(
+            "Missing venue or date for Off / Leave save."
+        );
     }
 
     const desiredEntries = getLeaveDraft().map(entry => ({
@@ -401,7 +440,13 @@ async function saveLeaveEntries() {
         reason: entry.reason
     }));
 
-    // Read existing records.
+    console.log("Saving Off / Leave entries:", {
+        venue,
+        date,
+        entries: desiredEntries
+    });
+
+    // Read existing records for the selected day.
     const { data: existingRows, error: readError } =
         await supabaseClient
             .from("manpower_leave_entries")
@@ -411,18 +456,20 @@ async function saveLeaveEntries() {
 
     if (readError) throw readError;
 
-    // Only upsert if there are entries to save.
+    // Add new entries or update existing entries.
+    // Skip this step when the draft is empty.
     if (desiredEntries.length > 0) {
-        const { error: upsertError } = await supabaseClient
-            .from("manpower_leave_entries")
-            .upsert(desiredEntries, {
-                onConflict: "venue,date,staff"
-            });
+        const { error: upsertError } =
+            await supabaseClient
+                .from("manpower_leave_entries")
+                .upsert(desiredEntries, {
+                    onConflict: "venue,date,staff"
+                });
 
         if (upsertError) throw upsertError;
     }
 
-    // Delete records removed from the draft.
+    // Identify entries removed from the draft.
     const desiredNames = new Set(
         desiredEntries.map(entry => entry.staff)
     );
@@ -431,100 +478,42 @@ async function saveLeaveEntries() {
         row => !desiredNames.has(row.staff)
     );
 
+    // Delete removed entries from Supabase.
     for (const row of removedRows) {
-        const { error } = await supabaseClient
-            .from("manpower_leave_entries")
-            .delete()
-            .eq("id", row.id);
+        const { error: deleteError } =
+            await supabaseClient
+                .from("manpower_leave_entries")
+                .delete()
+                .eq("id", row.id);
 
-        if (error) throw error;
+        if (deleteError) throw deleteError;
     }
 
-    // Verify the final database records.
+    // Verify the final database contents.
     const { data: verifiedRows, error: verifyError } =
         await supabaseClient
             .from("manpower_leave_entries")
-            .select("id,staff,reason")
+            .select("id,venue,date,staff,reason")
             .eq("venue", venue)
             .eq("date", date);
 
     if (verifyError) throw verifyError;
 
-    if ((verifiedRows || []).length !== desiredEntries.length) {
-        throw new Error("Unable to verify Off / Leave changes in Supabase.");
-    }
-
-    console.log("Verified Off / Leave records:", verifiedRows);
-
-    return verifiedRows;
-};
-
-    if (!venue || !date) {
-        throw new Error("Missing venue or date for Off / Leave save.");
-    }
-
-    if (!desiredEntries.length) {
-        throw new Error("There are no Off / Leave entries to save.");
-    }
-
-    // Read current records for this venue/date.
-    const { data: existingRows, error: readError } = await supabaseClient
-        .from("manpower_leave_entries")
-        .select("id,staff")
-        .eq("venue", venue)
-        .eq("date", date);
-
-    if (readError) throw readError;
-
-    // Upsert the entries currently shown in the draft.
-    const { data: savedRows, error: upsertError } = await supabaseClient
-        .from("manpower_leave_entries")
-        .upsert(desiredEntries, {
-            onConflict: "venue,date,staff"
-        })
-        .select("id,venue,date,staff,reason");
-
-    if (upsertError) throw upsertError;
-
-    console.log("Supabase returned saved Off / Leave rows:", savedRows);
-
-    // Remove records that the user removed from the draft.
-    const desiredNames = new Set(
-        desiredEntries.map(entry => entry.staff)
-    );
-
-    const removedRows = (existingRows || []).filter(
-        row => !desiredNames.has(row.staff)
-    );
-
-    for (const row of removedRows) {
-        const { error } = await supabaseClient
-            .from("manpower_leave_entries")
-            .delete()
-            .eq("id", row.id);
-
-        if (error) throw error;
-    }
-
-    // Verify the final database contents.
-    const { data: verifiedRows, error: verifyError } = await supabaseClient
-        .from("manpower_leave_entries")
-        .select("id,venue,date,staff,reason")
-        .eq("venue", venue)
-        .eq("date", date);
-
-    if (verifyError) throw verifyError;
-
     const verified = verifiedRows || [];
+
     if (verified.length !== desiredEntries.length) {
         throw new Error(
-            "Supabase save verification failed. Expected " +
-            desiredEntries.length +
+            "Unable to verify Off / Leave changes. " +
+            "Expected " + desiredEntries.length +
             " record(s), but found " +
-            verified.length +
-            ". Check RLS policies and table permissions."
+            verified.length + "."
         );
     }
+
+    console.log(
+        "Verified Off / Leave records:",
+        verified
+    );
 
     return verified;
 }
@@ -532,6 +521,8 @@ async function saveLeaveEntries() {
 
 /* =========================================================
    38. SAVE BUTTON
+
+   One function handles both modal modes.
 ========================================================= */
 
 async function saveManpower() {
@@ -539,9 +530,10 @@ async function saveManpower() {
 
     const buttonMode = saveButton?.dataset.mode;
 
-    const saveMode = buttonMode === "leave"
-        ? "leave"
-        : manpowerModalMode;
+    const saveMode =
+        buttonMode === "leave" || buttonMode === "manpower"
+            ? buttonMode
+            : manpowerModalMode;
 
     console.log("SAVE BUTTON CLICKED", {
         modalMode: manpowerModalMode,
@@ -553,7 +545,9 @@ async function saveManpower() {
     });
 
     if (!manpowerVenue || !manpowerDate) {
-        alert("Please reopen the Manpower or Off / Leave window.");
+        alert(
+            "Please reopen the Manpower or Off / Leave window."
+        );
         return;
     }
 
@@ -562,21 +556,27 @@ async function saveManpower() {
         return;
     }
 
-    if (saveButton) saveButton.disabled = true;
+    if (saveButton) {
+        saveButton.disabled = true;
+    }
 
     try {
         if (saveMode === "leave") {
-            // An empty draft is now allowed.
-            // This will delete all existing leave records for the day.
+            // Empty drafts are allowed so users can delete
+            // the last Off / Leave record.
             await saveLeaveEntries();
         } else {
             await savePresentManpower();
         }
 
-        const reloaded = await loadManpowerFromSupabase();
+        // Refresh the calendar data from Supabase.
+        const reloaded =
+            await loadManpowerFromSupabase();
 
         if (!reloaded) {
-            throw new Error("Unable to reload the latest records.");
+            throw new Error(
+                "Saved, but unable to reload the latest records."
+            );
         }
 
         closeManpowerModal();
@@ -589,7 +589,10 @@ async function saveManpower() {
         );
 
     } catch (error) {
-        console.error("Unable to save manpower:", error);
+        console.error(
+            "Unable to save manpower:",
+            error
+        );
 
         alert(
             "Unable to save: " +
@@ -597,9 +600,12 @@ async function saveManpower() {
         );
 
     } finally {
-        if (saveButton) saveButton.disabled = false;
+        if (saveButton) {
+            saveButton.disabled = false;
+        }
     }
 }
+
 
 /* =========================================================
    39. CLEAR PRESENT DRAFT
@@ -624,11 +630,15 @@ function clearPresentDraft() {
 function clearLeaveDraft() {
     draftLeaveEntries = [];
     renderLeaveEntries();
+
+    console.log("Off / Leave draft cleared.");
 }
 
 
 /* =========================================================
    41. CLEAR ENTIRE MANPOWER DAY
+
+   Deletes both Present Manpower and Off / Leave.
 ========================================================= */
 
 async function clearEntireManpowerDay() {
@@ -651,43 +661,67 @@ async function clearEntireManpowerDay() {
     }
 
     const button = $("clearManpowerDay");
-    if (button) button.disabled = true;
+
+    if (button) {
+        button.disabled = true;
+    }
 
     try {
         const venue = manpowerVenue;
         const date = manpowerDate;
 
-        const { error: leaveError } = await supabaseClient
-            .from("manpower_leave_entries")
-            .delete()
-            .eq("venue", venue)
-            .eq("date", date);
+        // Delete Off / Leave entries.
+        const { error: leaveError } =
+            await supabaseClient
+                .from("manpower_leave_entries")
+                .delete()
+                .eq("venue", venue)
+                .eq("date", date);
 
         if (leaveError) throw leaveError;
 
-        const { error: manpowerError } = await supabaseClient
-            .from("manpower")
-            .delete()
-            .eq("venue", venue)
-            .eq("date", date);
+        // Delete Present Manpower.
+        const { error: manpowerError } =
+            await supabaseClient
+                .from("manpower")
+                .delete()
+                .eq("venue", venue)
+                .eq("date", date);
 
         if (manpowerError) throw manpowerError;
 
         delete manpower[manpowerKey(venue, date)];
 
-        closeManpowerModal();
+        const reloaded =
+            await loadManpowerFromSupabase();
 
-        const reloaded = await loadManpowerFromSupabase();
         if (!reloaded) {
-            throw new Error("The calendar could not reload after clearing the day.");
+            throw new Error(
+                "Records were deleted, but the calendar could not reload."
+            );
         }
 
+        closeManpowerModal();
         renderCurrentScreen();
-        alert("Manpower and Off / Leave cleared for this day.");
+
+        alert(
+            "Manpower and Off / Leave cleared for this day."
+        );
+
     } catch (error) {
-        console.error("Unable to clear manpower day:", error);
-        alert("Unable to clear manpower: " + (error.message || String(error)));
+        console.error(
+            "Unable to clear manpower day:",
+            error
+        );
+
+        alert(
+            "Unable to clear manpower: " +
+            (error.message || String(error))
+        );
+
     } finally {
-        if (button) button.disabled = false;
+        if (button) {
+            button.disabled = false;
+        }
     }
 }
