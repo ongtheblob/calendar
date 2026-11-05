@@ -1072,18 +1072,6 @@ function renderEagleView() {
 
     programmeRow.appendChild(programmeLabel);
 
-    // -----------------------------------------
-    // OFF / LEAVE ROW
-    // -----------------------------------------
-
-    const leaveRow = document.createElement("div");
-    leaveRow.className = "eagle-leave-row";
-
-    const leaveLabel = document.createElement("div");
-    leaveLabel.className = "eagle-row-label";
-    leaveLabel.textContent = "OFF / LEAVE";
-
-    leaveRow.appendChild(leaveLabel);
 
     // -----------------------------------------
     // MONDAY TO SUNDAY
@@ -1222,43 +1210,46 @@ function renderEagleView() {
 
       programmeRow.appendChild(programmeCell);
 
-      // -----------------------------------------
-      // OFF / LEAVE CELL
-      // -----------------------------------------
+// -----------------------------------------
+// OFF / LEAVE CELL
+// -----------------------------------------
 
-      const leaveCell =
-        document.createElement("div");
+const leaveCell = document.createElement("div");
+leaveCell.className = "eagle-leave-cell";
 
-      leaveCell.className = "eagle-leave-cell";
+if (isCurrentMonth) {
 
-      if (isCurrentMonth) {
+  const record = getManpower(currentVenue, dateString);
 
-        const record = getManpower(
-          currentVenue,
-          dateString
-        );
+  const leaveList = document.createElement("div");
+  leaveList.className = "eagle-leave-list";
 
-        const notes =
-          document.createElement("div");
+  const entries = record.leaveEntries || [];
 
-        notes.className = "eagle-leave-notes";
+  if (entries.length > 0) {
 
-        notes.textContent =
-          record.notes || "—";
+    entries.forEach(entry => {
+      const line = document.createElement("div");
 
-        leaveCell.appendChild(notes);
+      line.textContent =
+        `${entry.name} (${entry.type}${entry.detail ? ": " + entry.detail : ""})`;
 
-        leaveCell.addEventListener("click", () => {
-          openManpowerModal(
-            currentVenue,
-            dateString
-          );
-        });
-      }
+      leaveList.appendChild(line);
+    });
 
-      leaveRow.appendChild(leaveCell);
-    }
+  } else {
+    leaveList.textContent = "—";
+  }
 
+  leaveCell.appendChild(leaveList);
+
+  leaveCell.addEventListener("click", () => {
+    openManpowerModal(currentVenue, dateString);
+  });
+}
+
+leaveRow.appendChild(leaveCell);
+       
     weekBlock.append(
       programmeRow,
       leaveRow
