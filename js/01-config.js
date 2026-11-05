@@ -84,6 +84,7 @@ const STAFF_LIST = [
 "Joelle",
 "Jireh",
 "RJ",
+"GZ", 
 "Clarissa",
 "Rachael",
 "Team Nila",
