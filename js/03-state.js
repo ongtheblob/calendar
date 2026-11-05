@@ -110,7 +110,7 @@ let events = [];
 let manpower = {};
 
 let currentVenue = "HBB";
-let activeCalendarView = "month";
+let activeCalendarView = "eagle";
 
 let selectedEventId = null;
 
