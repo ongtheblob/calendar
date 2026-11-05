@@ -750,7 +750,9 @@ function renderCalendar() {
 
   saveCalendarDate();
 
-  if (activeCalendarView === "week") {
+  if (activeCalendarView === "eagle") {
+    renderEagleView();
+  } else if (activeCalendarView === "week") {
     renderWeekView();
   } else if (activeCalendarView === "day") {
     renderDayView();
@@ -990,6 +992,277 @@ function renderDayColumn(date) {
   return column;
 }
 
+/* =========================================================
+19.5   EAGLE VIEW - MONTHLY PROGRAMME OVERVIEW
+========================================================= */
+
+function renderEagleView() {
+  const grid = $("calendarGrid");
+
+  const header =
+    $("weekHeader") ||
+    document.querySelector(".week-header");
+
+  if (!grid) return;
+
+  grid.className = "calendar-grid eagle-calendar";
+  grid.innerHTML = "";
+
+  setText("monthTitle", getViewDateLabel());
+
+  // Monday to Sunday
+  const weekdays = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday"
+  ];
+
+  if (header) {
+    header.className = "week-header eagle-header";
+
+    header.innerHTML =
+      '<div class="eagle-header-label">WEEK</div>' +
+      weekdays.map(day =>
+        `<div>${day}</div>`
+      ).join("");
+  }
+
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+
+  const firstDay = new Date(year, month, 1);
+
+  // Convert Sunday-first JavaScript numbering
+  // into Monday-first calendar numbering.
+  const mondayOffset = (firstDay.getDay() + 6) % 7;
+
+  const daysInMonth = new Date(
+    year,
+    month + 1,
+    0
+  ).getDate();
+
+  const totalWeeks = Math.ceil(
+    (mondayOffset + daysInMonth) / 7
+  );
+
+  for (let week = 0; week < totalWeeks; week++) {
+
+    const weekBlock = document.createElement("div");
+    weekBlock.className = "eagle-week-block";
+
+    // -----------------------------------------
+    // PROGRAMME ROW
+    // -----------------------------------------
+
+    const programmeRow = document.createElement("div");
+    programmeRow.className = "eagle-programme-row";
+
+    const programmeLabel = document.createElement("div");
+    programmeLabel.className = "eagle-row-label";
+    programmeLabel.textContent = "PROGRAMMES";
+
+    programmeRow.appendChild(programmeLabel);
+
+    // -----------------------------------------
+    // OFF / LEAVE ROW
+    // -----------------------------------------
+
+    const leaveRow = document.createElement("div");
+    leaveRow.className = "eagle-leave-row";
+
+    const leaveLabel = document.createElement("div");
+    leaveLabel.className = "eagle-row-label";
+    leaveLabel.textContent = "OFF / LEAVE";
+
+    leaveRow.appendChild(leaveLabel);
+
+    // -----------------------------------------
+    // MONDAY TO SUNDAY
+    // -----------------------------------------
+
+    for (let day = 0; day < 7; day++) {
+
+      const dayNumber =
+        week * 7 + day - mondayOffset + 1;
+
+      const date = new Date(
+        year,
+        month,
+        dayNumber
+      );
+
+      const dateString = formatInputDate(date);
+
+      const isCurrentMonth =
+        date.getMonth() === month;
+
+      // Programme cell
+      const programmeCell =
+        document.createElement("div");
+
+      programmeCell.className = "eagle-day-cell";
+
+      if (!isCurrentMonth) {
+        programmeCell.classList.add("eagle-other-month");
+      }
+
+      if (isSameDay(date, new Date())) {
+        programmeCell.classList.add("eagle-today");
+      }
+
+      const dateHeading =
+        document.createElement("div");
+
+      dateHeading.className = "eagle-date-number";
+
+      dateHeading.textContent = isCurrentMonth
+        ? date.getDate()
+        : "";
+
+      programmeCell.appendChild(dateHeading);
+
+      if (isCurrentMonth) {
+
+        // Staff assigned for the day
+        const record = getManpower(
+          currentVenue,
+          dateString
+        );
+
+        if (record.staff.length > 0) {
+          const staffList =
+            document.createElement("div");
+
+          staffList.className = "eagle-staff-list";
+
+          staffList.textContent =
+            record.staff.join(", ");
+
+          programmeCell.appendChild(staffList);
+        }
+
+        // Add / edit manpower button
+        const manpowerButton =
+          document.createElement("button");
+
+        manpowerButton.type = "button";
+        manpowerButton.className = "eagle-manpower-button";
+
+        manpowerButton.textContent =
+          record.staff.length > 0
+            ? "Edit staff"
+            : "+ Staff";
+
+        manpowerButton.addEventListener("click", e => {
+          e.stopPropagation();
+
+          openManpowerModal(
+            currentVenue,
+            dateString
+          );
+        });
+
+        programmeCell.appendChild(manpowerButton);
+
+        // Programmes for the day
+        getDayEvents(dateString).forEach(event => {
+
+          const eventCard =
+            document.createElement("div");
+
+          eventCard.className = "eagle-event";
+
+          const time =
+            document.createElement("div");
+
+          time.className = "eagle-event-time";
+
+          time.textContent = formatTime(event.time);
+
+          const name =
+            document.createElement("div");
+
+          name.className = "eagle-event-name";
+
+          name.textContent = event.programme;
+
+          const details =
+            document.createElement("div");
+
+          details.className = "eagle-event-details";
+
+          details.textContent =
+            getSessionLabel(event) +
+            (event.pax !== ""
+              ? " · " + event.pax + " pax"
+              : "");
+
+          eventCard.append(
+            time,
+            name,
+            details
+          );
+
+          eventCard.addEventListener("click", () => {
+            openEventModal(event);
+          });
+
+          programmeCell.appendChild(eventCard);
+        });
+      }
+
+      programmeRow.appendChild(programmeCell);
+
+      // -----------------------------------------
+      // OFF / LEAVE CELL
+      // -----------------------------------------
+
+      const leaveCell =
+        document.createElement("div");
+
+      leaveCell.className = "eagle-leave-cell";
+
+      if (isCurrentMonth) {
+
+        const record = getManpower(
+          currentVenue,
+          dateString
+        );
+
+        const notes =
+          document.createElement("div");
+
+        notes.className = "eagle-leave-notes";
+
+        notes.textContent =
+          record.notes || "—";
+
+        leaveCell.appendChild(notes);
+
+        leaveCell.addEventListener("click", () => {
+          openManpowerModal(
+            currentVenue,
+            dateString
+          );
+        });
+      }
+
+      leaveRow.appendChild(leaveCell);
+    }
+
+    weekBlock.append(
+      programmeRow,
+      leaveRow
+    );
+
+    grid.appendChild(weekBlock);
+  }
+}
 
 /* =========================================================
    20. PROGRAMME CARD
