@@ -639,7 +639,9 @@ function getManpower(venue, date) {
   return manpower[manpowerKey(venue, date)] || {
     staff: [],
     required: REQUIRED_MANPOWER,
-    notes: ""
+    notes: "",
+    leaveNotes: "",
+    leaveEntries: []
   };
 }
 
@@ -674,23 +676,22 @@ async function loadManpowerFromSupabase() {
   rows.forEach(row => {
     const date = String(row.date).slice(0, 10);
 
-manpower[manpowerKey(row.venue, date)] = {
-  staff: Array.isArray(row.staff) ? row.staff : [],
-  required: REQUIRED_MANPOWER,
-  notes: row.notes || "",
-  leaveNotes: row.leave_notes || "",
-  leaveEntries: Array.isArray(row.leave_entries)
-    ? row.leave_entries
-    : []
-};
+    manpower[manpowerKey(row.venue, date)] = {
+      staff: Array.isArray(row.staff) ? row.staff : [],
+      required: REQUIRED_MANPOWER,
+      notes: row.notes || "",
+      leaveNotes: row.leave_notes || "",
+      leaveEntries: Array.isArray(row.leave_entries)
+        ? row.leave_entries
+        : []
+    };
+  });
 
   manpowerLoaded = true;
 
   renderCurrentScreen();
   return true;
 }
-
-
 /* =========================================================
    13. CALENDAR FILTERING
 ========================================================= */
@@ -1071,9 +1072,10 @@ function renderEagleView() {
 
     programmeRow.appendChild(programmeLabel);
 
-    // -----------------------------------------
-    // OFF / LEAVE ROW
-    // -----------------------------------------
+// -----------------------------------------
+// OFF / LEAVE ROW
+// -----------------------------------------
+
 const leaveRow = document.createElement("div");
 leaveRow.className = "eagle-leave-row";
 
@@ -1082,26 +1084,6 @@ leaveLabel.className = "eagle-row-label";
 leaveLabel.textContent = "OFF / LEAVE";
 
 leaveRow.appendChild(leaveLabel);
-
-// Create a separate container for OFF / LEAVE names
-const leaveList = document.createElement("div");
-leaveList.className = "eagle-leave-list";
-
-const record = getManpower(currentVenue, dateString);
-
-(record.leaveEntries || []).forEach(entry => {
-  const line = document.createElement("div");
-
-  line.textContent =
-    `${entry.name} (${entry.type}${entry.detail ? ": " + entry.detail : ""})`;
-
-  leaveList.appendChild(line);
-});
-
-leaveRow.appendChild(leaveList);
-
-// Add the OFF / LEAVE row to the calendar cell
-cell.appendChild(leaveRow);
 
     // -----------------------------------------
     // MONDAY TO SUNDAY
@@ -1243,40 +1225,45 @@ cell.appendChild(leaveRow);
       // -----------------------------------------
       // OFF / LEAVE CELL
       // -----------------------------------------
+// -----------------------------------------
+// OFF / LEAVE CELL
+// -----------------------------------------
 
-      const leaveCell =
-        document.createElement("div");
+const leaveCell = document.createElement("div");
+leaveCell.className = "eagle-leave-cell";
 
-      leaveCell.className = "eagle-leave-cell";
+if (isCurrentMonth) {
+  const record = getManpower(currentVenue, dateString);
 
-      if (isCurrentMonth) {
+  // Display staff who are OFF or on leave
+  (record.leaveEntries || []).forEach(entry => {
+    const line = document.createElement("div");
 
-        const record = getManpower(
-          currentVenue,
-          dateString
-        );
+    line.className = "eagle-leave-entry";
 
-        const notes =
-          document.createElement("div");
+    line.textContent =
+      `${entry.name} (${entry.type}${entry.detail ? ": " + entry.detail : ""})`;
 
-        notes.className = "eagle-leave-notes";
+    leaveCell.appendChild(line);
+  });
 
-        notes.textContent =
-          record.notes || "—";
+  // Display separate leave notes, if any
+  if (record.leaveNotes) {
+    const notes = document.createElement("div");
 
-        leaveCell.appendChild(notes);
+    notes.className = "eagle-leave-notes";
+    notes.textContent = record.leaveNotes;
 
-        leaveCell.addEventListener("click", () => {
-          openManpowerModal(
-            currentVenue,
-            dateString
-          );
-        });
-      }
+    leaveCell.appendChild(notes);
+  }
 
-      leaveRow.appendChild(leaveCell);
-    }
+  leaveCell.addEventListener("click", () => {
+    openManpowerModal(currentVenue, dateString);
+  });
+}
 
+leaveRow.appendChild(leaveCell);
+       
     weekBlock.append(
       programmeRow,
       leaveRow
