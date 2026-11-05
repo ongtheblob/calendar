@@ -665,16 +665,24 @@ if (!data || data.length < pageSize) {
 manpower = {};
 
 rows.forEach(row => {
-const date = String(row.date).slice(0, 10);
+  const date = String(row.date).slice(0, 10);
 
-manpower[manpowerKey(row.venue, date)] = {
-  staff: Array.isArray(row.staff) ? row.staff : [],
-  required: REQUIRED_MANPOWER,
-  notes: row.notes || ""
-};
-});
+  manpower[manpowerKey(row.venue, date)] = {
+    staff: Array.isArray(row.staff) ? row.staff : [],
+    required: REQUIRED_MANPOWER,
+    notes: row.notes || "",
+    leaveNotes: row.leave_notes || "",
+    leaveEntries: Array.isArray(row.leave_entries)
+      ? row.leave_entries
+      : []
+  };
+}); // Closes rows.forEach()
 
 manpowerLoaded = true;
+
+renderCurrentScreen();
+return true;
+}
 
 renderCurrentScreen();
 return true;
