@@ -701,6 +701,22 @@ const button = document.createElement("button");
 button.type = "button";
 button.className = "manpower-button";
 
+const leaveButton = document.createElement("button");
+
+leaveButton.type = "button";
+leaveButton.className = "manpower-button leave-button";
+
+leaveButton.textContent = record.leaveEntries?.length
+    ? "🌿 Edit Off / Leave"
+    : "🌿 Set Off / Leave";
+
+leaveButton.addEventListener("click", e => {
+    e.stopPropagation();
+    openLeaveModal(venue, date);
+});
+
+container.appendChild(leaveButton);
+
 const present = record.staff.length;
 
 button.textContent = present
