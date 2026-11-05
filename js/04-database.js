@@ -44,7 +44,7 @@ function convertDatabaseProgramme(row) {
 
 
 /* =========================================================
-11. TEST SUPABASE CONNECTION
+11. SUPABASE CONNECTION
 ========================================================= */
 
 async function testSupabaseConnection() {
@@ -89,9 +89,7 @@ async function loadProgrammesFromSupabase() {
 
         rows.push(...(data || []));
 
-        if (!data || data.length < pageSize) {
-            break;
-        }
+        if (!data || data.length < pageSize) break;
     }
 
     events = rows.map(convertDatabaseProgramme);
@@ -103,116 +101,84 @@ async function loadProgrammesFromSupabase() {
 async function refreshProgrammesFromSupabase() {
     const success = await loadProgrammesFromSupabase();
 
-    if (success) {
-        renderCurrentScreen();
-    }
+    if (success) renderCurrentScreen();
 
     return success;
 }
 
 
 /* =========================================================
-13. MANPOWER DATABASE KEY
+13. MANPOWER DATABASE
 ========================================================= */
 
 function manpowerKey(venue, date) {
     return venue + "__" + date;
 }
 
-
-/* =========================================================
-14. GET MANPOWER RECORD
-========================================================= */
-
 function getManpower(venue, date) {
     return manpower[manpowerKey(venue, date)] || {
         staff: [],
         required: REQUIRED_MANPOWER,
         notes: "",
-        leaveNotes: "",
         leaveEntries: []
     };
 }
 
 
 /* =========================================================
-15. NORMALISE OFF / LEAVE ENTRIES
-
-Supports:
-- JSONB arrays from Supabase
-- JSON strings from older records
-- Simple string entries
-- Objects using staff/name/staff_name
+14. NORMALISE LEAVE ENTRIES
 ========================================================= */
 
-function normaliseLeaveEntries(rawEntries, venue, date) {
-    if (!rawEntries) {
-        return [];
-    }
+function normaliseLeaveEntries(entries) {
+    if (!Array.isArray(entries)) return [];
 
-    if (typeof rawEntries === "string") {
-        try {
-            rawEntries = JSON.parse(rawEntries);
-        } catch (error) {
-            console.warn(
-                "Could not parse leave_entries:",
-                venue,
-                date,
-                error
-            );
-
-            return [];
-        }
-    }
-
-    if (!Array.isArray(rawEntries)) {
-        return [];
-    }
-
-    return rawEntries
-        .map(entry => {
-            if (typeof entry === "string") {
-                const staff = entry.trim();
-
-                if (!staff) return null;
-
-                return {
-                    staff,
-                    reason: "Off Day"
-                };
-            }
-
-            if (!entry || typeof entry !== "object") {
-                return null;
-            }
-
-            const staff = String(
-                entry.staff ||
-                entry.name ||
-                entry.staff_name ||
-                ""
-            ).trim();
-
-            if (!staff) {
-                return null;
-            }
-
+    return entries.map(entry => {
+        if (typeof entry === "string") {
             return {
-                staff,
-                reason: String(
-                    entry.reason ||
-                    entry.type ||
-                    entry.leave_reason ||
-                    "Off Day"
-                )
+                staff: entry.trim(),
+                reason: "Off Day"
             };
-        })
-        .filter(entry => entry !== null);
+        }
+
+        if (!entry || typeof entry !== "object") {
+            return null;
+        }
+
+        const staff = String(
+            entry.staff ||
+            entry.name ||
+            entry.staff_name ||
+            ""
+        ).trim();
+
+        if (!staff) return null;
+
+        return {
+            staff,
+            reason: String(
+                entry.reason ||
+                entry.type ||
+                entry.leave_reason ||
+                "Off Day"
+            )
+        };
+    }).filter(Boolean);
 }
 
 
 /* =========================================================
-16. LOAD MANPOWER FROM SUPABASE
+15. LOAD MANPOWER AND LEAVE ENTRIES
+
+manpower:
+- Present staff
+- Required manpower
+- General notes
+
+manpower_leave_entries:
+- Staff on leave
+- Leave reason
+- Venue
+- Date
 ========================================================= */
 
 async function loadManpowerFromSupabase() {
@@ -221,86 +187,125 @@ async function loadManpowerFromSupabase() {
         return false;
     }
 
-    const rows = [];
-    const pageSize = 1000;
+    try {
+        const manpowerRows = [];
+        const leaveRows = [];
+        const pageSize = 1000;
 
-    for (let offset = 0; ; offset += pageSize) {
-        const { data, error } = await supabaseClient
-            .from("manpower")
-            .select("*")
-            .order("date", { ascending: true })
-            .order("venue", { ascending: true })
-            .range(offset, offset + pageSize - 1);
+        // Load Present manpower records.
+        for (let offset = 0; ; offset += pageSize) {
+            const { data, error } = await supabaseClient
+                .from("manpower")
+                .select("*")
+                .order("date", { ascending: true })
+                .order("venue", { ascending: true })
+                .range(offset, offset + pageSize - 1);
 
-        if (error) {
-            console.error(
-                "Unable to load manpower:",
-                error
-            );
+            if (error) throw error;
 
-            return false;
+            manpowerRows.push(...(data || []));
+
+            if (!data || data.length < pageSize) break;
         }
 
-        rows.push(...(data || []));
+        // Load separate Off / Leave records.
+        for (let offset = 0; ; offset += pageSize) {
+            const { data, error } = await supabaseClient
+                .from("manpower_leave_entries")
+                .select("id,venue,date,staff,reason")
+                .order("date", { ascending: true })
+                .order("venue", { ascending: true })
+                .range(offset, offset + pageSize - 1);
 
-        if (!data || data.length < pageSize) {
-            break;
-        }
-    }
+            if (error) throw error;
 
-    // Rebuild the local manpower object from Supabase.
-    const loadedManpower = {};
+            leaveRows.push(...(data || []));
 
-    rows.forEach(row => {
-        const date = String(row.date).slice(0, 10);
-        const venue = String(row.venue || "").trim();
-
-        if (!venue || !date) {
-            return;
+            if (!data || data.length < pageSize) break;
         }
 
-        const leaveEntries = normaliseLeaveEntries(
-            row.leave_entries,
-            venue,
-            date
+        // Build the local manpower records.
+        const loadedManpower = {};
+
+        manpowerRows.forEach(row => {
+            const venue = String(row.venue || "").trim();
+            const date = String(row.date).slice(0, 10);
+
+            if (!venue || !date) return;
+
+            let staff = row.staff;
+
+            if (typeof staff === "string") {
+                try {
+                    staff = JSON.parse(staff);
+                } catch (error) {
+                    staff = [];
+                }
+            }
+
+            if (!Array.isArray(staff)) staff = [];
+
+            loadedManpower[manpowerKey(venue, date)] = {
+                staff,
+                required: Number(
+                    row.required || REQUIRED_MANPOWER
+                ),
+                notes: row.notes || "",
+                leaveEntries: []
+            };
+        });
+
+        // Add leave entries to their matching venue/date.
+        leaveRows.forEach(row => {
+            const venue = String(row.venue || "").trim();
+            const date = String(row.date).slice(0, 10);
+            const staff = String(row.staff || "").trim();
+
+            if (!venue || !date || !staff) return;
+
+            const key = manpowerKey(venue, date);
+
+            // Create a local record even if there is no
+            // Present manpower record for that date.
+            if (!loadedManpower[key]) {
+                loadedManpower[key] = {
+                    staff: [],
+                    required: REQUIRED_MANPOWER,
+                    notes: "",
+                    leaveEntries: []
+                };
+            }
+
+            loadedManpower[key].leaveEntries.push({
+                staff,
+                reason: row.reason || "Off Day"
+            });
+        });
+
+        // Replace local data after both database loads succeed.
+        manpower = loadedManpower;
+        manpowerLoaded = true;
+
+        console.log(
+            "Present manpower records loaded:",
+            manpowerRows.length
         );
 
-        let staff = row.staff;
+        console.log(
+            "Off / Leave records loaded:",
+            leaveRows.length
+        );
 
-        // Support JSON text if older records used it.
-        if (typeof staff === "string") {
-            try {
-                staff = JSON.parse(staff);
-            } catch (error) {
-                staff = [];
-            }
-        }
+        renderCurrentScreen();
 
-        if (!Array.isArray(staff)) {
-            staff = [];
-        }
+        return true;
 
-        loadedManpower[manpowerKey(venue, date)] = {
-            staff: staff,
-            required: Number(
-                row.required || REQUIRED_MANPOWER
-            ),
-            notes: row.notes || "",
-            leaveNotes: row.leave_notes || "",
-            leaveEntries: leaveEntries
-        };
-    });
+    } catch (error) {
+        console.error(
+            "Unable to load manpower and leave entries:",
+            error
+        );
 
-    // Replace local data only after the database load succeeds.
-    manpower = loadedManpower;
-    manpowerLoaded = true;
-
-    console.log(
-        "Manpower records loaded:",
-        rows.length
-    );
-
-    renderCurrentScreen();
-
-    return true;
+        return false;
+    }
 }
