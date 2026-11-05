@@ -2852,23 +2852,23 @@ const endISO = endDate.toISOString();
 const monthLabel = startDate.toLocaleString("default", { month: "long", year: "numeric" });
 
 const confirmed = confirm(
-WARNING: DELETE DATA FOR ${monthLabel.toUpperCase()}\n\n +
-"This will permanently delete:\n" +
-- ALL HBB programmes in ${monthLabel}\n +
-- ALL OTH programmes in ${monthLabel}\n +
-- ALL manpower records in ${monthLabel}\n +
-"- ALL staff assignments and notes for this month\n\n" +
-"This affects EVERYONE using the shared calendar.\n\n" +
-"Continue?"
+  `WARNING: DELETE DATA FOR ${monthLabel.toUpperCase()}\n\n` +
+  `This will permanently delete:\n` +
+  `- ALL HBB programmes in ${monthLabel}\n` +
+  `- ALL OTH programmes in ${monthLabel}\n` +
+  `- ALL manpower records in ${monthLabel}\n` +
+  `- ALL staff assignments and notes for this month\n\n` +
+  `This affects EVERYONE using the shared calendar.\n\n` +
+  `Continue?`
 );
 
 if (!confirmed) return;
 
 const verification = prompt(
-Type "DELETE ${monthInput}" to confirm:
+  `Type "DELETE ${monthInput}" to confirm:`
 );
 
-if (verification !== DELETE ${monthInput}) {
+if (verification !== `DELETE ${monthInput}`) {
 alert("Deletion cancelled.");
 return;
 }
