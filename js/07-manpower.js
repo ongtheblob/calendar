@@ -479,6 +479,12 @@ Routes to the correct table based on modal mode.
 ========================================================= */
 
 async function saveManpower() {
+    console.log("SAVE BUTTON CLICKED");
+    console.log("Current mode:", manpowerModalMode);
+    console.log("Venue:", manpowerVenue);
+    console.log("Date:", manpowerDate);
+    console.log("Leave entries:", draftLeaveEntries);
+    
     if (!manpowerVenue || !manpowerDate) return;
 
     if (!supabaseClient) {
