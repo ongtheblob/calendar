@@ -551,6 +551,24 @@ function renderEagleView() {
           dateString
         );
 
+        const leaveButton = document.createElement("button");
+
+leaveButton.type = "button";
+leaveButton.className =
+    "eagle-manpower-button eagle-leave-button";
+
+leaveButton.textContent =
+    record.leaveEntries?.length
+        ? "Edit Off / Leave"
+        : "+ Off / Leave";
+
+leaveButton.addEventListener("click", event => {
+    event.stopPropagation();
+    openLeaveModal(currentVenue, dateString);
+});
+
+leaveCell.appendChild(leaveButton);
+
         const leaveList = document.createElement("div");
         leaveList.className = "eagle-leave-notes";
         leaveList.style.display = "flex";
@@ -597,7 +615,7 @@ function renderEagleView() {
         leaveCell.appendChild(leaveList);
 
         leaveCell.addEventListener("click", () => {
-          openManpowerModal(
+          openLeaveModal(
             currentVenue,
             dateString
           );
