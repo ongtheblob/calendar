@@ -684,10 +684,6 @@ renderCurrentScreen();
 return true;
 }
 
-renderCurrentScreen();
-return true;
-}
-
 /* =========================================================
 13. CALENDAR FILTERING
 ========================================================= */
@@ -1654,7 +1650,7 @@ setValue("remarks", "");
 
 setValue(
 "status",
-"Confirmed)"
+"Confirmed"
 );
 
 toggleHidden("customProgrammeGroup", true);
