@@ -389,12 +389,75 @@ async function savePresentManpower() {
 async function saveLeaveEntries() {
     const venue = manpowerVenue;
     const date = manpowerDate;
+
+    if (!venue || !date) {
+        throw new Error("Missing venue or date.");
+    }
+
     const desiredEntries = getLeaveDraft().map(entry => ({
         venue,
         date,
         staff: entry.staff,
         reason: entry.reason
     }));
+
+    // Read existing records.
+    const { data: existingRows, error: readError } =
+        await supabaseClient
+            .from("manpower_leave_entries")
+            .select("id,staff")
+            .eq("venue", venue)
+            .eq("date", date);
+
+    if (readError) throw readError;
+
+    // Only upsert if there are entries to save.
+    if (desiredEntries.length > 0) {
+        const { error: upsertError } = await supabaseClient
+            .from("manpower_leave_entries")
+            .upsert(desiredEntries, {
+                onConflict: "venue,date,staff"
+            });
+
+        if (upsertError) throw upsertError;
+    }
+
+    // Delete records removed from the draft.
+    const desiredNames = new Set(
+        desiredEntries.map(entry => entry.staff)
+    );
+
+    const removedRows = (existingRows || []).filter(
+        row => !desiredNames.has(row.staff)
+    );
+
+    for (const row of removedRows) {
+        const { error } = await supabaseClient
+            .from("manpower_leave_entries")
+            .delete()
+            .eq("id", row.id);
+
+        if (error) throw error;
+    }
+
+    // Verify the final database records.
+    const { data: verifiedRows, error: verifyError } =
+        await supabaseClient
+            .from("manpower_leave_entries")
+            .select("id,staff,reason")
+            .eq("venue", venue)
+            .eq("date", date);
+
+    if (verifyError) throw verifyError;
+
+    if ((verifiedRows || []).length !== desiredEntries.length) {
+        throw new Error("Unable to verify Off / Leave changes in Supabase.");
+    }
+
+    console.log("Verified Off / Leave records:", verifiedRows);
+
+    return verifiedRows;
+};
 
     if (!venue || !date) {
         throw new Error("Missing venue or date for Off / Leave save.");
@@ -474,9 +537,8 @@ async function saveLeaveEntries() {
 async function saveManpower() {
     const saveButton = $("saveManpower");
 
-    // Prefer the mode attached to the button when the modal was opened.
-    // This prevents a stale label/state mismatch from routing to the wrong table.
     const buttonMode = saveButton?.dataset.mode;
+
     const saveMode = buttonMode === "leave"
         ? "leave"
         : manpowerModalMode;
@@ -491,7 +553,7 @@ async function saveManpower() {
     });
 
     if (!manpowerVenue || !manpowerDate) {
-        alert("Please reopen the Manpower or Off / Leave window and try again.");
+        alert("Please reopen the Manpower or Off / Leave window.");
         return;
     }
 
@@ -504,24 +566,17 @@ async function saveManpower() {
 
     try {
         if (saveMode === "leave") {
-            const entries = getLeaveDraft();
-
-            if (!entries.length) {
-                throw new Error(
-                    "No Off / Leave entries found. Add a staff member to the list before saving."
-                );
-            }
-
+            // An empty draft is now allowed.
+            // This will delete all existing leave records for the day.
             await saveLeaveEntries();
         } else {
             await savePresentManpower();
         }
 
         const reloaded = await loadManpowerFromSupabase();
+
         if (!reloaded) {
-            throw new Error(
-                "The save request completed, but the latest records could not be reloaded."
-            );
+            throw new Error("Unable to reload the latest records.");
         }
 
         closeManpowerModal();
@@ -529,17 +584,22 @@ async function saveManpower() {
 
         alert(
             saveMode === "leave"
-                ? "Off / Leave saved successfully."
+                ? "Off / Leave changes saved successfully."
                 : "Manpower saved successfully."
         );
+
     } catch (error) {
         console.error("Unable to save manpower:", error);
-        alert("Unable to save: " + (error.message || String(error)));
+
+        alert(
+            "Unable to save: " +
+            (error.message || String(error))
+        );
+
     } finally {
         if (saveButton) saveButton.disabled = false;
     }
 }
-
 
 /* =========================================================
    39. CLEAR PRESENT DRAFT
