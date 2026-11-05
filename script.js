@@ -3139,8 +3139,5 @@ startApplication,
 startApplication();
 }
 
-⋮⋮⋮⋮
-You’re out of attachments for now. Upgrade your plan for more, or try again tomorrow after 7:34 PM.
-
 
 
