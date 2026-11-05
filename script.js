@@ -673,12 +673,12 @@ rows.forEach(row => {
     notes: row.notes || "",
     leaveNotes: row.leave_notes || "",
     leaveEntries: Array.isArray(row.leave_entries)
-      ? row.leave_entries
-      : []
+    ? row.leave_entries
+    : []
   };
-}); // Closes rows.forEach()
+  }); // Close rows.forEach()
 
-manpowerLoaded = true;
+  manpowerLoaded = true;
 
 renderCurrentScreen();
 return true;
