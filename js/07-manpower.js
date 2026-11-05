@@ -507,10 +507,25 @@ async function saveManpower() {
 
     try {
         if (saveMode === "leave") {
-            await saveLeaveEntries();
-        } else {
-            await savePresentManpower();
-        }
+
+    console.log(
+        "Saving leave entries:",
+        JSON.stringify(draftLeaveEntries)
+    );
+
+    if (!draftLeaveEntries.length) {
+        throw new Error(
+            "No Off / Leave entries found. Please add a staff member first."
+        );
+    }
+
+    await saveLeaveEntries();
+
+} else {
+
+    await savePresentManpower();
+
+}
 
         // Reload both tables so the calendar gets fresh data.
         const reloaded = await loadManpowerFromSupabase();
