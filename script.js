@@ -1072,18 +1072,18 @@ function renderEagleView() {
 
     programmeRow.appendChild(programmeLabel);
 
-// -----------------------------------------
-// OFF / LEAVE ROW
-// -----------------------------------------
+    // -----------------------------------------
+    // OFF / LEAVE ROW
+    // -----------------------------------------
 
-const leaveRow = document.createElement("div");
-leaveRow.className = "eagle-leave-row";
+    const leaveRow = document.createElement("div");
+    leaveRow.className = "eagle-leave-row";
 
-const leaveLabel = document.createElement("div");
-leaveLabel.className = "eagle-row-label";
-leaveLabel.textContent = "OFF / LEAVE";
+    const leaveLabel = document.createElement("div");
+    leaveLabel.className = "eagle-row-label";
+    leaveLabel.textContent = "OFF / LEAVE";
 
-leaveRow.appendChild(leaveLabel);
+    leaveRow.appendChild(leaveLabel);
 
     // -----------------------------------------
     // MONDAY TO SUNDAY
@@ -1225,45 +1225,40 @@ leaveRow.appendChild(leaveLabel);
       // -----------------------------------------
       // OFF / LEAVE CELL
       // -----------------------------------------
-// -----------------------------------------
-// OFF / LEAVE CELL
-// -----------------------------------------
 
-const leaveCell = document.createElement("div");
-leaveCell.className = "eagle-leave-cell";
+      const leaveCell =
+        document.createElement("div");
 
-if (isCurrentMonth) {
-  const record = getManpower(currentVenue, dateString);
+      leaveCell.className = "eagle-leave-cell";
 
-  // Display staff who are OFF or on leave
-  (record.leaveEntries || []).forEach(entry => {
-    const line = document.createElement("div");
+      if (isCurrentMonth) {
 
-    line.className = "eagle-leave-entry";
+        const record = getManpower(
+          currentVenue,
+          dateString
+        );
 
-    line.textContent =
-      `${entry.name} (${entry.type}${entry.detail ? ": " + entry.detail : ""})`;
+        const notes =
+          document.createElement("div");
 
-    leaveCell.appendChild(line);
-  });
+        notes.className = "eagle-leave-notes";
 
-  // Display separate leave notes, if any
-  if (record.leaveNotes) {
-    const notes = document.createElement("div");
+        notes.textContent =
+          record.notes || "—";
 
-    notes.className = "eagle-leave-notes";
-    notes.textContent = record.leaveNotes;
+        leaveCell.appendChild(notes);
 
-    leaveCell.appendChild(notes);
-  }
+        leaveCell.addEventListener("click", () => {
+          openManpowerModal(
+            currentVenue,
+            dateString
+          );
+        });
+      }
 
-  leaveCell.addEventListener("click", () => {
-    openManpowerModal(currentVenue, dateString);
-  });
-}
+      leaveRow.appendChild(leaveCell);
+    }
 
-leaveRow.appendChild(leaveCell);
-       
     weekBlock.append(
       programmeRow,
       leaveRow
