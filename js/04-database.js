@@ -47,19 +47,43 @@ function convertDatabaseProgramme(row) {
 11. SUPABASE CONNECTION
 ========================================================= */
 
+
 async function testSupabaseConnection() {
-    if (!supabaseClient) return;
-
-    const { error } = await supabaseClient
-        .from("programmes")
-        .select("id")
-        .limit(1);
-
-    if (error) {
-        console.error("Supabase connection failed:", error);
-    } else {
-        console.log("Supabase connection successful.");
+    if (!supabaseClient) {
+        console.error("Supabase client is unavailable.");
+        return false;
     }
+
+    const tables = [
+        "programmes",
+        "manpower",
+        "manpower_leave_entries"
+    ];
+
+    let allSuccessful = true;
+
+    for (const table of tables) {
+        const { data, error } = await supabaseClient
+            .from(table)
+            .select("*")
+            .limit(1);
+
+        if (error) {
+            console.error(
+                `Supabase table check failed: ${table}`,
+                error
+            );
+
+            allSuccessful = false;
+        } else {
+            console.log(
+                `Supabase table accessible: ${table}`,
+                data
+            );
+        }
+    }
+
+    return allSuccessful;
 }
 
 
