@@ -62,10 +62,17 @@ updateStaffCount();
 updateStaffStatus();
 });
 
-on("addLeaveEntry", "click", function(event) {
-    event.preventDefault();
-    addLeaveEntry();
-});
+const addLeaveButton = $("addLeaveEntry");
+
+if (addLeaveButton) {
+    addLeaveButton.addEventListener("click", function(event) {
+        event.preventDefault();
+
+        console.log("ADD BUTTON EVENT FIRED");
+
+        addLeaveEntry();
+    });
+}
 on("clearLeaveButton", "click", clearLeaveDraft);
 on("clearManpowerDay", "click", clearEntireManpowerDay);
 
