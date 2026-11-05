@@ -188,15 +188,25 @@ function openManpowerModal(venue, date) {
 }
 
 function openLeaveModal(venue, date) {
+
+    console.log("Opening Off / Leave modal");
+
+    manpowerModalMode = "leave";
+
     openManpowerSection(venue, date, "leave");
+
+    console.log("Modal mode after opening:", manpowerModalMode);
 }
 
 function openManpowerSection(venue, date, mode) {
     manpowerVenue = venue;
     manpowerDate = date;
 
-    manpowerModalMode =
-        mode === "leave" ? "leave" : "manpower";
+manpowerModalMode = (mode === "leave")
+    ? "leave"
+    : "manpower";
+
+console.log("Manpower modal mode set to:", manpowerModalMode);
 
     const record = getManpower(venue, date) || {};
 
@@ -271,14 +281,17 @@ function openManpowerSection(venue, date, mode) {
             : "Manpower"
     );
 
-    const saveButton = $("saveManpower");
+const saveButton = $("saveManpower");
 
-    if (saveButton) {
-        saveButton.textContent =
-            manpowerModalMode === "leave"
-                ? "Save Off / Leave"
-                : "Save Manpower";
-    }
+if (saveButton) {
+
+    saveButton.textContent =
+        manpowerModalMode === "leave"
+            ? "Save Off / Leave"
+            : "Save Manpower";
+
+    saveButton.dataset.mode = manpowerModalMode;
+}
 
     $("manpowerModal")?.classList.add("visible");
 }
