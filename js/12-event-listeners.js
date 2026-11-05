@@ -130,8 +130,5 @@ clearAllData
 );
 }
 
-on("saveManpower", "click", saveManpower);
 
-on("addLeaveEntry", "click", addLeaveEntry);
 
-on("clearLeaveButton", "click", clearLeaveDraft);
