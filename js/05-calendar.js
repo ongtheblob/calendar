@@ -376,14 +376,52 @@ function renderEagleView() {
     // OFF / LEAVE ROW
     // -----------------------------------------
 
-    const leaveRow = document.createElement("div");
-    leaveRow.className = "eagle-leave-row";
+ const leaveCell = document.createElement("div");
+leaveCell.className = "eagle-leave-cell";
 
-    const leaveLabel = document.createElement("div");
-    leaveLabel.className = "eagle-row-label";
-    leaveLabel.textContent = "OFF / LEAVE";
+if (isCurrentMonth) {
+    const record = getManpower(currentVenue, dateString);
 
-    leaveRow.appendChild(leaveLabel);
+    const leaveList = document.createElement("div");
+    leaveList.className = "eagle-leave-notes";
+
+    leaveList.style.display = "flex";
+    leaveList.style.flexDirection = "column";
+    leaveList.style.gap = "6px";
+    leaveList.style.padding = "8px 10px";
+
+    if (record.leaveEntries?.length) {
+        record.leaveEntries.forEach(entry => {
+            const leaveEntry = document.createElement("div");
+            leaveEntry.style.display = "flex";
+            leaveEntry.style.gap = "8px";
+            leaveEntry.style.alignItems = "flex-start";
+
+            const icon = document.createElement("span");
+            icon.textContent = "👤";
+
+            const details = document.createElement("span");
+
+            const name = document.createElement("strong");
+            name.textContent = entry.staff;
+
+            const reason = document.createElement("span");
+            reason.textContent = " — " + entry.reason;
+
+            details.append(name, reason);
+            leaveEntry.append(icon, details);
+            leaveList.appendChild(leaveEntry);
+        });
+    } else {
+        leaveList.textContent = record.leaveNotes || "—";
+    }
+
+    leaveCell.appendChild(leaveList);
+
+    leaveCell.addEventListener("click", () => {
+        openManpowerModal(currentVenue, dateString);
+    });
+}
 
     // -----------------------------------------
     // MONDAY TO SUNDAY
