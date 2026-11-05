@@ -674,12 +674,15 @@ async function loadManpowerFromSupabase() {
   rows.forEach(row => {
     const date = String(row.date).slice(0, 10);
 
-    manpower[manpowerKey(row.venue, date)] = {
-      staff: Array.isArray(row.staff) ? row.staff : [],
-      required: REQUIRED_MANPOWER,
-      notes: row.notes || ""
-    };
-  });
+manpower[manpowerKey(row.venue, date)] = {
+  staff: Array.isArray(row.staff) ? row.staff : [],
+  required: REQUIRED_MANPOWER,
+  notes: row.notes || "",
+  leaveNotes: row.leave_notes || "",
+  leaveEntries: Array.isArray(row.leave_entries)
+    ? row.leave_entries
+    : []
+};
 
   manpowerLoaded = true;
 
@@ -1071,15 +1074,34 @@ function renderEagleView() {
     // -----------------------------------------
     // OFF / LEAVE ROW
     // -----------------------------------------
+const leaveRow = document.createElement("div");
+leaveRow.className = "eagle-leave-row";
 
-    const leaveRow = document.createElement("div");
-    leaveRow.className = "eagle-leave-row";
+const leaveLabel = document.createElement("div");
+leaveLabel.className = "eagle-row-label";
+leaveLabel.textContent = "OFF / LEAVE";
 
-    const leaveLabel = document.createElement("div");
-    leaveLabel.className = "eagle-row-label";
-    leaveLabel.textContent = "OFF / LEAVE";
+leaveRow.appendChild(leaveLabel);
 
-    leaveRow.appendChild(leaveLabel);
+// Create a separate container for OFF / LEAVE names
+const leaveList = document.createElement("div");
+leaveList.className = "eagle-leave-list";
+
+const record = getManpower(currentVenue, dateString);
+
+(record.leaveEntries || []).forEach(entry => {
+  const line = document.createElement("div");
+
+  line.textContent =
+    `${entry.name} (${entry.type}${entry.detail ? ": " + entry.detail : ""})`;
+
+  leaveList.appendChild(line);
+});
+
+leaveRow.appendChild(leaveList);
+
+// Add the OFF / LEAVE row to the calendar cell
+cell.appendChild(leaveRow);
 
     // -----------------------------------------
     // MONDAY TO SUNDAY
@@ -2252,13 +2274,20 @@ async function saveManpower() {
     return;
   }
 
-  const record = {
-    venue: manpowerVenue,
-    date: manpowerDate,
-    staff: selectedStaff(),
-    required: REQUIRED_MANPOWER,
-    notes: valueOf("manpowerNotes").trim()
-  };
+const record = {
+  venue: manpowerVenue,
+  date: manpowerDate,
+
+  // Staff running the lab
+  staff: selectedStaff(),
+
+  required: REQUIRED_MANPOWER,
+  notes: valueOf("manpowerNotes").trim(),
+
+  // Separate OFF / LEAVE records
+  leave_notes: valueOf("manpowerLeaveNotes").trim(),
+  leave_entries: getSelectedLeaveEntries()
+};
 
   const { data, error } = await supabaseClient
     .from("manpower")
@@ -2299,6 +2328,9 @@ async function saveManpower() {
   closeManpowerModal();
 
   renderCurrentScreen();
+
+renderLeaveChecklist(record.leaveEntries || []);
+renderStaffChecklist(record.staff);
 }
 
 
