@@ -28,7 +28,7 @@ showCalendarView();
 function changeCalendarView() {
 activeCalendarView = valueOf(
 "calendarView",
-"month"
+"eagle"
 );
 
 showCalendarView();
