@@ -144,11 +144,13 @@ function renderLeaveEntries() {
 ========================================================= */
 
 function addLeaveEntry() {
+
     const staff = valueOf("leaveStaff").trim();
-    const reason = valueOf(
-        "leaveReason",
-        "Off Day"
-    ).trim();
+    const reason = valueOf("leaveReason", "Off Day").trim();
+
+    console.log("ADD LEAVE BUTTON CLICKED");
+    console.log("Selected staff:", staff);
+    console.log("Selected reason:", reason);
 
     if (!staff) {
         alert("Please select a staff member for Off / Leave.");
@@ -168,9 +170,13 @@ function addLeaveEntry() {
         });
     }
 
+    console.log("Updated leave entries:", draftLeaveEntries);
+
     setValue("leaveStaff", "");
+
     renderLeaveEntries();
 }
+
 
 
 /* =========================================================
