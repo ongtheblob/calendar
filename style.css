@@ -2398,3 +2398,36 @@ textarea {
 .eagle-leave-notes {
   white-space: pre-wrap;
 }
+
+/* WEBSITE TITLE AND CALENDAR LOGO */
+
+.website-title {
+display: flex;
+align-items: center;
+gap: 12px;
+margin-bottom: 22px;
+}
+
+.website-logo {
+display: flex;
+align-items: center;
+justify-content: center;
+width: 42px;
+height: 42px;
+background: #e8f1ff;
+color: #2563eb;
+border-radius: 10px;
+flex-shrink: 0;
+}
+
+.website-logo svg {
+width: 25px;
+height: 25px;
+}
+
+.website-title h1 {
+margin: 0;
+font-size: 26px;
+font-weight: 700;
+color: #1e293b;
+}
