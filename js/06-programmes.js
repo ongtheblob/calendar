@@ -395,18 +395,19 @@ known
 
 toggleHidden("editDurationGroup", known);
 
-setValue("editVenue", first.venue);
-setValue("editStartDate", first.date);
+// Use the clicked session, not always Week 1.
+setValue("editVenue", selected.venue);
+setValue("editStartDate", selected.date);
 
-const [hour, minute] = first.time.split(":");
+const [hour, minute] = selected.time.split(":");
 
 setValue("editStartHour", hour);
 setValue("editStartMinute", minute);
-setValue("editStartTime", first.time);
+setValue("editStartTime", selected.time);
 
-setValue("editDuration", first.duration);
-setValue("editRemarks", first.remarks);
-
+setValue("editDuration", selected.duration);
+setValue("editRemarks", selected.remarks);
+  
 setValue(
 "editStatus",
 first.status ||
@@ -499,15 +500,32 @@ event => event.seriesId === oldSeriesId
 (a, b) => dateTimeValue(a) - dateTimeValue(b)
 );
 
-const replacement = buildProgrammeEvents({
-programmeName,
-venue: valueOf("editVenue", currentVenue),
-startDate,
-time,
-duration,
-status: valueOf("editStatus"),
-remarks: valueOf("editRemarks").trim(),
-seriesId: oldSeriesId
+const selectedSessionNumber =
+    Number(selected.sessionNumber || 1);
+
+const dateDifference =
+    Math.round(
+        (parseInputDate(startDate).getTime() -
+         parseInputDate(selected.date).getTime()) /
+        86400000
+    );
+
+const replacement = existing.map(event => {
+    const updated = { ...event };
+
+    if (
+        Number(event.sessionNumber || 1) >=
+        selectedSessionNumber
+    ) {
+        updated.date = formatInputDate(
+            addDays(
+                parseInputDate(event.date),
+                dateDifference
+            )
+        );
+    }
+
+    return updated;
 });
 
 const existingByWeek = new Map();
