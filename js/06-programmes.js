@@ -751,5 +751,5 @@ event => !deletedIds.has(event.id)
 closeEventModal();
 
 renderCurrentScreen();
-
+}
 
