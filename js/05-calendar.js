@@ -750,6 +750,10 @@ function createManpowerSection(venue, date) {
         date
     );
 
+const leaveNotes = String(
+    record.leaveNotes || ""
+).trim();
+
     /* PRESENT STAFF */
 
     const heading = document.createElement("div");
@@ -783,39 +787,50 @@ function createManpowerSection(venue, date) {
     container.appendChild(presentList);
 
 
-    /* OFF / LEAVE STAFF */
+  /* OFF / LEAVE STAFF */
 
-    const leaveHeading = document.createElement("div");
+const leaveHeading = document.createElement("div");
 
-    leaveHeading.className = "calendar-staff-heading";
-    leaveHeading.textContent = "Off / Leave";
+leaveHeading.className = "calendar-staff-heading";
+leaveHeading.textContent = "Off / Leave";
 
-    container.appendChild(leaveHeading);
+container.appendChild(leaveHeading);
 
-    const leaveList = document.createElement("div");
-    leaveList.className = "calendar-staff-list";
+const leaveList = document.createElement("div");
+leaveList.className = "calendar-staff-list";
 
-    if (leaveEntries.length > 0) {
-        leaveEntries.forEach(entry => {
-            const leave = document.createElement("div");
+if (leaveEntries.length > 0) {
 
-            leave.className = "calendar-staff-name";
-            leave.textContent =
-                entry.staff + " — " + entry.reason;
+    leaveEntries.forEach(entry => {
+        const leave = document.createElement("div");
 
-            leaveList.appendChild(leave);
-        });
-    } else {
-        const empty = document.createElement("div");
+        leave.className = "calendar-staff-name";
+        leave.textContent =
+            entry.staff + " — " + entry.reason;
 
-        empty.className = "calendar-staff-name";
-        empty.textContent = "No Off / Leave recorded";
+        leaveList.appendChild(leave);
+    });
 
-        leaveList.appendChild(empty);
-    }
+} else if (leaveNotes) {
 
-    container.appendChild(leaveList);
+    const leave = document.createElement("div");
 
+    leave.className = "calendar-staff-name";
+    leave.textContent = leaveNotes;
+
+    leaveList.appendChild(leave);
+
+} else {
+
+    const empty = document.createElement("div");
+
+    empty.className = "calendar-staff-name";
+    empty.textContent = "No Off / Leave recorded";
+
+    leaveList.appendChild(empty);
+}
+
+container.appendChild(leaveList);
 
     /* MANPOWER BUTTON */
 
@@ -860,9 +875,9 @@ function createManpowerSection(venue, date) {
         "manpower-button leave-button";
 
     leaveButton.textContent =
-        leaveEntries.length > 0
-            ? "🌿 Edit Off / Leave"
-            : "🌿 Set Off / Leave";
+    leaveEntries.length > 0 || leaveNotes
+        ? "🌿 Edit Off / Leave"
+        : "🌿 Set Off / Leave";
 
     leaveButton.addEventListener("click", event => {
         event.stopPropagation();
