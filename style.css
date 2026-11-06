@@ -2398,3 +2398,50 @@ textarea {
 .eagle-leave-notes {
   white-space: pre-wrap;
 }
+
+/* =========================================================
+   EAGLE VIEW - ALIGNMENT FIX
+========================================================= */
+
+.eagle-week-block {
+  display: block;
+  width: 100%;
+  min-width: 1010px;
+}
+
+.eagle-programme-row {
+  display: grid;
+  grid-template-columns: 100px repeat(7, minmax(130px, 1fr));
+  align-items: stretch;
+  height: 370px;
+  min-height: 370px;
+}
+
+.eagle-leave-row {
+  display: grid;
+  grid-template-columns: 100px repeat(7, minmax(130px, 1fr));
+  align-items: stretch;
+  height: 130px;
+  min-height: 130px;
+}
+
+.eagle-day-cell,
+.eagle-leave-cell,
+.eagle-row-label {
+  min-width: 0;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.eagle-day-cell {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.eagle-leave-cell {
+  overflow-wrap: anywhere;
+}
+
+.eagle-header {
+  grid-template-columns: 100px repeat(7, minmax(130px, 1fr));
+}
