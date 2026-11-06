@@ -656,7 +656,6 @@ setValue(
 
 renderCurrentScreen();
 
-alert("Programme updated successfully.");
 } catch (error) {
 console.error("Programme edit failed:", error);
 
@@ -753,5 +752,4 @@ closeEventModal();
 
 renderCurrentScreen();
 
-alert("Programme deleted successfully.");
-}
+
