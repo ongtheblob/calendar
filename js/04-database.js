@@ -269,14 +269,15 @@ async function loadManpowerFromSupabase() {
 
             if (!Array.isArray(staff)) staff = [];
 
-            loadedManpower[manpowerKey(venue, date)] = {
-                staff,
-                required: Number(
-                    row.required || REQUIRED_MANPOWER
-                ),
-                notes: row.notes || "",
-                leaveEntries: []
-            };
+        loadedManpower[manpowerKey(venue, date)] = {
+            staff,
+            required: Number(
+                row.required || REQUIRED_MANPOWER
+            ),
+            notes: row.notes || "",
+            leaveNotes: row.leaveNotes || row.leave_notes || "",
+            leaveEntries: []
+        };
         });
 
         // Add leave entries to their matching venue/date.
