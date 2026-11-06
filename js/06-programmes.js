@@ -238,7 +238,6 @@ setValue(
 
 renderCurrentScreen();
 
-alert("Programme saved successfully.");
 } catch (error) {
 console.error(
 "Unable to save programme:",
