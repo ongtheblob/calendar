@@ -2399,49 +2399,37 @@ textarea {
   white-space: pre-wrap;
 }
 
-/* =========================================================
-   EAGLE VIEW - ALIGNMENT FIX
-========================================================= */
+/* EAGLE VIEW - CONSISTENT HORIZONTAL WIDTH */
 
-.eagle-week-block {
-  display: block;
+.eagle-calendar {
   width: 100%;
+  overflow-x: auto;
+  overflow-y: auto;
+}
+
+.eagle-header,
+.eagle-week-block {
+  display: grid;
+  grid-template-columns: 100px repeat(7, minmax(130px, 1fr));
+  width: 1010px;
   min-width: 1010px;
 }
 
-.eagle-programme-row {
-  display: grid;
-  grid-template-columns: 100px repeat(7, minmax(130px, 1fr));
-  align-items: stretch;
-  height: 370px;
-  min-height: 370px;
+.eagle-week-block {
+  display: block;
+  margin-bottom: 8px;
 }
 
+.eagle-programme-row,
 .eagle-leave-row {
   display: grid;
   grid-template-columns: 100px repeat(7, minmax(130px, 1fr));
-  align-items: stretch;
-  height: 130px;
-  min-height: 130px;
+  width: 100%;
 }
 
 .eagle-day-cell,
 .eagle-leave-cell,
 .eagle-row-label {
   min-width: 0;
-  height: 100%;
   box-sizing: border-box;
-}
-
-.eagle-day-cell {
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-.eagle-leave-cell {
-  overflow-wrap: anywhere;
-}
-
-.eagle-header {
-  grid-template-columns: 100px repeat(7, minmax(130px, 1fr));
 }
