@@ -320,6 +320,17 @@ async function loadManpowerFromSupabase() {
             leaveRows.length
         );
 
+        console.table(leaveRows);
+
+        console.log(
+        "Manpower records with Off / Leave:",
+        Object.entries(manpower).filter(
+        ([key, record]) =>
+            Array.isArray(record.leaveEntries) &&
+            record.leaveEntries.length > 0
+    )
+);
+
         renderCurrentScreen();
 
         return true;
