@@ -582,12 +582,6 @@ async function saveManpower() {
         closeManpowerModal();
         renderCurrentScreen();
 
-        alert(
-            saveMode === "leave"
-                ? "Off / Leave changes saved successfully."
-                : "Manpower saved successfully."
-        );
-
     } catch (error) {
         console.error(
             "Unable to save manpower:",
