@@ -504,7 +504,7 @@ if (modalActions && !$("copyDayProgrammesButton")) {
         modalActions.querySelector("#closeButton")
     );
 }
-  
+
 $("eventModal")?.classList.add("visible");
 }
 
@@ -570,7 +570,7 @@ setValue("editStartTime", selected.time);
 
 setValue("editDuration", selected.duration);
 setValue("editRemarks", selected.remarks);
-  
+
 setValue(
 "editStatus",
 first.status ||
@@ -593,162 +593,239 @@ selectedEventId = null;
 ========================================================= */
 
 async function saveEdit() {
-const selected = events.find(
-event => event.id === selectedEventId
-);
+    const selected = events.find(
+        event => event.id === selectedEventId
+    );
 
-if (!selected) {
-alert("No programme selected.");
-return;
+    if (!selected) {
+        alert("No programme selected.");
+        return;
+    }
+
+    if (!supabaseClient) {
+        alert("Supabase is not connected.");
+        return;
+    }
+
+    const preservedDate = new Date(currentDate);
+    const preservedView = activeCalendarView;
+    const preservedVenue = currentVenue;
+
+    const selectedName = valueOf("editProgramme");
+    const isCustom = selectedName === "CUSTOM";
+
+    const programmeName = isCustom
+        ? valueOf("editCustomProgramme").trim()
+        : selectedName;
+
+    const startDate = valueOf("editStartDate");
+    const time = getEditTime();
+
+    if (!programmeName) {
+        alert("Please select a programme.");
+        return;
+    }
+
+    if (
+        !startDate ||
+        isNaN(parseInputDate(startDate).getTime())
+    ) {
+        alert("Please select a valid date.");
+        return;
+    }
+
+    if (!isValidHalfHourTime(time)) {
+        alert("Start time must end in :00 or :30.");
+        return;
+    }
+
+    const duration = isCustom
+        ? Number(valueOf("editDuration"))
+        : getProgrammeDuration(programmeName);
+
+    if (!Number.isFinite(duration) || duration <= 0) {
+        alert("Please enter a valid duration.");
+        return;
+    }
+
+    const saveButton = $("saveEditButton");
+
+    if (saveButton) {
+        saveButton.disabled = true;
+    }
+
+    try {
+        /*
+         * STANDALONE PROGRAMMES
+         * Copied programmes are standalone and must be updated
+         * as one database row. Do not pass them through the
+         * rolling-series builder.
+         */
+        if (Number(selected.totalSessions || 1) <= 1) {
+            const updatedEvent = {
+                ...selected,
+                programme: programmeName,
+                venue: valueOf("editVenue", currentVenue),
+                date: startDate,
+                time,
+                duration,
+                status: valueOf("editStatus"),
+                remarks: valueOf("editRemarks").trim(),
+                sessionNumber: null,
+                totalSessions: 1,
+                type: "Stand-alone"
+            };
+
+            const row = mapProgrammeToDatabase(updatedEvent);
+            const { id, ...changes } = row;
+
+            const { data, error } = await supabaseClient
+                .from("programmes")
+                .update(changes)
+                .eq("id", id)
+                .select("*");
+
+            if (error) throw error;
+
+            if (!data || data.length !== 1) {
+                throw new Error(
+                    "Programme update was not confirmed."
+                );
+            }
+
+            const savedEvent = convertDatabaseProgramme(data[0]);
+
+            const index = events.findIndex(
+                event => event.id === selected.id
+            );
+
+            if (index !== -1) {
+                events[index] = savedEvent;
+            }
+
+            currentDate = preservedDate;
+            activeCalendarView = preservedView;
+            currentVenue = preservedVenue;
+
+            saveCalendarDate();
+            closeEditModal();
+            updateVenueUI();
+
+            setValue("calendarView", activeCalendarView);
+            renderCurrentScreen();
+
+            return;
+        }
+
+        /*
+         * ROLLING PROGRAMMES
+         * Keep the existing series together. The selected session
+         * and later sessions move by the same date difference.
+         */
+        const oldSeriesId = selected.seriesId;
+
+        const existing = events
+            .filter(event => event.seriesId === oldSeriesId)
+            .sort(
+                (a, b) => dateTimeValue(a) - dateTimeValue(b)
+            );
+
+        const selectedSessionNumber =
+            Number(selected.sessionNumber || 1);
+
+        const dateDifference = Math.round(
+            (
+                parseInputDate(startDate).getTime() -
+                parseInputDate(selected.date).getTime()
+            ) / 86400000
+        );
+
+        const replacement = existing.map(event => {
+            const updated = {
+                ...event,
+                programme: programmeName,
+                venue: valueOf("editVenue", currentVenue),
+                time,
+                duration,
+                status: valueOf("editStatus"),
+                remarks: valueOf("editRemarks").trim()
+            };
+
+            if (
+                Number(event.sessionNumber || 1) >=
+                selectedSessionNumber
+            ) {
+                updated.date = formatInputDate(
+                    addDays(
+                        parseInputDate(event.date),
+                        dateDifference
+                    )
+                );
+            }
+
+            return updated;
+        });
+
+        const updates = replacement.map((event, index) => ({
+            ...event,
+            id: existing[index].id
+        }));
+
+        // Save each existing rolling session without changing its ID.
+        for (const event of updates) {
+            const row = mapProgrammeToDatabase(event);
+            const { id, ...changes } = row;
+
+            const { data, error } = await supabaseClient
+                .from("programmes")
+                .update(changes)
+                .eq("id", id)
+                .select("id");
+
+            if (error) throw error;
+
+            if (!data || data.length !== 1) {
+                throw new Error(
+                    "Programme update was not confirmed."
+                );
+            }
+        }
+
+        const reloaded = await refreshProgrammesFromSupabase();
+
+        if (!reloaded) {
+            throw new Error(
+                "Unable to reload the saved programme."
+            );
+        }
+
+        currentDate = preservedDate;
+        activeCalendarView = preservedView;
+        currentVenue = preservedVenue;
+
+        saveCalendarDate();
+        closeEditModal();
+        updateVenueUI();
+
+        setValue("calendarView", activeCalendarView);
+        renderCurrentScreen();
+
+    } catch (error) {
+        console.error("Programme edit failed:", error);
+
+        await refreshProgrammesFromSupabase();
+
+        alert(
+            "Unable to update programme: " + error.message
+        );
+
+    } finally {
+        if (saveButton) {
+            saveButton.disabled = false;
+        }
+    }
 }
 
-if (!supabaseClient) {
-alert("Supabase is not connected.");
-return;
-}
-
-const preservedDate = new Date(currentDate);
-const preservedView = activeCalendarView;
-const preservedVenue = currentVenue;
-
-const selectedName = valueOf("editProgramme");
-
-const isCustom =
-selectedName === "CUSTOM";
-
-const programmeName = isCustom
-? valueOf("editCustomProgramme").trim()
-: selectedName;
-
-const startDate = valueOf("editStartDate");
-const time = getEditTime();
-
-if (!programmeName) {
-alert("Please select a programme.");
-return;
-}
-
-if (
-!startDate ||
-isNaN(parseInputDate(startDate).getTime())
-) {
-alert("Please select a valid date.");
-return;
-}
-
-if (!isValidHalfHourTime(time)) {
-alert("Start time must end in :00 or :30.");
-return;
-}
-
-const duration = isCustom
-? Number(valueOf("editDuration"))
-: getProgrammeDuration(programmeName);
-
-if (
-!Number.isFinite(duration) ||
-duration <= 0
-) {
-alert("Please enter a valid duration.");
-return;
-}
-
-// Stand-alone programmes (including copied programmes)
-// must be edited individually.
-// Rolling programmes continue through the existing series logic.
-
-if (Number(selected.totalSessions || 1) <= 1) {
-
-const updatedEvent = {
-...selected,
-programme: programmeName,
-venue: valueOf("editVenue", currentVenue),
-date: startDate,
-time,
-duration,
-status: valueOf("editStatus"),
-remarks: valueOf("editRemarks").trim(),
-sessionNumber: null,
-totalSessions: 1,
-type: "Stand-alone"
-};
-
-const saveButton = $("saveEditButton");
-
-if (saveButton) {
-saveButton.disabled = true;
-}
-
-try {
-const row = mapProgrammeToDatabase(updatedEvent);
-const { id, ...changes } = row;
-
-const { data, error } = await supabaseClient
-.from("programmes")
-.update(changes)
-.eq("id", id)
-.select("*");
-
-if (error) throw error;
-
-if (!data || data.length !== 1) {
-throw new Error(
-"Programme update was not confirmed."
-);
-}
-
-const savedEvent = convertDatabaseProgramme(data[0]);
-
-const index = events.findIndex(
-event => event.id === selected.id
-);
-
-if (index !== -1) {
-events[index] = savedEvent;
-}
-
-currentDate = preservedDate;
-activeCalendarView = preservedView;
-currentVenue = preservedVenue;
-
-saveCalendarDate();
-
-closeEditModal();
-updateVenueUI();
-
-setValue("calendarView", activeCalendarView);
-
-renderCurrentScreen();
-
-} catch (error) {
-console.error("Standalone programme edit failed:", error);
-
-await refreshProgrammesFromSupabase();
-
-alert(
-"Unable to update programme: " + error.message
-);
-
-} finally {
-if (saveButton) {
-saveButton.disabled = false;
-}
-}
-
-return;
-}
-
-// Existing rolling programme editing logic starts here.
-const oldSeriesId = selected.seriesId;
-
-const existing = events
-.filter(
-event => event.seriesId === oldSeriesId
-)
-.sort(
-(a, b) => dateTimeValue(a) - dateTimeValue(b)
-);
-  
 /* =========================================================
 29. DELETE PROGRAMME
 ========================================================= */
@@ -827,4 +904,3 @@ closeEventModal();
 
 renderCurrentScreen();
 }
-
