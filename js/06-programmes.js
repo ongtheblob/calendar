@@ -653,6 +653,92 @@ alert("Please enter a valid duration.");
 return;
 }
 
+// Stand-alone programmes (including copied programmes)
+// must be edited individually.
+// Rolling programmes continue through the existing series logic.
+
+if (Number(selected.totalSessions || 1) <= 1) {
+
+const updatedEvent = {
+...selected,
+programme: programmeName,
+venue: valueOf("editVenue", currentVenue),
+date: startDate,
+time,
+duration,
+status: valueOf("editStatus"),
+remarks: valueOf("editRemarks").trim(),
+sessionNumber: null,
+totalSessions: 1,
+type: "Stand-alone"
+};
+
+const saveButton = $("saveEditButton");
+
+if (saveButton) {
+saveButton.disabled = true;
+}
+
+try {
+const row = mapProgrammeToDatabase(updatedEvent);
+const { id, ...changes } = row;
+
+const { data, error } = await supabaseClient
+.from("programmes")
+.update(changes)
+.eq("id", id)
+.select("*");
+
+if (error) throw error;
+
+if (!data || data.length !== 1) {
+throw new Error(
+"Programme update was not confirmed."
+);
+}
+
+const savedEvent = convertDatabaseProgramme(data[0]);
+
+const index = events.findIndex(
+event => event.id === selected.id
+);
+
+if (index !== -1) {
+events[index] = savedEvent;
+}
+
+currentDate = preservedDate;
+activeCalendarView = preservedView;
+currentVenue = preservedVenue;
+
+saveCalendarDate();
+
+closeEditModal();
+updateVenueUI();
+
+setValue("calendarView", activeCalendarView);
+
+renderCurrentScreen();
+
+} catch (error) {
+console.error("Standalone programme edit failed:", error);
+
+await refreshProgrammesFromSupabase();
+
+alert(
+"Unable to update programme: " + error.message
+);
+
+} finally {
+if (saveButton) {
+saveButton.disabled = false;
+}
+}
+
+return;
+}
+
+// Existing rolling programme editing logic starts here.
 const oldSeriesId = selected.seriesId;
 
 const existing = events
@@ -662,181 +748,7 @@ event => event.seriesId === oldSeriesId
 .sort(
 (a, b) => dateTimeValue(a) - dateTimeValue(b)
 );
-
-const selectedSessionNumber =
-    Number(selected.sessionNumber || 1);
-
-const dateDifference =
-    Math.round(
-        (parseInputDate(startDate).getTime() -
-         parseInputDate(selected.date).getTime()) /
-        86400000
-    );
-
-const replacement = existing.map(event => {
-    const updated = { ...event };
-
-    if (
-        Number(event.sessionNumber || 1) >=
-        selectedSessionNumber
-    ) {
-        updated.date = formatInputDate(
-            addDays(
-                parseInputDate(event.date),
-                dateDifference
-            )
-        );
-    }
-
-    return updated;
-});
-
-const existingByWeek = new Map();
-
-existing.forEach(event => {
-const week = event.sessionNumber ?? 1;
-
-existingByWeek.set(week, event);
-});
-
-const updates = [];
-const inserts = [];
-const retainedIds = new Set();
-
-replacement.forEach(event => {
-const week = event.sessionNumber ?? 1;
-const old = existingByWeek.get(week);
-
-if (old) {
-  event.id = old.id;
-
-  retainedIds.add(old.id);
-  updates.push(event);
-} else {
-  inserts.push(event);
-}
-});
-
-const obsolete = existing.filter(
-event => !retainedIds.has(event.id)
-);
-
-const saveButton = $("saveEditButton");
-
-if (saveButton) {
-saveButton.disabled = true;
-}
-
-try {
-// Update existing sessions.
-for (const event of updates) {
-const row = mapProgrammeToDatabase(event);
-
-  const { id, ...changes } = row;
-
-  const { data, error } = await supabaseClient
-    .from("programmes")
-    .update(changes)
-    .eq("id", id)
-    .select("id");
-
-  if (error) throw error;
-
-  if (!data || data.length !== 1) {
-    throw new Error(
-      "Programme update was not confirmed."
-    );
-  }
-}
-
-// Insert new sessions.
-if (inserts.length > 0) {
-  const { data, error } = await supabaseClient
-    .from("programmes")
-    .insert(
-      inserts.map(mapProgrammeToDatabase)
-    )
-    .select("id");
-
-  if (error) throw error;
-
-  if (
-    !data ||
-    data.length !== inserts.length
-  ) {
-    throw new Error(
-      "New sessions were not fully confirmed."
-    );
-  }
-}
-
-// Remove obsolete sessions.
-if (obsolete.length > 0) {
-  const ids = obsolete.map(event => event.id);
-
-  const { data, error } = await supabaseClient
-    .from("programmes")
-    .delete()
-    .in("id", ids)
-    .select("id");
-
-  if (error) throw error;
-
-  if (
-    !data ||
-    data.length !== ids.length
-  ) {
-    throw new Error(
-      "Old sessions were not fully removed."
-    );
-  }
-}
-
-const reloaded =
-  await refreshProgrammesFromSupabase();
-
-if (!reloaded) {
-  throw new Error(
-    "Unable to reload the saved programme."
-  );
-}
-
-// Preserve calendar position.
-currentDate = preservedDate;
-activeCalendarView = preservedView;
-currentVenue = preservedVenue;
-
-saveCalendarDate();
-
-closeEditModal();
-
-updateVenueUI();
-
-setValue(
-  "calendarView",
-  activeCalendarView
-);
-
-renderCurrentScreen();
-
-} catch (error) {
-console.error("Programme edit failed:", error);
-
-await refreshProgrammesFromSupabase();
-
-alert(
-  "Unable to complete programme edit: " +
-  error.message +
-  "\nSome changes may have been saved. " +
-  "Please review the series."
-);
-} finally {
-if (saveButton) {
-saveButton.disabled = false;
-}
-}
-}
-
+  
 /* =========================================================
 29. DELETE PROGRAMME
 ========================================================= */
