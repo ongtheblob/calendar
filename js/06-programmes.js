@@ -485,6 +485,26 @@ getSessionLabel(event)
 setText("modalStatus", event.status || "");
 setText("modalRemarks", event.remarks || "—");
 
+const modalActions = document.querySelector(
+    "#eventModal .modal-actions"
+);
+
+if (modalActions && !$("copyDayProgrammesButton")) {
+    const copyButton = document.createElement("button");
+
+    copyButton.type = "button";
+    copyButton.id = "copyDayProgrammesButton";
+    copyButton.className = "btn btn-secondary";
+    copyButton.textContent = "Copy Day's Programmes";
+
+    copyButton.addEventListener("click", copyDayProgrammes);
+
+    modalActions.insertBefore(
+        copyButton,
+        modalActions.querySelector("#closeButton")
+    );
+}
+  
 $("eventModal")?.classList.add("visible");
 }
 
