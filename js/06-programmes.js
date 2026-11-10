@@ -258,6 +258,149 @@ addButton.disabled = false;
 }
 }
 
+
+/* =========================================================
+COPY PROGRAMMES TO ANOTHER DAY
+- Copies standalone programmes only
+- Never changes existing rolling programme sessions
+- Adds alongside existing destination programmes
+========================================================= */
+
+async function copyDayProgrammes() {
+const selected = events.find(
+event => event.id === selectedEventId
+);
+
+if (!selected) {
+alert("Please select a programme first.");
+return;
+}
+
+if (!supabaseClient) {
+alert("Supabase is not connected.");
+return;
+}
+
+const sourceDate = selected.date;
+const venue = selected.venue;
+
+// Only copy standalone programmes.
+// Rolling programme sessions are deliberately excluded.
+const sourceProgrammes = events.filter(event =>
+event.date === sourceDate &&
+event.venue === venue &&
+Number(event.totalSessions || 1) <= 1 &&
+!event.sessionNumber
+);
+
+if (sourceProgrammes.length === 0) {
+alert(
+"There are no standalone programmes to copy. " +
+"Rolling programme sessions are not copied."
+);
+return;
+}
+
+const destinationDate = prompt(
+"Copy programmes from " + sourceDate +
+"\n\nEnter destination date (YYYY-MM-DD):"
+);
+
+if (!destinationDate) return;
+
+if (
+!/^\d{4}-\d{2}-\d{2}$/.test(destinationDate) ||
+isNaN(parseInputDate(destinationDate).getTime()) ||
+formatInputDate(parseInputDate(destinationDate)) !== destinationDate
+) {
+alert("Please enter a valid date in YYYY-MM-DD format.");
+return;
+}
+
+if (destinationDate === sourceDate) {
+alert("Please choose a different destination date.");
+return;
+}
+
+const confirmed = confirm(
+"Copy " + sourceProgrammes.length +
+" standalone programme(s)?\n\n" +
+"From: " + sourceDate +
+"\nTo: " + destinationDate +
+"\nVenue: " + venue +
+"\n\nExisting programmes and rolling sessions will not be replaced."
+);
+
+if (!confirmed) return;
+
+const copiedEvents = sourceProgrammes.map(event => ({
+id: makeId("event"),
+seriesId: makeId("series"),
+programme: event.programme,
+venue: event.venue,
+date: destinationDate,
+time: event.time,
+duration: event.duration,
+pax: event.pax,
+status: event.status,
+remarks: event.remarks,
+sessionNumber: null,
+totalSessions: 1,
+type: "Stand-alone"
+}));
+
+const copyButton = $("copyDayProgrammesButton");
+
+if (copyButton) {
+copyButton.disabled = true;
+}
+
+try {
+const { data, error } = await supabaseClient
+.from("programmes")
+.insert(
+copiedEvents.map(mapProgrammeToDatabase)
+)
+.select();
+
+if (error) throw error;
+
+if (!data || data.length !== copiedEvents.length) {
+throw new Error(
+"Not all copied programmes were confirmed."
+);
+}
+
+events.push(
+...data.map(convertDatabaseProgramme)
+);
+
+closeEventModal();
+
+renderCurrentScreen();
+
+alert(
+data.length +
+" programme(s) copied successfully to " +
+destinationDate + "."
+);
+
+} catch (error) {
+console.error("Copy programmes failed:", error);
+
+await refreshProgrammesFromSupabase();
+
+alert(
+"Unable to copy programmes: " + error.message
+);
+
+} finally {
+if (copyButton) {
+copyButton.disabled = false;
+}
+}
+}
+
 /* =========================================================
 25. RESET PROGRAMME FORM
 KEEP SELECTED START DATE
