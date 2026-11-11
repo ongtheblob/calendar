@@ -112,7 +112,12 @@ const row = [
   formatMonth(first.date),
   "", // Remarks always blank.
   first.programme || "",
-  formatShortDate(first.date),
+  parseInputDate(first.date).toLocaleDateString("en-SG", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric"
+}),
   formatTime(first.time),
   first.pax ?? "",
   first.status || "",
