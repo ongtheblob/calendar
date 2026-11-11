@@ -19,7 +19,7 @@ const CSV_HEADERS = [
     "W5",
     "W6",
     "W7",
-    "W8"
+    "W8",
     "W14"
 ];
 
@@ -91,6 +91,7 @@ ROLLING PROGRAMME DATES:
 20 Jan
 27 Jan
 3 Feb
+
 ========================================================= */
 
 function formatRollingDate(value) {
@@ -144,6 +145,8 @@ COLUMN F: Time
 COLUMN G: Pax
 COLUMN H: Status
 COLUMN I-P: W1-W8
+COLUMN Q: W14
+
 ========================================================= */
 
 function buildVenueExportRows(venue) {
@@ -152,7 +155,7 @@ function buildVenueExportRows(venue) {
     getVenueSeries(venue).forEach(series => {
         if (!series.length) return;
 
-        // First session of the programme.
+        // Get the first session of the programme.
         const first = series[0];
 
         // Export only when Week 1 starts
@@ -191,28 +194,30 @@ function buildVenueExportRows(venue) {
             "",                       // N: W6
             "",                       // O: W7
             "",                       // P: W8
-            ""                        // W14
+            ""                        // Q: W14
         ];
 
         // Check whether this is a rolling programme.
-const rolling = Number(first.totalSessions) > 1;
+        const rolling =
+            Number(first.totalSessions) > 1;
 
-if (rolling) {
-    series.forEach(event => {
-        const week = Number(event.sessionNumber);
+        if (rolling) {
+            series.forEach(event => {
+                const week = Number(event.sessionNumber);
 
-        // Normal rolling sessions: W1-W8
-        if (week >= 1 && week <= 8) {
-            row[8 + week - 1] =
-                formatRollingDate(event.date);
+                // Normal rolling programme sessions: W1-W8.
+                if (week >= 1 && week <= 8) {
+                    row[8 + week - 1] =
+                        formatRollingDate(event.date);
+                }
+
+                // Special Week 14 session.
+                if (week === 14) {
+                    row[16] =
+                        formatRollingDate(event.date);
+                }
+            });
         }
-
-        // Special Week 14 session
-        if (week === 14) {
-            row[16] = formatRollingDate(event.date);
-        }
-    });
-}
 
         rows.push({
             date: first.date,
