@@ -95,23 +95,72 @@ series.sort(
 );
 }
 
+
 function buildVenueExportRows(venue) {
-const row = [
-    formatMonth(first.date),
-    "", // Remarks always blank.
-    first.programme || "",
-    "", // Blank column D
-    parseInputDate(first.date).toLocaleDateString("en-SG", {
-        weekday: "short",
-        day: "numeric",
-        month: "short",
-        year: "numeric"
-    }),
-    formatTime(first.time),
-    first.pax ?? "",
-    first.status || "",
-    "", "", "", "", "", "", "", ""
-];
+    const rows = [];
+
+    getVenueSeries(venue).forEach(series => {
+        if (!series.length) return;
+
+        // Get the first programme session.
+        const first = series[0];
+
+        // Export only when Week 1 starts
+        // in the selected month.
+        if (!isDateInExportMonth(first.date)) {
+            return;
+        }
+
+        const row = [
+            formatMonth(first.date),
+            "", // Remarks always blank.
+            first.programme || "",
+            "", // Blank column D.
+            parseInputDate(first.date).toLocaleDateString("en-SG", {
+                weekday: "short",
+                day: "numeric",
+                month: "short",
+                year: "numeric"
+            }),
+            formatTime(first.time),
+            first.pax ?? "",
+            first.status || "",
+            "", "", "", "", "", "", "", ""
+        ];
+
+        // Rolling programme dates go into W1-W8.
+        // Their format is DD MMM, e.g. 13 Jan.
+        const rolling = Number(first.totalSessions) > 1;
+
+        if (rolling) {
+            series.forEach(event => {
+                const week = Number(event.sessionNumber);
+
+                if (week >= 1 && week <= 8) {
+                    row[8 + week - 1] =
+                        formatRollingDate(event.date);
+                }
+            });
+        }
+
+        rows.push({
+            date: first.date,
+            time: first.time,
+            row
+        });
+    });
+
+    // Sort by date and time.
+    rows.sort((a, b) => {
+        const firstDateTime = a.date + "T" + a.time;
+        const secondDateTime = b.date + "T" + b.time;
+
+        return firstDateTime.localeCompare(secondDateTime);
+    });
+
+    return rows.map(item => item.row);
+}
+
 
 
 function formatRollingDate(value) {
