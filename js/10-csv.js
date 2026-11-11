@@ -1,3 +1,4 @@
+
 /* =========================================================
 36. CSV EXPORT
 ========================================================= */
@@ -21,147 +22,75 @@ const CSV_HEADERS = [
     "W8"
 ];
 
+/* =========================================================
+CSV HELPER FUNCTIONS
+========================================================= */
+
 function csvEscape(value) {
-return (
-'"' +
-String(value ?? "").replace(/"/g, '""') +
-'"'
-);
+    return (
+        '"' +
+        String(value ?? "").replace(/"/g, '""') +
+        '"'
+    );
 }
 
 function downloadCSV(csv, filename) {
-const blob = new Blob(
-["\uFEFF", csv],
-{
-type: "text/csv;charset=utf-8;"
-}
-);
+    const blob = new Blob(
+        ["\uFEFF", csv],
+        {
+            type: "text/csv;charset=utf-8;"
+        }
+    );
 
-const url = URL.createObjectURL(blob);
+    const url = URL.createObjectURL(blob);
 
-const link = document.createElement("a");
+    const link = document.createElement("a");
 
-link.href = url;
-link.download = filename;
+    link.href = url;
+    link.download = filename;
 
-document.body.appendChild(link);
+    document.body.appendChild(link);
 
-link.click();
-link.remove();
+    link.click();
+    link.remove();
 
-setTimeout(() => {
-URL.revokeObjectURL(url);
-}, 1000);
-}
-
-function getExportMonthDate() {
-return showingSummary
-? new Date(summaryDate)
-: new Date(currentDate);
-}
-
-function isDateInExportMonth(dateString) {
-const date = parseInputDate(dateString);
-const selected = getExportMonthDate();
-
-return (
-date.getFullYear() === selected.getFullYear() &&
-date.getMonth() === selected.getMonth()
-);
+    setTimeout(() => {
+        URL.revokeObjectURL(url);
+    }, 1000);
 }
 
 /* =========================================================
-37. GROUP ROLLING PROGRAMMES
+EXPORT MONTH HELPERS
 ========================================================= */
 
-function getVenueSeries(venue) {
-const groups = new Map();
-
-events
-.filter(event => event.venue === venue)
-.forEach(event => {
-const key = event.seriesId || event.id;
-
-  if (!groups.has(key)) {
-    groups.set(key, []);
-  }
-
-  groups.get(key).push(event);
-});
-return Array.from(groups.values()).map(series =>
-series.sort(
-(a, b) => dateTimeValue(a) - dateTimeValue(b)
-)
-);
+function getExportMonthDate() {
+    return showingSummary
+        ? new Date(summaryDate)
+        : new Date(currentDate);
 }
 
+function isDateInExportMonth(dateString) {
+    const date = parseInputDate(dateString);
+    const selected = getExportMonthDate();
 
-function buildVenueExportRows(venue) {
-    const rows = [];
-
-    getVenueSeries(venue).forEach(series => {
-        if (!series.length) return;
-
-        // Get the first programme session.
-        const first = series[0];
-
-        // Export only when Week 1 starts
-        // in the selected month.
-        if (!isDateInExportMonth(first.date)) {
-            return;
-        }
-
-        const row = [
-            formatMonth(first.date),
-            "", // Remarks always blank.
-            first.programme || "",
-            "", // Blank column D.
-            parseInputDate(first.date).toLocaleDateString("en-SG", {
-                weekday: "short",
-                day: "numeric",
-                month: "short",
-                year: "numeric"
-            }),
-            formatTime(first.time),
-            first.pax ?? "",
-            first.status || "",
-            "", "", "", "", "", "", "", ""
-        ];
-
-        // Rolling programme dates go into W1-W8.
-        // Their format is DD MMM, e.g. 13 Jan.
-        const rolling = Number(first.totalSessions) > 1;
-
-        if (rolling) {
-            series.forEach(event => {
-                const week = Number(event.sessionNumber);
-
-                if (week >= 1 && week <= 8) {
-                    row[8 + week - 1] =
-                        formatRollingDate(event.date);
-                }
-            });
-        }
-
-        rows.push({
-            date: first.date,
-            time: first.time,
-            row
-        });
-    });
-
-    // Sort by date and time.
-    rows.sort((a, b) => {
-        const firstDateTime = a.date + "T" + a.time;
-        const secondDateTime = b.date + "T" + b.time;
-
-        return firstDateTime.localeCompare(secondDateTime);
-    });
-
-    return rows.map(item => item.row);
+    return (
+        date.getFullYear() === selected.getFullYear() &&
+        date.getMonth() === selected.getMonth()
+    );
 }
 
+/* =========================================================
+DATE FORMATTING
 
+DATE / WEEK 1:
+Tue, 13 Jan 2026
+
+ROLLING PROGRAMME DATES:
+13 Jan
+20 Jan
+27 Jan
+3 Feb
+========================================================= */
 
 function formatRollingDate(value) {
     const date = parseInputDate(value);
@@ -176,65 +105,129 @@ function formatRollingDate(value) {
     });
 }
 
+/* =========================================================
+37. GROUP ROLLING PROGRAMMES
+========================================================= */
 
-getVenueSeries(venue).forEach(series => {
-if (!series.length) return;
+function getVenueSeries(venue) {
+    const groups = new Map();
 
-const first = series[0];
+    events
+        .filter(event => event.venue === venue)
+        .forEach(event => {
+            const key = event.seriesId || event.id;
 
-// Export only when Week 1 starts
-// in the selected month.
-if (!isDateInExportMonth(first.date)) {
-  return;
-}
+            if (!groups.has(key)) {
+                groups.set(key, []);
+            }
 
-const row = [
-  formatMonth(first.date),
-  "", // Remarks always blank.
-  first.programme || "",
-  parseInputDate(first.date).toLocaleDateString("en-SG", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    year: "numeric"
-}),
-  formatTime(first.time),
-  first.pax ?? "",
-  first.status || "",
-  "", "", "", "", "", "", "", ""
-];
+            groups.get(key).push(event);
+        });
 
-const rolling =
-  Number(first.totalSessions) > 1;
-
-if (rolling) {
-  series.forEach(event => {
-    const week = Number(
-      event.sessionNumber
+    return Array.from(groups.values()).map(series =>
+        series.sort(
+            (a, b) => dateTimeValue(a) - dateTimeValue(b)
+        )
     );
-
-    if (week >= 1 && week <= 8) {
-   row[8 + week - 1] = 
-     formatRollingDate(event.date);
-    }
-  });
 }
 
-rows.push({
-  date: first.date,
-  time: first.time,
-  row
-});
-});
+/* =========================================================
+BUILD VENUE EXPORT ROWS
 
-rows.sort((a, b) => {
-const first = a.date + "T" + a.time;
-const second = b.date + "T" + b.time;
+COLUMN A: Month
+COLUMN B: Remarks
+COLUMN C: Programme Name
+COLUMN D: Blank
+COLUMN E: Date / Week 1
+COLUMN F: Time
+COLUMN G: Pax
+COLUMN H: Status
+COLUMN I-P: W1-W8
+========================================================= */
 
-return first.localeCompare(second);
-});
+function buildVenueExportRows(venue) {
+    const rows = [];
 
-return rows.map(item => item.row);
+    getVenueSeries(venue).forEach(series => {
+        if (!series.length) return;
+
+        // First session of the programme.
+        const first = series[0];
+
+        // Export only when Week 1 starts
+        // in the selected month.
+        if (!isDateInExportMonth(first.date)) {
+            return;
+        }
+
+        // Build CSV row.
+        const row = [
+            formatMonth(first.date),  // A: Month
+            "",                       // B: Remarks
+            first.programme || "",    // C: Programme Name
+            "",                       // D: Blank column
+
+            // E: Date / Week 1
+            parseInputDate(first.date).toLocaleDateString(
+                "en-SG",
+                {
+                    weekday: "short",
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric"
+                }
+            ),
+
+            formatTime(first.time),   // F: Time
+            first.pax ?? "",          // G: Pax
+            first.status || "",       // H: Status
+
+            "",                       // I: W1
+            "",                       // J: W2
+            "",                       // K: W3
+            "",                       // L: W4
+            "",                       // M: W5
+            "",                       // N: W6
+            "",                       // O: W7
+            ""                        // P: W8
+        ];
+
+        // Check whether this is a rolling programme.
+        const rolling =
+            Number(first.totalSessions) > 1;
+
+        if (rolling) {
+            series.forEach(event => {
+                const week = Number(event.sessionNumber);
+
+                if (week >= 1 && week <= 8) {
+                    // I-P: Rolling programme dates.
+                    // Format: 13 Jan, 20 Jan, etc.
+                    row[8 + week - 1] =
+                        formatRollingDate(event.date);
+                }
+            });
+        }
+
+        rows.push({
+            date: first.date,
+            time: first.time,
+            row
+        });
+    });
+
+    // Sort programmes by date and time.
+    rows.sort((a, b) => {
+        const firstDateTime =
+            a.date + "T" + a.time;
+
+        const secondDateTime =
+            b.date + "T" + b.time;
+
+        return firstDateTime.localeCompare(secondDateTime);
+    });
+
+    return rows.map(item => item.row);
 }
 
 /* =========================================================
@@ -242,95 +235,115 @@ return rows.map(item => item.row);
 ========================================================= */
 
 function makeVenueCSV(venue) {
-const rows = buildVenueExportRows(venue);
+    const rows = buildVenueExportRows(venue);
 
-if (!rows.length) return null;
+    if (!rows.length) {
+        return null;
+    }
 
-return [
-CSV_HEADERS,
-...rows
-]
-.map(row => row.map(csvEscape).join(","))
-.join("\r\n");
+    return [
+        CSV_HEADERS,
+        ...rows
+    ]
+        .map(row =>
+            row.map(csvEscape).join(",")
+        )
+        .join("\r\n");
 }
+
+/* =========================================================
+GET EXPORT FILENAME
+========================================================= */
 
 function getExportFilename(venue) {
-const date = getExportMonthDate();
+    const date = getExportMonthDate();
 
-const year = date.getFullYear();
+    const year = date.getFullYear();
 
-const month = String(
-date.getMonth() + 1
-).padStart(2, "0");
+    const month = String(
+        date.getMonth() + 1
+    ).padStart(2, "0");
 
-return (
-venue +
-"_" +
-year +
-"-" +
-month +
-"_programme_schedule.csv"
-);
+    return (
+        venue +
+        "_" +
+        year +
+        "-" +
+        month +
+        "_programme_schedule.csv"
+    );
 }
+
+/* =========================================================
+EXPORT CURRENT VENUE
+========================================================= */
 
 function exportVenueMonthCSV(venue) {
-if (!programmesLoaded) {
-alert("Programme data has not loaded yet.");
-return false;
+    if (!programmesLoaded) {
+        alert("Programme data has not loaded yet.");
+        return false;
+    }
+
+    const csv = makeVenueCSV(venue);
+
+    if (!csv) {
+        alert(
+            "No " +
+            venue +
+            " programmes begin in the selected month."
+        );
+
+        return false;
+    }
+
+    downloadCSV(
+        csv,
+        getExportFilename(venue)
+    );
+
+    return true;
 }
 
-const csv = makeVenueCSV(venue);
-
-if (!csv) {
-alert(
-"No " +
-venue +
-" programmes begin in the selected month."
-);
-
-return false;
-}
-
-downloadCSV(
-csv,
-getExportFilename(venue)
-);
-
-return true;
-}
+/* =========================================================
+EXPORT CURRENT MONTH
+========================================================= */
 
 function exportCurrentMonthCSV() {
-exportVenueMonthCSV(currentVenue);
+    exportVenueMonthCSV(currentVenue);
 }
+
+/* =========================================================
+EXPORT BOTH VENUES
+========================================================= */
 
 function exportBothVenuesCSV() {
-if (!programmesLoaded) {
-alert("Programme data has not loaded yet.");
-return;
-}
+    if (!programmesLoaded) {
+        alert("Programme data has not loaded yet.");
+        return;
+    }
 
-const hbb = makeVenueCSV("HBB");
-const oth = makeVenueCSV("OTH");
+    const hbb = makeVenueCSV("HBB");
+    const oth = makeVenueCSV("OTH");
 
-if (!hbb && !oth) {
-alert(
-"No programmes begin in the selected month."
-);
+    if (!hbb && !oth) {
+        alert(
+            "No programmes begin in the selected month."
+        );
 
-return;
-}
+        return;
+    }
 
-if (hbb) {
-downloadCSV(
-hbb,
-getExportFilename("HBB")
-);
-}
+    if (hbb) {
+        downloadCSV(
+            hbb,
+            getExportFilename("HBB")
+        );
+    }
 
-if (oth) {
-downloadCSV(
-oth,
-getExportFilename("OTH")
-);
-}
+    if (oth) {
+        downloadCSV(
+            oth,
+            getExportFilename("OTH")
+        );
+    }
 }
