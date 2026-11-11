@@ -3,21 +3,22 @@
 ========================================================= */
 
 const CSV_HEADERS = [
-"Month",
-"Remarks",
-"Programme Name",
-"Date/ Week 1",
-"Time",
-"Pax",
-"Status",
-"W1",
-"W2",
-"W3",
-"W4",
-"W5",
-"W6",
-"W7",
-"W8"
+    "Month",
+    "Remarks",
+    "Programme Name",
+    "", // Blank column D
+    "Date/ Week 1",
+    "Time",
+    "Pax",
+    "Status",
+    "W1",
+    "W2",
+    "W3",
+    "W4",
+    "W5",
+    "W6",
+    "W7",
+    "W8"
 ];
 
 function csvEscape(value) {
@@ -95,7 +96,37 @@ series.sort(
 }
 
 function buildVenueExportRows(venue) {
-const rows = [];
+const row = [
+    formatMonth(first.date),
+    "", // Remarks always blank.
+    first.programme || "",
+    "", // Blank column D
+    parseInputDate(first.date).toLocaleDateString("en-SG", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        year: "numeric"
+    }),
+    formatTime(first.time),
+    first.pax ?? "",
+    first.status || "",
+    "", "", "", "", "", "", "", ""
+];
+
+
+function formatRollingDate(value) {
+    const date = parseInputDate(value);
+
+    if (isNaN(date.getTime())) {
+        return "";
+    }
+
+    return date.toLocaleDateString("en-SG", {
+        day: "numeric",
+        month: "short"
+    });
+}
+
 
 getVenueSeries(venue).forEach(series => {
 if (!series.length) return;
@@ -134,8 +165,8 @@ if (rolling) {
     );
 
     if (week >= 1 && week <= 8) {
-      row[7 + week - 1] =
-        formatShortDate(event.date);
+   row[8 + week - 1] = 
+     formatRollingDate(event.date);
     }
   });
 }
