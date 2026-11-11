@@ -20,6 +20,7 @@ const CSV_HEADERS = [
     "W6",
     "W7",
     "W8"
+    "W14"
 ];
 
 /* =========================================================
@@ -189,25 +190,29 @@ function buildVenueExportRows(venue) {
             "",                       // M: W5
             "",                       // N: W6
             "",                       // O: W7
-            ""                        // P: W8
+            "",                       // P: W8
+            ""                        // W14
         ];
 
         // Check whether this is a rolling programme.
-        const rolling =
-            Number(first.totalSessions) > 1;
+const rolling = Number(first.totalSessions) > 1;
 
-        if (rolling) {
-            series.forEach(event => {
-                const week = Number(event.sessionNumber);
+if (rolling) {
+    series.forEach(event => {
+        const week = Number(event.sessionNumber);
 
-                if (week >= 1 && week <= 8) {
-                    // I-P: Rolling programme dates.
-                    // Format: 13 Jan, 20 Jan, etc.
-                    row[8 + week - 1] =
-                        formatRollingDate(event.date);
-                }
-            });
+        // Normal rolling sessions: W1-W8
+        if (week >= 1 && week <= 8) {
+            row[8 + week - 1] =
+                formatRollingDate(event.date);
         }
+
+        // Special Week 14 session
+        if (week === 14) {
+            row[16] = formatRollingDate(event.date);
+        }
+    });
+}
 
         rows.push({
             date: first.date,
