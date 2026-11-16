@@ -524,7 +524,17 @@ function renderEagleView() {
                         (event.pax !== ""
                             ? " · " + event.pax + " pax"
                             : "");
-            
+
+                    // Display programme remarks in Eagle View.
+                        let remarks = null;
+                        
+                        if (event.remarks && event.remarks.trim()) {
+                            remarks = document.createElement("div");
+                        
+                            remarks.className = "eagle-event-remarks";
+                            remarks.textContent = event.remarks.trim();
+                        }
+                    
              if (subheader) {
                 eventCard.append(
                     time,
@@ -539,6 +549,11 @@ function renderEagleView() {
                     details
                 );
                     }
+
+            // Display remarks after the programme details.
+                if (remarks) {
+                    eventCard.appendChild(remarks);
+                }
 
                     eventCard.addEventListener("click", () => {
                         openEventModal(event);
