@@ -514,16 +514,14 @@ function renderEagleView() {
                 subheader.textContent = subheaderText;
                 }
 
-                    const details =
-                        document.createElement("div");
-
-                    details.className = "eagle-event-details";
-
-                    details.textContent =
-                        getSessionLabel(event) +
-                        (event.pax !== ""
-                            ? " · " + event.pax + " pax"
-                            : "");
+                const details = document.createElement("div");
+                
+                details.className = "eagle-event-details";
+                
+                details.textContent =
+                    Number(event.totalSessions || 1) > 1
+                        ? getSessionLabel(event)
+                        : "";
 
                     // Display programme remarks in Eagle View.
                         let remarks = null;
