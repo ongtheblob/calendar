@@ -175,7 +175,7 @@ return valueOf("editStartTime").slice(0, 5);
 }
 
 function isValidHalfHourTime(time) {
-return /^([01]\d|2[0-3]):(00|30)$/.test(time);
+    return /^([01]\d|2[0-3]):(00|30|45)$/.test(time);
 }
 
 function addMinutesToTime(time, minutes) {
