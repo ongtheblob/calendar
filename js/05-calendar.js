@@ -503,6 +503,17 @@ function renderEagleView() {
                     name.className = "eagle-event-name";
                     name.textContent = event.programme;
 
+                    const subheaderText = getProgrammeSubheader(event);
+
+                let subheader = null;
+
+                if (subheaderText) {
+                subheader = document.createElement("div");
+
+                subheader.className = "eagle-event-subheader";
+                subheader.textContent = subheaderText;
+                }
+
                     const details =
                         document.createElement("div");
 
@@ -513,12 +524,21 @@ function renderEagleView() {
                         (event.pax !== ""
                             ? " · " + event.pax + " pax"
                             : "");
-
-                    eventCard.append(
-                        time,
-                        name,
-                        details
-                    );
+            
+             if (subheader) {
+                eventCard.append(
+                    time,
+                    name,
+                    subheader,
+                    details
+                );
+               } else {
+                eventCard.append(
+                    time,
+                    name,
+                    details
+                );
+                    }
 
                     eventCard.addEventListener("click", () => {
                         openEventModal(event);
@@ -682,8 +702,57 @@ function renderEagleView() {
 
 
 /* =========================================================
+PROGRAMME SESSION SUBHEADERS
+DISPLAY ONLY - NOT SAVED TO DATABASE OR CSV
+========================================================= */
+
+function getProgrammeSubheader(event) {
+    const programme = String(event.programme || "").trim();
+    const week = Number(event.sessionNumber);
+
+    // CALM 1.0
+    if (
+        programme === "Function - Combat Age-Related Loss of Muscle (CALM) 1.0" &&
+        [1, 8].includes(week)
+    ) {
+        return "Assessment";
+    }
+
+    // Strength 1.0
+    if (programme === "Strength 1.0") {
+        if ([1, 8].includes(week)) {
+            return "Assessment";
+        }
+
+        if (week === 7) {
+            return "Gym Orientation";
+        }
+    }
+
+    // Perform 1.0
+    if (
+        programme === "Perform 1.0" &&
+        [1, 8].includes(week)
+    ) {
+        return "Assessment";
+    }
+
+    // CALM 2.0
+    if (
+        programme === "Function - Combat Age-Related Loss of Muscle (CALM) 2.0" &&
+        week === 6
+    ) {
+        return "Gym Orientation";
+    }
+
+    return "";
+}
+
+
+/* =========================================================
 20. PROGRAMME CARD
 ========================================================= */
+
 
 function createEventElement(event) {
     const element = document.createElement("div");
@@ -695,6 +764,8 @@ function createEventElement(event) {
         event.duration
     );
 
+    const subheader = getProgrammeSubheader(event);
+
     element.innerHTML = `
         <div class="event-time">
             ${escapeHtml(formatTime(event.time))}
@@ -705,6 +776,16 @@ function createEventElement(event) {
         <div class="event-name">
             ${escapeHtml(event.programme)}
         </div>
+
+        ${
+            subheader
+                ? `
+                    <div class="event-subheader">
+                        ${escapeHtml(subheader)}
+                    </div>
+                  `
+                : ""
+        }
 
         <div class="event-meta">
             ${escapeHtml(getSessionLabel(event))}
@@ -723,6 +804,7 @@ function createEventElement(event) {
 
     return element;
 }
+
 
 
 /* =========================================================
