@@ -2444,3 +2444,12 @@ textarea {
     margin-top: 3px;
     margin-bottom: 3px;
 }
+
+.eagle-event-remarks {
+    font-size: 12px;
+    color: #555;
+    margin-top: 5px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
