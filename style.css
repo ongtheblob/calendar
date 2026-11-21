@@ -2879,3 +2879,42 @@ textarea {
         padding: 10px;
     }
 }
+
+/* Lab Deployment: avoid a second month heading and keep PDD beside settings */
+.lab-deployment-controls .lab-month-title {
+  display: none; /* The main calendar toolbar already displays the month */
+}
+
+.lab-deployment-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.lab-pdd-settings {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+}
+
+.lab-pdd-date-label {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0;
+  white-space: normal;
+}
+
+#labDeploymentSaveStatus {
+  margin-left: 0; /* Do not push the PDD meeting label to the far edge */
+  flex: 0 0 auto;
+}
+
+@media (max-width: 750px) {
+  .lab-deployment-controls {
+    justify-content: flex-start;
+  }
+}
