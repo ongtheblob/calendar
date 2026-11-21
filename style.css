@@ -2724,3 +2724,142 @@ textarea {
 }
 
 
+/* =========================================================
+   LAB DEPLOYMENT — FINAL EAGLE VIEW ALIGNMENT FIX
+   All rows must share identical column sizing
+========================================================= */
+
+/* Main viewport */
+#labDeploymentGrid,
+.lab-deployment-grid {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+
+    box-sizing: border-box !important;
+}
+
+/* Calendar content */
+#labDeploymentGrid .lab-eagle-calendar,
+#labDeploymentGrid .eagle-calendar,
+#labDeploymentGrid .lab-eagle-week-block,
+#labDeploymentGrid .eagle-week-block {
+    display: block !important;
+
+    width: 100% !important;
+    min-width: 1200px !important;
+    max-width: none !important;
+
+    box-sizing: border-box !important;
+}
+
+/* Every header and row uses the SAME eight columns:
+   label + Monday + Tuesday + Wednesday + Thursday
+   + Friday + Saturday + Sunday */
+#labDeploymentGrid .lab-eagle-header,
+#labDeploymentGrid .lab-eagle-date-row,
+#labDeploymentGrid .lab-eagle-venue-row,
+#labDeploymentGrid .lab-eagle-remarks-row {
+    display: grid !important;
+
+    grid-template-columns:
+        110px
+        repeat(7, minmax(0, 1fr)) !important;
+
+    grid-auto-flow: row !important;
+
+    width: 100% !important;
+    min-width: 1200px !important;
+    max-width: none !important;
+
+    box-sizing: border-box !important;
+}
+
+/* Prevent inherited Eagle View styles from changing cells */
+#labDeploymentGrid .lab-eagle-header > *,
+#labDeploymentGrid .lab-eagle-date-row > *,
+#labDeploymentGrid .lab-eagle-venue-row > *,
+#labDeploymentGrid .lab-eagle-remarks-row > * {
+    grid-column: auto !important;
+    grid-row: auto !important;
+
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+
+    margin: 0 !important;
+
+    box-sizing: border-box !important;
+}
+
+/* Week block rows must not stretch independently */
+#labDeploymentGrid .lab-eagle-week-block {
+    overflow: hidden !important;
+    margin-bottom: 14px !important;
+}
+
+/* Keep label column consistent */
+#labDeploymentGrid .lab-eagle-row-label {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+}
+
+/* All seven day cells fill their matching grid track */
+#labDeploymentGrid .lab-eagle-date-cell,
+#labDeploymentGrid .lab-eagle-deployment-cell,
+#labDeploymentGrid .lab-eagle-remarks-cell {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+}
+
+/* Inputs stay inside their day cell */
+#labDeploymentGrid .lab-eagle-input,
+#labDeploymentGrid textarea {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+
+    box-sizing: border-box !important;
+}
+
+/* Header alignment */
+#labDeploymentGrid .lab-eagle-header > div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    text-align: center;
+}
+
+/* Date number alignment */
+#labDeploymentGrid .lab-eagle-date-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+/* Keep the row label vertically centred */
+#labDeploymentGrid .lab-eagle-row-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Smaller screens: keep the columns readable and scroll */
+@media (max-width: 1200px) {
+    #labDeploymentGrid .lab-eagle-header,
+    #labDeploymentGrid .lab-eagle-date-row,
+    #labDeploymentGrid .lab-eagle-venue-row,
+    #labDeploymentGrid .lab-eagle-remarks-row,
+    #labDeploymentGrid .lab-eagle-week-block {
+        min-width: 1200px !important;
+    }
+}
+
+
