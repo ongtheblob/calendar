@@ -771,6 +771,19 @@ function renderLabDeploymentOverview() {
                 cell.className =
                     "lab-table-entry";
 
+               // Connect OTH and HBB deployment
+                // entries to their manpower data.
+                if (
+                    rowKey === "OTH" ||
+                    rowKey === "HBB"
+                ) {
+                    cell.appendChild(
+                        renderLabManpowerSummary(
+                            rowKey,
+                            dateKey
+                        )
+                    );
+                   
                 const input =
                     labTextArea(
                         monthKey,
@@ -789,18 +802,6 @@ function renderLabDeploymentOverview() {
 
                 cell.appendChild(input);
 
-                // Connect OTH and HBB deployment
-                // entries to their manpower data.
-                if (
-                    rowKey === "OTH" ||
-                    rowKey === "HBB"
-                ) {
-                    cell.appendChild(
-                        renderLabManpowerSummary(
-                            rowKey,
-                            dateKey
-                        )
-                    );
 
                     const jump =
                         document.createElement("button");
