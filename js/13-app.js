@@ -64,3 +64,4 @@ startApplication,
 } else {
 startApplication();
 }
+
