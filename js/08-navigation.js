@@ -145,7 +145,10 @@ function showLabDeploymentView() {
 }
 
 function renderCurrentScreen() {
-    if (showingLabDeployment) {
+    if (
+        typeof showingLabDeployment !== "undefined" &&
+        showingLabDeployment
+    ) {
         renderLabDeploymentOverview();
     } else if (showingSummary) {
         renderProgrammeSummary();
