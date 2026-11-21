@@ -9,6 +9,8 @@ setupProgrammeForm();
 
 setupButtons();
 
+setupLabDeployment();
+
 // Restore last selected Add Programme date.
 initialiseStartDate();
 
@@ -44,7 +46,8 @@ await testSupabaseConnection();
 
 await Promise.all([
 refreshProgrammesFromSupabase(),
-loadManpowerFromSupabase()
+loadManpowerFromSupabase(),
+loadLabDeploymentMonth()
 ]);
 
 console.log(
