@@ -2454,3 +2454,68 @@ textarea {
     white-space: pre-wrap;
     overflow-wrap: anywhere;
 }
+
+
+/* =========================================================
+   LAB DEPLOYMENT OVERVIEW
+========================================================= */
+.lab-deployment-panel { padding: 16px; }
+.lab-deployment { color: #243247; }
+.lab-deployment-header {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; margin-bottom: 14px;
+}
+.lab-deployment-header h2 { margin: 0; font-size: 1.35rem; }
+.lab-deployment-subtitle { margin: 5px 0 0; color: #64748b; }
+.lab-deployment-controls { display: flex; gap: 8px; align-items: center; }
+.lab-pdd-control {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 10px;
+  padding: 12px; margin-bottom: 14px; border: 1px solid #d7e1ee;
+  border-radius: 10px; background: #f7faff;
+}
+.lab-pdd-control label { font-weight: 700; }
+.lab-pdd-control input { padding: 7px 9px; border: 1px solid #cbd5e1; border-radius: 6px; }
+.lab-pdd-control small { flex-basis: 100%; color: #64748b; }
+.lab-deployment-scroll { overflow-x: auto; }
+.lab-deployment-weekdays,
+.lab-deployment-grid {
+  display: grid; grid-template-columns: repeat(7, minmax(155px, 1fr));
+  min-width: 1085px;
+}
+.lab-deployment-weekdays > div {
+  padding: 9px; text-align: center; font-weight: 700;
+  background: #e5edf7; border: 1px solid #d1dbe8;
+}
+.lab-deployment-day {
+  min-width: 0; padding: 8px; border: 1px solid #d7dee8;
+  background: #fff; min-height: 190px;
+}
+.lab-outside-month { background: #f3f5f8; color: #9aa4b2; }
+.lab-pdd-day { background: #fff5f3; border-color: #e9aaa2; }
+.lab-deployment-date {
+  display: flex; justify-content: space-between; align-items: center;
+  font-weight: 700; margin-bottom: 7px;
+}
+.lab-pdd-badge {
+  font-size: 10px; padding: 2px 5px; border-radius: 4px;
+  background: #c0392b; color: white;
+}
+.lab-venue-entry, .lab-remarks-entry {
+  display: block; margin: 7px 0; font-size: 11px; font-weight: 700;
+}
+.lab-venue-entry > span { display: inline-block; min-width: 30px; }
+.lab-deployment-entry, .lab-deployment-remarks {
+  display: block; width: 100%; min-height: 34px; resize: vertical;
+  margin-top: 3px; padding: 5px; border: 1px solid #d6deea;
+  border-radius: 5px; font: inherit; font-size: 11px; font-weight: 400;
+  box-sizing: border-box; background: #fbfdff; color: #263548;
+}
+.lab-deployment-entry:disabled {
+  background: #f6dedd; color: #8d3430; cursor: not-allowed;
+}
+.lab-remarks-entry { border-top: 1px dashed #cbd5e1; padding-top: 6px; }
+.lab-deployment-save-status { min-height: 20px; margin-top: 10px; color: #64748b; font-size: 12px; }
+@media (max-width: 700px) {
+  .lab-deployment-panel { padding: 8px; }
+  .lab-deployment-header h2 { font-size: 1.15rem; }
+}
