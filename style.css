@@ -2501,3 +2501,134 @@ textarea {
     min-width: 0;
     box-sizing: border-box;
 }
+
+
+/* =========================================================
+   LAB DEPLOYMENT PANEL — HEADER, SETTINGS & SCROLLING
+   Add this at the bottom of style.css
+========================================================= */
+
+.lab-deployment-panel {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 16px;
+    background: #ffffff;
+}
+
+/* Title and month navigation */
+.lab-deployment-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.lab-deployment-header h2 {
+    margin: 0 0 6px;
+}
+
+.lab-deployment-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: nowrap;
+}
+
+.lab-month-title {
+    font-size: 20px;
+    white-space: nowrap;
+}
+
+/* PDD settings in one tidy row */
+.lab-pdd-settings {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 12px;
+    margin-bottom: 12px;
+    background: #f5f8fc;
+    border: 1px solid #d8e2ef;
+    border-radius: 8px;
+}
+
+.lab-pdd-toggle,
+.lab-pdd-date-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.lab-pdd-date-input {
+    max-width: 190px;
+}
+
+.lab-pdd-date-label {
+    font-size: 13px;
+    color: #64748b;
+}
+
+/* Deployment legend */
+.lab-deployment-key {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+/* The vertical scrollbar belongs to this container */
+.lab-deployment-grid {
+    display: block;
+    width: 100%;
+    height: min(68vh, 720px);
+    min-height: 320px;
+    box-sizing: border-box;
+    overflow-y: scroll;
+    overflow-x: auto;
+    scrollbar-gutter: stable;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+/* Keep the Eagle View calendar inside the scroll container */
+.lab-deployment-grid .eagle-calendar {
+    width: 100%;
+    min-width: 0;
+    overflow: visible;
+}
+
+/* Make deployment fields fit their individual cells */
+.lab-eagle-deployment-cell,
+.lab-eagle-remarks-cell {
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.lab-eagle-deployment-cell textarea,
+.lab-eagle-remarks-cell textarea {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+/* Smaller screens */
+@media (max-width: 800px) {
+    .lab-deployment-header {
+        align-items: flex-start;
+    }
+
+    .lab-deployment-controls {
+        justify-content: flex-start;
+    }
+
+    .lab-deployment-grid {
+        height: 65vh;
+        min-height: 280px;
+    }
+}
