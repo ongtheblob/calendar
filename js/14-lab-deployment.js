@@ -756,7 +756,7 @@ function renderLabDeploymentOverview() {
                 // Sundays or Mondays. Keep the deployment field
                 // and that date's Remarks section visible.
                 const isSundayOrMonday =
-                    date.getDay() === 0 || date.getDay() === 1;
+                date.getDay() === 0 || date.getDay() === 1;
 
                 if (
                     (venue === "OTH" || venue === "HBB") &&
@@ -767,6 +767,13 @@ function renderLabDeploymentOverview() {
                     cell.appendChild(manpower);
                 }
 
+                  // Skip HQ deployment on Sundays.
+                  // The HQ Remarks box will still be rendered below.
+                  if (venue === "HQ" && date.getDay() === 0) {
+                      venueRow.appendChild(cell);
+                      return;
+                  }
+               
                 const input = labTextArea(
                     monthKey,
                     dateKey,
