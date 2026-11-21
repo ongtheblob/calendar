@@ -728,31 +728,23 @@ href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 
 
         </div>
 
-        <div class="lab-pdd-controls">
+        <div class="lab-pdd-settings">
 
-            <label>
-                <input
-                    type="checkbox"
-                    id="labPddEnabled"
-                    checked
-                >
-                Enable PDD meeting date
-            </label>
+  <label class="lab-pdd-toggle">
+    <input type="checkbox" id="labPddEnabled" checked>
+    <span>Enable PDD meeting</span>
+  </label>
 
-            <label for="labPddDate">
-                PDD date:
-            </label>
+  <div class="lab-pdd-date-control">
+    <label for="labPddDate">PDD date:</label>
+    <input type="date" id="labPddDate">
+  </div>
 
-            <input
-                type="date"
-                id="labPddDate"
-            >
+  <span id="labPddDateLabel" class="lab-pdd-date-label"></span>
 
-            <span id="labPddDateLabel">
-                Select a PDD date
-            </span>
+  <span id="labDeploymentSaveStatus" role="status"></span>
 
-        </div>
+</div>
 
     </div>
 
