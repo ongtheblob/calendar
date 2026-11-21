@@ -793,8 +793,6 @@ const skipHqDeploymentSunday =
                 // Add this date's Remarks at the bottom of its HQ cell.
                 if (venue === "HQ") {
                     const remarksLabel = document.createElement("label");
-                    remarksLabel.className = "lab-eagle-remarks-label";
-                    cell.appendChild(remarksLabel);
 
                     const remarks = labTextArea(
                         monthKey,
