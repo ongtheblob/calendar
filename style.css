@@ -2557,3 +2557,564 @@ textarea {
     overflow: hidden;
 }
 
+
+/* =========================================================
+   LAB DEPLOYMENT OVERVIEW
+   Layout, table sizing and responsive styling
+   Keep this section at the BOTTOM of style.css
+========================================================= */
+
+/* Main overview panel */
+#labDeploymentPanel {
+    display: flex;
+    flex-direction: column;
+
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+
+    width: 100%;
+    padding: 24px;
+
+    overflow: hidden;
+
+    background: #ffffff;
+    color: #202124;
+}
+
+/* Keep hidden panels hidden */
+#labDeploymentPanel.hidden {
+    display: none !important;
+}
+
+/* ---------------------------------------------------------
+   HEADER
+--------------------------------------------------------- */
+
+.lab-deployment-header {
+    display: flex;
+    flex-wrap: wrap;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 18px;
+
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.lab-deployment-title {
+    flex: 1 1 300px;
+    min-width: 0;
+}
+
+.lab-deployment-title h2 {
+    margin: 0 0 8px;
+
+    color: #202124;
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+.lab-deployment-title p {
+    margin: 0;
+
+    color: #5f6368;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+/* Month navigation */
+.lab-deployment-controls {
+    display: flex;
+    flex-wrap: wrap;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 10px;
+}
+
+#labDeploymentMonth {
+    min-width: 180px;
+    margin: 0;
+
+    color: #202124;
+    font-size: 22px;
+    font-weight: 700;
+
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* Previous and Next buttons */
+#labPreviousMonth,
+#labNextMonth {
+    width: auto;
+    min-width: 100px;
+
+    padding: 9px 14px;
+
+    border: 1px solid #d0d7e2;
+    border-radius: 8px;
+
+    background: #f8fafc;
+    color: #263445;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+#labPreviousMonth:hover,
+#labNextMonth:hover {
+    background: #e8f1ff;
+    border-color: #9bbcf0;
+}
+
+/* ---------------------------------------------------------
+   PDD SETTINGS
+--------------------------------------------------------- */
+
+.lab-pdd-controls {
+    display: flex;
+    flex-wrap: wrap;
+
+    align-items: center;
+    gap: 12px;
+
+    width: 100%;
+    margin: 0 0 14px;
+    padding: 14px 16px;
+
+    border: 1px solid #dce3ec;
+    border-radius: 10px;
+
+    background: #f7f9fc;
+
+    color: #344054;
+    font-size: 14px;
+}
+
+/* Checkbox and its label */
+.lab-pdd-controls label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    margin: 0;
+
+    color: #344054;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.lab-pdd-controls input[type="checkbox"] {
+    flex: 0 0 18px;
+
+    width: 18px;
+    height: 18px;
+
+    margin: 0;
+    padding: 0;
+
+    accent-color: #2563eb;
+}
+
+/* PDD date picker */
+#labPddDate {
+    flex: 0 1 210px;
+
+    width: auto;
+    min-width: 190px;
+
+    padding: 9px 12px;
+
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+
+    background: #ffffff;
+    color: #263445;
+
+    font-size: 14px;
+}
+
+/* PDD meeting date description */
+#labPddDateLabel {
+    flex: 1 1 180px;
+
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* ---------------------------------------------------------
+   SAVE STATUS
+--------------------------------------------------------- */
+
+#labDeploymentSaveStatus {
+    flex: 0 0 auto;
+
+    margin: 0 0 12px;
+
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+#labDeploymentSaveStatus.error {
+    color: #b42318;
+}
+
+/* ---------------------------------------------------------
+   TABLE CONTAINER
+--------------------------------------------------------- */
+
+#labDeploymentGrid {
+    flex: 1 1 auto;
+
+    min-width: 0;
+    min-height: 0;
+
+    width: 100%;
+
+    overflow: auto;
+
+    border: 1px solid #dce3ec;
+    border-radius: 10px;
+
+    background: #ffffff;
+}
+
+/* ---------------------------------------------------------
+   DEPLOYMENT TABLE
+--------------------------------------------------------- */
+
+.lab-deployment-table {
+    width: 100%;
+    min-width: 1450px;
+
+    table-layout: fixed;
+
+    border-collapse: separate;
+    border-spacing: 0;
+
+    color: #263445;
+    font-size: 14px;
+}
+
+/* Column widths */
+.lab-deployment-table th:nth-child(1),
+.lab-deployment-table td:nth-child(1) {
+    width: 100px;
+}
+
+.lab-deployment-table th:nth-child(2),
+.lab-deployment-table td:nth-child(2) {
+    width: 75px;
+}
+
+.lab-deployment-table th:nth-child(3),
+.lab-deployment-table td:nth-child(3),
+.lab-deployment-table th:nth-child(4),
+.lab-deployment-table td:nth-child(4),
+.lab-deployment-table th:nth-child(5),
+.lab-deployment-table td:nth-child(5) {
+    width: 300px;
+}
+
+.lab-deployment-table th:nth-child(6),
+.lab-deployment-table td:nth-child(6) {
+    width: 300px;
+}
+
+/* Table headings */
+.lab-deployment-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+
+    padding: 14px 12px;
+
+    background: #174a80;
+    color: #ffffff;
+
+    font-size: 14px;
+    font-weight: 700;
+
+    text-align: left;
+    white-space: nowrap;
+
+    border-right: 1px solid #35618e;
+}
+
+/* Table cells */
+.lab-deployment-table tbody td {
+    padding: 10px;
+
+    vertical-align: top;
+
+    border-right: 1px solid #e3e9f0;
+    border-bottom: 1px solid #e3e9f0;
+}
+
+/* Alternating row colours */
+.lab-deployment-table tbody tr:nth-child(even) {
+    background: #f7f9fc;
+}
+
+.lab-deployment-table tbody tr:hover:not(.lab-table-pdd-row) {
+    background: #edf5ff;
+}
+
+/* Date */
+.lab-deployment-table .lab-table-date {
+    color: #263445;
+
+    font-size: 14px;
+    font-weight: 700;
+
+    white-space: nowrap;
+}
+
+/* Day */
+.lab-deployment-table td:nth-child(2) {
+    color: #64748b;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    white-space: nowrap;
+}
+
+/* ---------------------------------------------------------
+   DEPLOYMENT INPUTS
+--------------------------------------------------------- */
+
+/* Stack deployment input, manpower summary and shortcut */
+.lab-table-entry {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+
+    gap: 8px;
+
+    width: 100%;
+    min-width: 0;
+}
+
+/* Deployment and remarks text areas */
+.lab-deployment-table .lab-cell-input {
+    display: block;
+
+    width: 100%;
+    min-width: 0;
+    min-height: 58px;
+
+    padding: 10px 12px;
+
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+
+    background: #ffffff;
+    color: #263445;
+
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 1.45;
+
+    resize: vertical;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+/* Focus */
+.lab-deployment-table .lab-cell-input:focus {
+    border-color: #2563eb;
+
+    outline: 2px solid rgba(37, 99, 235, 0.15);
+}
+
+/* Disabled deployment on PDD date */
+.lab-deployment-table .lab-cell-input:disabled {
+    background: #eef1f5;
+    color: #7b8492;
+
+    border-color: #d5dbe4;
+
+    cursor: not-allowed;
+}
+
+/* Remarks */
+.lab-deployment-table .lab-cell-remarks {
+    min-width: 0;
+    min-height: 100px;
+}
+
+/* ---------------------------------------------------------
+   MANPOWER SUMMARY CARDS
+--------------------------------------------------------- */
+
+.lab-deployment-table .lab-table-entry > div:not(:first-child) {
+    max-width: 100%;
+}
+
+/* Manpower summary card */
+.lab-manpower-summary,
+.lab-deployment-manpower-summary {
+    width: 100%;
+    max-width: 100%;
+
+    padding: 10px 12px;
+
+    border: 1px solid #dce5f0;
+    border-radius: 8px;
+
+    background: #f3f7fc;
+
+    color: #344054;
+
+    font-size: 13px;
+    line-height: 1.5;
+
+    overflow-wrap: anywhere;
+}
+
+/* Understaffed status */
+.lab-manpower-summary strong,
+.lab-deployment-manpower-summary strong {
+    color: #b45309;
+}
+
+/* ---------------------------------------------------------
+   OPEN CALENDAR BUTTON
+--------------------------------------------------------- */
+
+.lab-calendar-jump {
+    align-self: flex-start;
+
+    flex: 0 0 auto;
+
+    width: 36px;
+    height: 34px;
+
+    padding: 0;
+
+    border: 1px solid #c8d9ef;
+    border-radius: 7px;
+
+    background: #e8f1ff;
+    color: #145db5;
+
+    font-size: 17px;
+    font-weight: 700;
+
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.lab-calendar-jump:hover {
+    background: #d2e5ff;
+}
+
+/* ---------------------------------------------------------
+   PDD ROW
+--------------------------------------------------------- */
+
+.lab-table-pdd-row {
+    background: #fff5d6 !important;
+}
+
+.lab-table-pdd-row td {
+    border-bottom-color: #ead28a;
+}
+
+/* ---------------------------------------------------------
+   RESPONSIVE
+--------------------------------------------------------- */
+
+@media (max-width: 1100px) {
+    #labDeploymentPanel {
+        padding: 16px;
+    }
+
+    .lab-deployment-header {
+        align-items: flex-start;
+    }
+
+    .lab-deployment-controls {
+        justify-content: flex-start;
+    }
+
+    #labDeploymentMonth {
+        min-width: 150px;
+        font-size: 19px;
+    }
+}
+
+@media (max-width: 700px) {
+    #labDeploymentPanel {
+        padding: 12px;
+    }
+
+    .lab-deployment-header {
+        flex-direction: column;
+        align-items: stretch;
+
+        gap: 14px;
+    }
+
+    .lab-deployment-title h2 {
+        font-size: 22px;
+    }
+
+    .lab-deployment-title p {
+        font-size: 14px;
+    }
+
+    .lab-deployment-controls {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    #labDeploymentMonth {
+        min-width: 0;
+        font-size: 17px;
+    }
+
+    #labPreviousMonth,
+    #labNextMonth {
+        min-width: 85px;
+        padding: 8px 10px;
+    }
+
+    .lab-pdd-controls {
+        align-items: flex-start;
+        flex-direction: column;
+
+        gap: 10px;
+    }
+
+    #labPddDate {
+        width: 100%;
+        min-width: 0;
+    }
+
+    #labPddDateLabel {
+        flex: 0 0 auto;
+    }
+
+    #labDeploymentGrid {
+        max-height: 70vh;
+    }
+
+    .lab-deployment-table {
+        min-width: 1350px;
+    }
+}
+
+
