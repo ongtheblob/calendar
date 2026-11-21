@@ -694,7 +694,83 @@ href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 
     ==================================================== -->
 
     <!-- LAB DEPLOYMENT OVERVIEW: separate monthly Supabase data -->
-    <div class="lab-deployment-panel hidden" id="labDeploymentPanel"></div>
+    
+<div class="lab-deployment-panel hidden" id="labDeploymentPanel">
+
+    <div class="lab-deployment-header">
+
+        <div class="lab-deployment-title">
+            <h2>Lab Deployment Overview</h2>
+            <p>Monthly deployment and manpower planning</p>
+        </div>
+
+        <div class="lab-deployment-controls">
+
+            <button
+                type="button"
+                id="labPreviousMonth"
+                class="secondary-button"
+            >
+                ← Previous
+            </button>
+
+            <h3 id="labDeploymentMonth">
+                Month Year
+            </h3>
+
+            <button
+                type="button"
+                id="labNextMonth"
+                class="secondary-button"
+            >
+                Next →
+            </button>
+
+        </div>
+
+        <div class="lab-pdd-controls">
+
+            <label>
+                <input
+                    type="checkbox"
+                    id="labPddEnabled"
+                    checked
+                >
+                Enable PDD meeting date
+            </label>
+
+            <label for="labPddDate">
+                PDD date:
+            </label>
+
+            <input
+                type="date"
+                id="labPddDate"
+            >
+
+            <span id="labPddDateLabel">
+                Select a PDD date
+            </span>
+
+        </div>
+
+    </div>
+
+    <div
+        id="labDeploymentSaveStatus"
+        class="lab-deployment-save-status"
+        aria-live="polite"
+    >
+        Ready
+    </div>
+
+    <div
+        id="labDeploymentGrid"
+        class="lab-deployment-grid"
+    ></div>
+
+</div>
+
 
     <div class="sheet-tabs">
 
