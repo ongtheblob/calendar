@@ -35,6 +35,11 @@ showCalendarView();
 }
 
 function goPrevious() {
+if (showingLabDeployment) {
+labDeploymentMonth = new Date(labDeploymentMonth.getFullYear(), labDeploymentMonth.getMonth() - 1, 1);
+loadLabDeploymentMonth();
+return;
+}
 if (showingSummary) {
 summaryPreviousMonthHandler();
 return;
@@ -60,6 +65,11 @@ renderCalendar();
 }
 
 function goNext() {
+if (showingLabDeployment) {
+labDeploymentMonth = new Date(labDeploymentMonth.getFullYear(), labDeploymentMonth.getMonth() + 1, 1);
+loadLabDeploymentMonth();
+return;
+}
 if (showingSummary) {
 summaryNextMonthHandler();
 return;
@@ -87,7 +97,10 @@ renderCalendar();
 function goToday() {
 currentDate = new Date();
 
-if (showingSummary) {
+if (showingLabDeployment) {
+labDeploymentMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+loadLabDeploymentMonth();
+} else if (showingSummary) {
 summaryDate = new Date(
 currentDate.getFullYear(),
 currentDate.getMonth(),
@@ -109,6 +122,7 @@ saveCalendarDate();
 ========================================================= */
 
 function showCalendarView() {
+if (typeof showingLabDeployment !== "undefined") hideLabDeploymentView();
 showingSummary = false;
 
 toggleHidden("summaryPanel", true);
@@ -127,6 +141,7 @@ renderCalendar();
 }
 
 function showSummaryView() {
+if (typeof showingLabDeployment !== "undefined") hideLabDeploymentView();
 showingSummary = true;
 
 toggleHidden("calendarArea", true);
@@ -138,7 +153,9 @@ renderProgrammeSummary();
 }
 
 function renderCurrentScreen() {
-if (showingSummary) {
+if (showingLabDeployment) {
+renderLabDeploymentOverview();
+} else if (showingSummary) {
 renderProgrammeSummary();
 } else {
 renderCalendar();
@@ -158,6 +175,11 @@ currentVenue === "OTH" && !showingSummary
 
 $("summarySheetTab")?.classList.toggle(
 "active",
-showingSummary
+showingSummary && !showingLabDeployment
+);
+
+$("labDeploymentSheetTab")?.classList.toggle(
+"active",
+showingLabDeployment
 );
 }
