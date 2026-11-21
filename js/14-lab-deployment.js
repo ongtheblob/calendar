@@ -614,13 +614,7 @@ function renderLabDeploymentOverview() {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
 
-    setText(
-        "labDeploymentMonth",
-        currentDate.toLocaleDateString("en-SG", {
-            month: "long",
-            year: "numeric"
-        })
-    );
+   
 
     if ($("labPddEnabled")) {
         $("labPddEnabled").checked =
