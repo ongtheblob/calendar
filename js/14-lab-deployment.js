@@ -778,7 +778,7 @@ function renderLabDeploymentOverview() {
                 input.rows = 2;
                 input.placeholder = isPdd
                     ? "PDD meeting — blocked"
-                    : "Deployment";
+                    : "Deployment/Remarks";
                 cell.appendChild(input);
 
                 // Add this date's Remarks at the bottom of its HQ cell.
