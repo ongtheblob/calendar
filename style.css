@@ -2632,3 +2632,250 @@ textarea {
         min-height: 280px;
     }
 }
+
+/* =========================================================
+   WEEK + DAY VIEWS — EAGLE VIEW VISUAL STYLE
+   Keeps the existing weekly/daily behaviour and render logic.
+   Append-only styling: Eagle-inspired cards, date headers,
+   staff section first, programme cards below.
+========================================================= */
+
+/* Matching Eagle's soft, structured calendar surface */
+.calendar-grid.week-view,
+.calendar-grid.day-view {
+    gap: 0;
+    align-items: stretch;
+    background: #ffffff;
+    border: 1px solid #c7c7c7;
+    box-sizing: border-box;
+}
+
+/* Seven date columns: retain the full week and allow horizontal
+   scrolling on narrower screens instead of squeezing columns. */
+.calendar-grid.week-view {
+    grid-template-columns: repeat(7, minmax(190px, 1fr));
+    min-width: 1330px;
+    min-height: 0;
+    overflow: visible;
+}
+
+.week-header.week-view-header {
+    grid-template-columns: repeat(7, minmax(190px, 1fr));
+    min-width: 1330px;
+    gap: 0;
+    overflow: visible;
+}
+
+/* Eagle-style weekday header cells */
+.week-header.week-view-header .calendar-date-header,
+.week-header.day-view-header .calendar-date-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 52px;
+    padding: 10px;
+    border: 1px solid #c7c7c7;
+    border-bottom: 3px solid #9e9e9e;
+    border-radius: 0;
+    background: #dce8f5;
+    color: #172b43;
+    font-size: 17px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.25;
+    white-space: normal;
+}
+
+.week-header .calendar-date-header.today-header {
+    background: #cbdff2;
+    color: #0f3b66;
+}
+
+/* Daily columns styled as Eagle day cells */
+.calendar-grid.week-view .week-column,
+.calendar-grid.day-view .week-column {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 7px;
+    min-width: 0;
+    min-height: 480px;
+    padding: 9px;
+    box-sizing: border-box;
+    overflow: visible;
+    background: #fff2cc;
+    border-right: 1px solid #c7c7c7;
+    border-bottom: 1px solid #c7c7c7;
+}
+
+.calendar-grid.week-view .week-column.today-column,
+.calendar-grid.day-view .week-column.today-column {
+    background: #fff2cc;
+}
+
+/* Manpower at the top: pale blue card like Eagle staffing cards */
+.week-view .manpower-container,
+.day-view .manpower-container {
+    order: 0;
+    width: 100%;
+    margin: 0 0 2px;
+    padding: 10px;
+    box-sizing: border-box;
+    border: 1px solid #d8e3f0;
+    border-radius: 11px;
+    background: #f3f7fc;
+    color: #17324f;
+    box-shadow: none;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.week-view .calendar-staff-heading,
+.day-view .calendar-staff-heading {
+    margin: 0 0 3px;
+    color: #25415e;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.week-view .calendar-staff-list,
+.day-view .calendar-staff-list {
+    margin: 0 0 7px;
+}
+
+.week-view .calendar-staff-name,
+.day-view .calendar-staff-name {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+/* Manpower and Off/Leave actions match Eagle's compact buttons */
+.week-view .manpower-button,
+.day-view .manpower-button {
+    width: 100%;
+    min-height: 31px;
+    margin: 3px 0 0;
+    padding: 5px 8px;
+    border: 1px solid #a9c8f5;
+    border-radius: 6px;
+    background: #e8f1ff;
+    color: #1459a6;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.week-view .manpower-button.good,
+.day-view .manpower-button.good {
+    border-color: #a8d5bd;
+    background: #e7f5ec;
+    color: #087f5b;
+}
+
+.week-view .manpower-button.warning,
+.day-view .manpower-button.warning {
+    border-color: #f0c875;
+    background: #fff4d8;
+    color: #a95300;
+}
+
+/* Programme cards beneath staffing */
+.calendar-grid.week-view .week-view-event,
+.calendar-grid.day-view .day-view-event {
+    order: 2;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 10px;
+    box-sizing: border-box;
+    border: 1px solid #ead8a5;
+    border-left: 4px solid #d6a23a;
+    border-radius: 9px;
+    background: #fff8e5;
+    color: #24364b;
+    box-shadow: none;
+    font-size: 13px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+.week-view .event-time,
+.day-view .event-time {
+    margin-bottom: 4px;
+    color: #52657a;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.week-view .event-name,
+.day-view .event-name {
+    color: #17324f;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.week-view .event-subheader,
+.day-view .event-subheader,
+.week-view .event-meta,
+.day-view .event-meta {
+    margin-top: 4px;
+    font-size: 12px;
+    line-height: 1.35;
+}
+
+/* Empty-day message styled as a quiet card */
+.week-view .view-empty,
+.day-view .view-empty {
+    order: 1;
+    padding: 10px;
+    border: 1px dashed #d4c79f;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.55);
+    color: #68788a;
+    font-size: 12px;
+}
+
+/* Daily view uses the same card design, with comfortable width */
+.calendar-grid.day-view {
+    grid-template-columns: minmax(0, 1fr);
+    min-width: 0;
+    min-height: 0;
+}
+
+.week-header.day-view-header {
+    grid-template-columns: minmax(0, 1fr);
+    min-width: 0;
+}
+
+.calendar-grid.day-view .week-column {
+    min-height: 600px;
+    padding: 14px;
+}
+
+.calendar-grid.day-view .manpower-container {
+    max-width: 100%;
+    padding: 14px;
+}
+
+.calendar-grid.day-view .day-view-event {
+    padding: 14px 16px;
+    font-size: 14px;
+}
+
+/* On smaller screens, week view stays scrollable; day view fills width */
+@media (max-width: 900px) {
+    .calendar-grid.week-view {
+        min-width: 1330px;
+    }
+
+    .week-header.week-view-header {
+        min-width: 1330px;
+    }
+
+    .calendar-grid.day-view .week-column {
+        padding: 10px;
+    }
+}
