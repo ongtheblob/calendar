@@ -118,6 +118,7 @@ let manpowerDate = null;
 let manpowerVenue = null;
 
 let showingSummary = false;
+let showingLabDeployment = false;
 let summaryDate = new Date(currentDate);
 
 let programmesLoaded = false;
