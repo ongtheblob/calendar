@@ -410,8 +410,8 @@ function labTextArea(
 
     area.placeholder =
         rowKey === "remarks"
-            ? "Remarks"
-            : "Deployment";
+            ? "Add remarks…"
+            : "Deployment…";
 
     area.disabled =
         isBlocked && rowKey !== "remarks";
@@ -605,35 +605,21 @@ function renderLabManpowerSummary(
 ========================================================= */
 
 function renderLabDeploymentOverview() {
-    const grid =
-        $("labDeploymentGrid");
-
+    const grid = $("labDeploymentGrid");
     if (!grid) return;
 
-    const token =
-        ++labDeploymentRenderToken;
-
-    const monthKey =
-        labMonthKey();
-
-    const monthData =
-        labDataForMonth(monthKey);
-
-    const year =
-        currentDate.getFullYear();
-
-    const month =
-        currentDate.getMonth();
+    const token = ++labDeploymentRenderToken;
+    const monthKey = labMonthKey();
+    const monthData = labDataForMonth(monthKey);
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
 
     setText(
         "labDeploymentMonth",
-        currentDate.toLocaleDateString(
-            "en-SG",
-            {
-                month: "long",
-                year: "numeric"
-            }
-        )
+        currentDate.toLocaleDateString("en-SG", {
+            month: "long",
+            year: "numeric"
+        })
     );
 
     if ($("labPddEnabled")) {
@@ -641,311 +627,239 @@ function renderLabDeploymentOverview() {
             monthData.pddEnabled !== false;
     }
 
-    const pddDate =
-        labPddDateForMonth(
-            monthKey,
-            monthData
-        );
+    const pddDate = labPddDateForMonth(monthKey, monthData);
 
     setValue(
         "labPddDate",
-        pddDate
-            ? labDateKey(pddDate)
-            : ""
+        pddDate ? labDateKey(pddDate) : ""
     );
 
     setText(
         "labPddDateLabel",
         pddDate
-            ? "PDD meeting: " +
-              pddDate.toLocaleDateString(
-                  "en-SG",
-                  {
-                      weekday: "short",
-                      day: "numeric",
-                      month: "short"
-                  }
-              )
+            ? "PDD meeting: " + pddDate.toLocaleDateString("en-SG", {
+                weekday: "short",
+                day: "numeric",
+                month: "short"
+            })
             : "Select a PDD date for this month"
     );
 
-    const table =
-        document.createElement("table");
+    // Eagle View: seven weekday columns, with each week
+    // displayed as date, venue deployment, and remarks rows.
+    const calendar = document.createElement("div");
+    calendar.className = "lab-eagle-calendar eagle-calendar";
 
-    table.className =
-        "lab-deployment-table";
+    const header = document.createElement("div");
+    header.className = "lab-eagle-header eagle-header";
 
-    table.innerHTML = `
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Day</th>
-                <th>OTH Deployment</th>
-                <th>HBB Deployment</th>
-                <th>HQ Deployment</th>
-            </tr>
-        </thead>
-    `;
+    const headerLabel = document.createElement("div");
+    headerLabel.className = "lab-eagle-header-label";
+    headerLabel.textContent = "Week";
+    header.appendChild(headerLabel);
 
-    const tbody =
-        document.createElement("tbody");
+    ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].forEach(dayName => {
+        const heading = document.createElement("div");
+        heading.textContent = dayName;
+        header.appendChild(heading);
+    });
 
-    const daysInMonth =
-        new Date(
-            year,
-            month + 1,
-            0
-        ).getDate();
+    calendar.appendChild(header);
 
-    for (
-        let dayNumber = 1;
-        dayNumber <= daysInMonth;
-        dayNumber++
-    ) {
-        const date =
-            new Date(
-                year,
-                month,
-                dayNumber
-            );
+    const firstOfMonth = new Date(year, month, 1);
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-        const dateKey =
-            labDateKey(date);
+    // Monday-based grid start.
+    const mondayOffset = (firstOfMonth.getDay() + 6) % 7;
+    const gridStart = new Date(year, month, 1 - mondayOffset);
+    const totalSlots = Math.ceil((mondayOffset + daysInMonth) / 7) * 7;
 
-        const dayData =
-            labDayData(
-                monthKey,
-                dateKey
-            );
+    for (let slot = 0; slot < totalSlots; slot += 7) {
+        const week = document.createElement("section");
+        week.className = "lab-eagle-week-block eagle-week-block";
 
-        const isPdd =
-            monthData.pddEnabled !== false &&
-            pddDate &&
-            labDateKey(pddDate) === dateKey;
-
-        const tr =
-            document.createElement("tr");
-
-        if (isPdd) {
-            tr.classList.add(
-                "lab-table-pdd-row"
-            );
+        const dates = [];
+        for (let col = 0; col < 7; col++) {
+            const date = new Date(gridStart);
+            date.setDate(gridStart.getDate() + slot + col);
+            dates.push(date);
         }
 
-        const dateCell =
-            document.createElement("td");
+        // Date strip across the week.
+        const dateRow = document.createElement("div");
+        dateRow.className = "lab-eagle-date-row";
 
-        dateCell.className =
-            "lab-table-date";
+        const dateLabel = document.createElement("div");
+        dateLabel.className = "lab-eagle-row-label eagle-row-label";
+        dateLabel.textContent = "Date";
+        dateRow.appendChild(dateLabel);
 
-        dateCell.textContent =
-            dayNumber +
-            " " +
-            date.toLocaleDateString(
-                "en-SG",
-                { month: "short" }
-            );
+        dates.forEach(date => {
+            const cell = document.createElement("div");
+            cell.className = "lab-eagle-date-cell eagle-date-cell";
 
-        const dayCell =
-            document.createElement("td");
+            const inMonth = date.getMonth() === month;
+            if (!inMonth) {
+                cell.classList.add("eagle-other-month");
+                cell.textContent = "";
+            } else {
+                const dateNumber = document.createElement("div");
+                dateNumber.className = "eagle-date-number";
+                dateNumber.textContent = date.getDate() + " " +
+                    date.toLocaleDateString("en-SG", { month: "short" });
+                cell.appendChild(dateNumber);
 
-        dayCell.textContent =
-            date.toLocaleDateString(
-                "en-SG",
-                { weekday: "short" }
-            );
+                if (date.toDateString() === new Date().toDateString()) {
+                    cell.classList.add("eagle-today");
+                }
+            }
+            dateRow.appendChild(cell);
+        });
 
-        tr.append(
-            dateCell,
-            dayCell
-        );
+        week.appendChild(dateRow);
 
-        LAB_DEPLOYMENT_ROWS.forEach(
-            rowKey => {
-                const td =
-                    document.createElement("td");
+        // Deployment row for each location. Manpower card
+        // is intentionally placed BEFORE the deployment input.
+        LAB_DEPLOYMENT_ROWS.forEach(venue => {
+            const venueRow = document.createElement("div");
+            venueRow.className = "lab-eagle-venue-row eagle-programme-row";
 
-                const cell =
-                    document.createElement("div");
+            const label = document.createElement("div");
+            label.className = "lab-eagle-row-label eagle-row-label";
+            label.textContent = venue;
+            venueRow.appendChild(label);
 
-                cell.className =
-                    "lab-table-entry";
+            dates.forEach(date => {
+                const cell = document.createElement("div");
+                cell.className = "lab-eagle-deployment-cell eagle-day-cell";
 
-               // Connect OTH and HBB deployment
-                // entries to their manpower data.
-                if (
-                    rowKey === "OTH" ||
-                    rowKey === "HBB"
-                ) {
-                    cell.appendChild(
-                        renderLabManpowerSummary(
-                            rowKey,
-                            dateKey
-                        )
-                    );
-                   
-                const input =
-                    labTextArea(
-                        monthKey,
-                        dateKey,
-                        rowKey,
-                        dayData[rowKey],
-                        isPdd
-                    );
+                if (date.getMonth() !== month) {
+                    cell.classList.add("eagle-other-month");
+                    venueRow.appendChild(cell);
+                    return;
+                }
 
-                input.rows = 1;
+                const dateKey = labDateKey(date);
+                const dayData = labDayData(monthKey, dateKey);
+                const isPdd = monthData.pddEnabled !== false &&
+                    pddDate && labDateKey(pddDate) === dateKey;
 
-                input.placeholder =
+                if (isPdd) {
+                    cell.classList.add("lab-eagle-pdd", "lab-pdd-day");
+                    const badge = document.createElement("div");
+                    badge.className = "lab-eagle-pdd-badge lab-pdd-badge";
+                    badge.textContent = "PDD";
+                    cell.appendChild(badge);
+                }
+
+                if (venue === "OTH" || venue === "HBB") {
+                    const manpower = renderLabManpowerSummary(venue, dateKey);
+                    manpower.classList.add("lab-deployment-manpower-summary");
+                    cell.appendChild(manpower);
+                }
+
+                const input = labTextArea(
+                    monthKey,
+                    dateKey,
+                    venue,
+                    dayData[venue],
                     isPdd
-                        ? "PDD meeting — blocked"
-                        : "Deployment";
-
+                );
+                input.classList.add("lab-eagle-input", "lab-deployment-entry");
+                input.rows = 2;
+                input.placeholder = isPdd
+                    ? "PDD meeting — blocked"
+                    : "Deployment";
                 cell.appendChild(input);
 
-
-                    const jump =
-                        document.createElement("button");
-
+                if (venue === "OTH" || venue === "HBB") {
+                    const jump = document.createElement("button");
                     jump.type = "button";
-
-                    jump.className =
-                        "lab-calendar-jump";
-
-                    jump.title =
-                        "Open " +
-                        rowKey +
-                        " calendar and manpower on " +
-                        dateKey;
-
-                    jump.setAttribute(
-                        "aria-label",
-                        "Open " +
-                        rowKey +
-                        " manpower on " +
-                        dateKey
-                    );
-
+                    jump.className = "lab-eagle-jump lab-calendar-jump";
+                    jump.title = "Open " + venue + " calendar and manpower on " + dateKey;
+                    jump.setAttribute("aria-label", "Open " + venue + " manpower on " + dateKey);
                     jump.textContent = "↗";
-
-                    jump.addEventListener(
-                        "click",
-                        () => {
-                            navigateToDeploymentCalendar(
-                                rowKey,
-                                dateKey
-                            );
-                        }
-                    );
-
+                    jump.addEventListener("click", () => {
+                        navigateToDeploymentCalendar(venue, dateKey);
+                    });
                     cell.appendChild(jump);
                 }
 
-                td.appendChild(cell);
-                tr.appendChild(td);
-            }
-        );
-
-        // Keep OTH, HBB and HQ deployment together.
-        tbody.appendChild(tr);
-
-        // Remarks occupy a dedicated full-width row underneath
-        // the deployment row for this date.
-        const remarksRow =
-            document.createElement("tr");
-
-        remarksRow.className =
-            "lab-table-remarks-row";
-
-        const remarksCell =
-            document.createElement("td");
-
-        remarksCell.colSpan = 5;
-        remarksCell.className =
-            "lab-table-remarks-cell";
-
-        const remarksLabel =
-            document.createElement("label");
-
-        remarksLabel.className =
-            "lab-table-remarks-label";
-
-        remarksLabel.textContent =
-            "Remarks";
-
-        const remarksInput =
-            labTextArea(
-                monthKey,
-                dateKey,
-                "remarks",
-                dayData.remarks,
-                false
-            );
-
-        remarksInput.placeholder = "Remarks";
-        remarksInput.setAttribute(
-            "aria-label",
-            "Remarks for " + dateKey
-        );
-
-        remarksCell.append(
-            remarksLabel,
-            remarksInput
-        );
-
-        remarksRow.appendChild(remarksCell);
-        tbody.appendChild(remarksRow);
-    }
-
-    table.appendChild(tbody);
-    grid.replaceChildren(table);
-
-    // Load deployment data from Supabase.
-    if (
-        !labDeploymentLoadedMonths.has(monthKey)
-    ) {
-        loadLabDeploymentMonth(monthKey)
-            .then(() => {
-                if (
-                    token === labDeploymentRenderToken &&
-                    showingLabDeployment
-                ) {
-                    renderLabDeploymentOverview();
-                }
+                venueRow.appendChild(cell);
             });
+
+            week.appendChild(venueRow);
+        });
+
+        // Remarks row below the deployment rows, aligned to dates.
+        const remarksRow = document.createElement("div");
+        remarksRow.className = "lab-eagle-remarks-row";
+
+        const remarksLabel = document.createElement("div");
+        remarksLabel.className = "lab-eagle-row-label eagle-row-label";
+        remarksLabel.textContent = "Remarks";
+        remarksRow.appendChild(remarksLabel);
+
+        dates.forEach(date => {
+            const cell = document.createElement("div");
+            cell.className = "lab-eagle-remarks-cell eagle-day-cell";
+
+            if (date.getMonth() !== month) {
+                cell.classList.add("eagle-other-month");
+            } else {
+                const dateKey = labDateKey(date);
+                const dayData = labDayData(monthKey, dateKey);
+                const remarks = labTextArea(
+                    monthKey,
+                    dateKey,
+                    "remarks",
+                    dayData.remarks,
+                    false
+                );
+                remarks.classList.add("lab-eagle-remarks-input", "lab-deployment-remarks");
+                remarks.rows = 2;
+                remarks.placeholder = "Remarks";
+                cell.appendChild(remarks);
+            }
+
+            remarksRow.appendChild(cell);
+        });
+
+        week.appendChild(remarksRow);
+        calendar.appendChild(week);
     }
 
-    // Manpower is loaded by 13-app.js during
-    // application startup. If it is not ready yet,
-    // load it once and refresh the deployment sheet.
+    grid.replaceChildren(calendar);
+
+    // Preserve existing Supabase loading and refresh behavior.
+    if (!labDeploymentLoadedMonths.has(monthKey)) {
+        loadLabDeploymentMonth(monthKey).then(() => {
+            if (token === labDeploymentRenderToken && showingLabDeployment) {
+                renderLabDeploymentOverview();
+            }
+        });
+    }
+
     if (
         typeof manpowerLoaded !== "undefined" &&
         !manpowerLoaded &&
         supabaseClient &&
         !labDeploymentManpowerLoadPromise
     ) {
-        labDeploymentManpowerLoadPromise =
-            loadManpowerFromSupabase()
-                .then(() => {
-                    if (
-                        token === labDeploymentRenderToken &&
-                        showingLabDeployment
-                    ) {
-                        renderLabDeploymentOverview();
-                    }
-                })
-                .catch(error => {
-                    console.error(
-                        "Unable to load manpower for Lab Deployment:",
-                        error
-                    );
-                })
-                .finally(() => {
-                    labDeploymentManpowerLoadPromise =
-                        null;
-                });
+        labDeploymentManpowerLoadPromise = loadManpowerFromSupabase()
+            .then(() => {
+                if (token === labDeploymentRenderToken && showingLabDeployment) {
+                    renderLabDeploymentOverview();
+                }
+            })
+            .catch(error => {
+                console.error("Unable to load manpower for Lab Deployment:", error);
+            })
+            .finally(() => {
+                labDeploymentManpowerLoadPromise = null;
+            });
     }
 }
-
 
 /* =========================================================
    12. OPEN THE MATCHING CALENDAR AND MANPOWER MODAL
