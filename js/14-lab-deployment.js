@@ -646,7 +646,7 @@ function renderLabDeploymentOverview() {
     );
 
     // Eagle View: seven weekday columns, with each week
-    // displayed as date, venue deployment, and remarks rows.
+    // displayed as date and venue rows; daily remarks are inside each HQ cell.
     const calendar = document.createElement("div");
     calendar.className = "lab-eagle-calendar eagle-calendar";
 
@@ -752,7 +752,16 @@ function renderLabDeploymentOverview() {
                     cell.appendChild(badge);
                 }
 
-                if (venue === "OTH" || venue === "HBB") {
+                // Do not show deployment manpower staffing on
+                // Sundays or Mondays. Keep the deployment field
+                // and that date's Remarks section visible.
+                const isSundayOrMonday =
+                    date.getDay() === 0 || date.getDay() === 1;
+
+                if (
+                    (venue === "OTH" || venue === "HBB") &&
+                    !isSundayOrMonday
+                ) {
                     const manpower = renderLabManpowerSummary(venue, dateKey);
                     manpower.classList.add("lab-deployment-manpower-summary");
                     cell.appendChild(manpower);
@@ -771,6 +780,33 @@ function renderLabDeploymentOverview() {
                     ? "PDD meeting — blocked"
                     : "Deployment";
                 cell.appendChild(input);
+
+                // Add this date's Remarks at the bottom of its HQ cell.
+                if (venue === "HQ") {
+                    const remarksLabel = document.createElement("label");
+                    remarksLabel.className = "lab-eagle-remarks-label";
+                    remarksLabel.textContent = "Remarks";
+                    cell.appendChild(remarksLabel);
+
+                    const remarks = labTextArea(
+                        monthKey,
+                        dateKey,
+                        "remarks",
+                        dayData.remarks,
+                        false
+                    );
+                    remarks.classList.add(
+                        "lab-eagle-remarks-input",
+                        "lab-deployment-remarks"
+                    );
+                    remarks.rows = 2;
+                    remarks.placeholder = "Remarks";
+                    remarks.setAttribute(
+                        "aria-label",
+                        "Remarks for " + dateKey
+                    );
+                    cell.appendChild(remarks);
+                }
 
                 if (venue === "OTH" || venue === "HBB") {
                     const jump = document.createElement("button");
@@ -791,41 +827,6 @@ function renderLabDeploymentOverview() {
             week.appendChild(venueRow);
         });
 
-        // Remarks row below the deployment rows, aligned to dates.
-        const remarksRow = document.createElement("div");
-        remarksRow.className = "lab-eagle-remarks-row";
-
-        const remarksLabel = document.createElement("div");
-        remarksLabel.className = "lab-eagle-row-label eagle-row-label";
-        remarksLabel.textContent = "Remarks";
-        remarksRow.appendChild(remarksLabel);
-
-        dates.forEach(date => {
-            const cell = document.createElement("div");
-            cell.className = "lab-eagle-remarks-cell eagle-day-cell";
-
-            if (date.getMonth() !== month) {
-                cell.classList.add("eagle-other-month");
-            } else {
-                const dateKey = labDateKey(date);
-                const dayData = labDayData(monthKey, dateKey);
-                const remarks = labTextArea(
-                    monthKey,
-                    dateKey,
-                    "remarks",
-                    dayData.remarks,
-                    false
-                );
-                remarks.classList.add("lab-eagle-remarks-input", "lab-deployment-remarks");
-                remarks.rows = 2;
-                remarks.placeholder = "Remarks";
-                cell.appendChild(remarks);
-            }
-
-            remarksRow.appendChild(cell);
-        });
-
-        week.appendChild(remarksRow);
         calendar.appendChild(week);
     }
 
