@@ -107,6 +107,9 @@ currentDate.getMonth(),
 showSummaryView();
 });
 
+// Lab Deployment Overview tab
+on("labDeploymentSheetTab", "click", showLabDeploymentView);
+
 on(
 "summaryPreviousMonth",
 "click",
