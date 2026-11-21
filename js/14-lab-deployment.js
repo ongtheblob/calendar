@@ -785,7 +785,7 @@ const skipHqDeploymentSunday =
                    input.rows = 2;
                    input.placeholder = isPdd
                        ? "PDD meeting — blocked"
-                       : "Deployment";
+                       : "Remarks";
                
                    cell.appendChild(input);
                }
@@ -794,7 +794,6 @@ const skipHqDeploymentSunday =
                 if (venue === "HQ") {
                     const remarksLabel = document.createElement("label");
                     remarksLabel.className = "lab-eagle-remarks-label";
-                    remarksLabel.textContent = "Remarks";
                     cell.appendChild(remarksLabel);
 
                     const remarks = labTextArea(
