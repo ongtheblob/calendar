@@ -766,28 +766,7 @@ function renderLabDeploymentOverview() {
 const skipHqDeploymentSunday =
     venue === "HQ" && date.getDay() === 0;
 
-               if (!skipHqDeploymentSunday) {
-    const input = labTextArea(
-        monthKey,
-        dateKey,
-        venue,
-        dayData[venue],
-        isPdd
-    );
-
-    input.classList.add(
-        "lab-eagle-input",
-        "lab-deployment-entry"
-    );
-
-    input.rows = 2;
-    input.placeholder = isPdd
-        ? "PDD meeting — blocked"
-        : "Deployment";
-
-    cell.appendChild(input);
-}
-               
+     
                   // HQ has Remarks only — no Deployment input.
                if (venue !== "HQ") {
                    const input = labTextArea(
