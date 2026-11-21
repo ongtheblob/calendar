@@ -2561,7 +2561,6 @@ textarea {
 /* =========================================================
    LAB DEPLOYMENT OVERVIEW
    Layout, table sizing and responsive styling
-   Keep this section at the BOTTOM of style.css
 ========================================================= */
 
 /* Main overview panel */
@@ -3117,4 +3116,327 @@ textarea {
     }
 }
 
+
+/* =========================================================
+   LAB DEPLOYMENT — EAGLE VIEW LAYOUT
+========================================================= */
+
+#labDeploymentGrid {
+    width: 100%;
+    min-width: 0;
+    overflow: auto;
+    border: none;
+    border-radius: 0;
+    background: #ffffff;
+}
+
+/* Eagle calendar scrolling container */
+.lab-eagle-calendar {
+    width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: auto;
+    background: #ffffff;
+}
+
+/* Shared 8-column layout:
+   1 row label + 7 days */
+.lab-eagle-header,
+.lab-eagle-date-row,
+.lab-eagle-venue-row,
+.lab-eagle-remarks-row {
+    display: grid;
+
+    grid-template-columns:
+        100px
+        repeat(7, minmax(130px, 1fr));
+
+    width: 1010px;
+    min-width: 1010px;
+}
+
+/* Weekday header */
+.lab-eagle-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+
+    background: #dce8f5;
+    color: #263445;
+
+    font-size: 12px;
+    font-weight: 700;
+
+    text-align: center;
+
+    border-bottom: 2px solid #aab9ca;
+}
+
+.lab-eagle-header > div {
+    padding: 11px 5px;
+
+    border-right: 1px solid #c5c5c5;
+}
+
+/* Each week */
+.lab-eagle-week-block {
+    width: 1010px;
+    min-width: 1010px;
+
+    margin-bottom: 12px;
+
+    border: 1px solid #c7c7c7;
+    border-radius: 5px;
+
+    overflow: hidden;
+}
+
+/* Keep all rows aligned */
+.lab-eagle-date-row,
+.lab-eagle-venue-row,
+.lab-eagle-remarks-row {
+    width: 100%;
+}
+
+/* Left-side row labels */
+.lab-eagle-row-label {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 8px 5px;
+
+    background: #d2e2f1;
+
+    border-right: 1px solid #aab9ca;
+    border-bottom: 1px solid #c7c7c7;
+
+    color: #263445;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+/* Date row */
+.lab-eagle-date-cell {
+    min-height: 46px;
+
+    background: #dce8f5;
+
+    border-right: 1px solid #c7c7c7;
+    border-bottom: 1px solid #c7c7c7;
+}
+
+/* Date number */
+.lab-eagle-date-cell .eagle-date-number {
+    margin: 0;
+    padding: 8px 10px 3px;
+
+    color: #263445;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    text-align: right;
+}
+
+/* Deployment cells */
+.lab-eagle-deployment-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+
+    gap: 7px;
+
+    min-width: 0;
+    min-height: 150px;
+
+    padding: 8px;
+
+    background: #fff2cc;
+
+    border-right: 1px solid #c7c7c7;
+    border-bottom: 1px solid #c7c7c7;
+}
+
+/* Date / deployment alignment */
+.lab-eagle-date-row > *,
+.lab-eagle-venue-row > *,
+.lab-eagle-remarks-row > * {
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+/* Deployment text area */
+.lab-eagle-input {
+    display: block;
+
+    width: 100%;
+    min-width: 0;
+    min-height: 58px;
+
+    padding: 8px 9px;
+
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+
+    background: #ffffff;
+    color: #263445;
+
+    font-family: inherit;
+    font-size: 12px;
+    line-height: 1.4;
+
+    resize: vertical;
+    overflow-wrap: anywhere;
+}
+
+/* Focus state */
+.lab-eagle-input:focus {
+    border-color: #2563eb;
+
+    outline: 2px solid rgba(37, 99, 235, 0.15);
+}
+
+/* PDD disabled deployment */
+.lab-eagle-input:disabled {
+    background: #e7e9ed;
+    color: #737b85;
+
+    border-color: #d5dbe4;
+
+    cursor: not-allowed;
+}
+
+/* Manpower summary inside OTH / HBB */
+.lab-eagle-deployment-cell .lab-manpower-summary {
+    width: 100%;
+    max-width: 100%;
+
+    margin: 0 !important;
+    padding: 8px;
+
+    border: 1px solid #d5e1ed;
+    border-radius: 6px;
+
+    background: #f5f8fc;
+
+    color: #334155;
+
+    font-size: 11px;
+    line-height: 1.45;
+
+    overflow-wrap: anywhere;
+}
+
+/* Staff status */
+.lab-eagle-deployment-cell .lab-manpower-status {
+    margin-bottom: 4px;
+
+    font-size: 11px;
+    font-weight: 700;
+}
+
+/* Jump to calendar button */
+.lab-eagle-jump {
+    align-self: flex-start;
+
+    width: 30px;
+    height: 28px;
+
+    margin: 0;
+    padding: 0;
+
+    border: 1px solid #a9c5e8;
+    border-radius: 5px;
+
+    background: #e8f1ff;
+    color: #145db5;
+
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.lab-eagle-jump:hover {
+    background: #d2e5ff;
+}
+
+/* PDD date highlight */
+.lab-eagle-pdd {
+    background: #fff0bf !important;
+}
+
+/* PDD label */
+.lab-eagle-pdd-badge {
+    display: inline-block;
+
+    margin: 0 8px 6px;
+    padding: 2px 6px;
+
+    border-radius: 4px;
+
+    background: #f4c542;
+    color: #624800;
+
+    font-size: 9px;
+    font-weight: 700;
+}
+
+/* Current day highlight */
+.lab-eagle-date-cell.eagle-today,
+.lab-eagle-deployment-cell.eagle-today {
+    outline: 2px solid #4285f4;
+    outline-offset: -2px;
+}
+
+/* Remarks row */
+.lab-eagle-remarks-cell {
+    min-width: 0;
+    min-height: 90px;
+
+    padding: 8px;
+
+    background: #ffffff;
+
+    border-right: 1px solid #c7c7c7;
+    border-bottom: 1px solid #c7c7c7;
+}
+
+/* Remarks textarea */
+.lab-eagle-remarks-input {
+    min-height: 70px;
+}
+
+/* Dates outside the displayed month */
+.lab-eagle-calendar .eagle-other-month {
+    background: #eeeeee !important;
+}
+
+/* Responsive: preserve Eagle View columns and scroll */
+@media (max-width: 750px) {
+    .lab-eagle-calendar {
+        overflow-x: auto;
+    }
+
+    .lab-eagle-header,
+    .lab-eagle-date-row,
+    .lab-eagle-venue-row,
+    .lab-eagle-remarks-row {
+        grid-template-columns:
+            90px
+            repeat(7, 130px);
+
+        width: 1000px;
+        min-width: 1000px;
+    }
+
+    .lab-eagle-week-block {
+        width: 1000px;
+        min-width: 1000px;
+    }
+}
 
