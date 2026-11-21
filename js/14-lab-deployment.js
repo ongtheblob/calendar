@@ -767,26 +767,55 @@ function renderLabDeploymentOverview() {
                     cell.appendChild(manpower);
                 }
 
-                  // Skip HQ deployment on Sundays.
-                  // The HQ Remarks box will still be rendered below.
-                  if (venue === "HQ" && date.getDay() === 0) {
-                      venueRow.appendChild(cell);
-                      return;
-                  }
+      // Skip only the HQ deployment input on Sundays.
+// Keep the HQ Remarks box visible.
+const skipHqDeploymentSunday =
+    venue === "HQ" && date.getDay() === 0;
+
+               if (!skipHqDeploymentSunday) {
+    const input = labTextArea(
+        monthKey,
+        dateKey,
+        venue,
+        dayData[venue],
+        isPdd
+    );
+
+    input.classList.add(
+        "lab-eagle-input",
+        "lab-deployment-entry"
+    );
+
+    input.rows = 2;
+    input.placeholder = isPdd
+        ? "PDD meeting — blocked"
+        : "Deployment";
+
+    cell.appendChild(input);
+}
                
-                const input = labTextArea(
-                    monthKey,
-                    dateKey,
-                    venue,
-                    dayData[venue],
-                    isPdd
-                );
-                input.classList.add("lab-eagle-input", "lab-deployment-entry");
-                input.rows = 2;
-                input.placeholder = isPdd
-                    ? "PDD meeting — blocked"
-                    : "Remarks";
-                cell.appendChild(input);
+                  // HQ has Remarks only — no Deployment input.
+               if (venue !== "HQ") {
+                   const input = labTextArea(
+                       monthKey,
+                       dateKey,
+                       venue,
+                       dayData[venue],
+                       isPdd
+                   );
+               
+                   input.classList.add(
+                       "lab-eagle-input",
+                       "lab-deployment-entry"
+                   );
+               
+                   input.rows = 2;
+                   input.placeholder = isPdd
+                       ? "PDD meeting — blocked"
+                       : "Deployment";
+               
+                   cell.appendChild(input);
+               }
 
                 // Add this date's Remarks at the bottom of its HQ cell.
                 if (venue === "HQ") {
