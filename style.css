@@ -2519,3 +2519,41 @@ textarea {
   .lab-deployment-panel { padding: 8px; }
   .lab-deployment-header h2 { font-size: 1.15rem; }
 }
+
+
+/* =========================================================
+   LAB DEPLOYMENT OVERVIEW — ENABLE VERTICAL SCROLLING
+========================================================= */
+
+#labDeploymentPanel {
+    flex: 1 1 0;
+    min-height: 0;
+    max-height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    box-sizing: border-box;
+}
+
+/* Keep the deployment calendar scrollable horizontally */
+#labDeploymentPanel .lab-deployment-scroll {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: visible;
+}
+
+/* Prevent the calendar grid from being squeezed */
+#labDeploymentPanel .lab-deployment-weekdays,
+#labDeploymentPanel .lab-deployment-grid {
+    min-width: 1085px;
+}
+
+/* Ensure the app layout allows the panel to scroll */
+.app,
+.main {
+    min-height: 0;
+}
+
+.main {
+    overflow: hidden;
+}
+
