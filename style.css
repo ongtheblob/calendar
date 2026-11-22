@@ -3325,3 +3325,96 @@ textarea {
         grid-column: 2;
     }
 }
+
+
+/* =========================================================
+   CALENDAR QUICK-ACTION BUTTONS
+   + Staff and + Off / Leave
+========================================================= */
+
+.calendar-add-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+
+    min-height: 34px;
+    padding: 6px 12px;
+
+    border: 1px solid #d5deea;
+    border-radius: 9px;
+
+    background: #ffffff;
+    color: #344054;
+
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 650;
+    line-height: 1.2;
+
+    cursor: pointer;
+
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+
+    transition:
+        background 0.18s ease,
+        border-color 0.18s ease,
+        color 0.18s ease,
+        box-shadow 0.18s ease,
+        transform 0.18s ease;
+}
+
+/* Staff button */
+
+.calendar-add-button.staff-button {
+    border-color: #cbdaf7;
+    background: #f5f8ff;
+    color: #315da8;
+}
+
+.calendar-add-button.staff-button:hover {
+    border-color: #9db9ed;
+    background: #eaf1ff;
+    color: #244b91;
+}
+
+/* Off / Leave button */
+
+.calendar-add-button.leave-button {
+    border-color: #c9dfc1;
+    background: #f3f9ef;
+    color: #47743b;
+}
+
+.calendar-add-button.leave-button:hover {
+    border-color: #a9c99c;
+    background: #e8f3e2;
+    color: #365f2c;
+}
+
+/* Shared hover and focus */
+
+.calendar-add-button:hover {
+    box-shadow: 0 3px 7px rgba(16, 24, 40, 0.08);
+    transform: translateY(-1px);
+}
+
+.calendar-add-button:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+.calendar-add-button:focus-visible {
+    outline: 3px solid rgba(59, 130, 246, 0.25);
+    outline-offset: 2px;
+}
+
+/* Compact calendar layout */
+
+@media (max-width: 600px) {
+    .calendar-add-button {
+        min-height: 36px;
+        padding: 7px 11px;
+        font-size: 12px;
+    }
+}
