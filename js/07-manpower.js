@@ -364,32 +364,7 @@ function renderLeaveEntries() {
           );
       });
 
-            // Remember the original saved period so it can
-            // be deleted from Supabase when Save is clicked.
-            if (
-                removedEntry?.originalStartDate &&
-                removedEntry?.originalEndDate
-            ) {
-                removedLeavePeriods.push({
-                    staff: removedEntry.staff,
-                    startDate: removedEntry.originalStartDate,
-                    endDate: removedEntry.originalEndDate
-                });
-            }
 
-            if (editingLeaveIndex === index) {
-                cancelLeavePeriodEdit();
-            }
-
-            getLeaveDraft().splice(index, 1);
-
-            renderLeaveEntries();
-        });
-
-        item.append(details, edit, remove);
-        container.appendChild(item);
-    });
-}
 
 function cancelLeavePeriodEdit() {
     editingLeaveIndex = null;
