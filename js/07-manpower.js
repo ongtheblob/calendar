@@ -464,6 +464,106 @@ function openLeaveModal(venue, date) {
     openManpowerSection(venue, date, "leave");
 }
 
+/* =========================================================
+   LOAD SAVED OFF / LEAVE DATE PERIODS
+========================================================= */
+
+async function loadLeavePeriodsForDate(venue, date) {
+    if (!supabaseClient) {
+        throw new Error("Supabase is not connected.");
+    }
+
+    const { data: rows, error } = await supabaseClient
+        .from("manpower_leave_entries")
+        .select("venue,date,staff,reason")
+        .eq("venue", venue)
+        .order("date", { ascending: true });
+
+    if (error) {
+        throw error;
+    }
+
+    const entries = rows || [];
+
+    // Group database rows by staff member and reason.
+    const grouped = {};
+
+    entries.forEach(row => {
+        const staff = String(row.staff || "").trim();
+        const reason = String(row.reason || "Off Day").trim();
+        const rowDate = String(row.date || "").slice(0, 10);
+
+        if (!staff || !rowDate) return;
+
+        const key = staff + "|" + reason;
+
+        if (!grouped[key]) {
+            grouped[key] = [];
+        }
+
+        grouped[key].push(rowDate);
+    });
+
+    const periods = [];
+
+    Object.entries(grouped).forEach(([key, dates]) => {
+        const [staff, reason] = key.split("|");
+
+        const uniqueDates = [...new Set(dates)].sort();
+
+        let startDate = null;
+        let previousDate = null;
+
+        function addPeriod(endDate) {
+            if (!startDate) return;
+
+            periods.push({
+                staff,
+                reason,
+                startDate,
+                endDate,
+                originalStartDate: startDate,
+                originalEndDate: endDate
+            });
+        }
+
+        uniqueDates.forEach(currentDate => {
+            if (!startDate) {
+                startDate = currentDate;
+                previousDate = currentDate;
+                return;
+            }
+
+            const nextDay = new Date(
+                previousDate + "T00:00:00Z"
+            );
+
+            nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+
+            const expectedDate = nextDay
+                .toISOString()
+                .slice(0, 10);
+
+            if (currentDate === expectedDate) {
+                previousDate = currentDate;
+            } else {
+                addPeriod(previousDate);
+
+                startDate = currentDate;
+                previousDate = currentDate;
+            }
+        });
+
+        addPeriod(previousDate);
+    });
+
+    // Return only periods that include the selected date.
+    return periods.filter(period =>
+        period.startDate <= date &&
+        period.endDate >= date
+    );
+}
+
 async function openManpowerSection(venue, date, mode) {
     const requestedMode =
         mode === "leave" ? "leave" : "manpower";
