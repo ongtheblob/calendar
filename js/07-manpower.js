@@ -118,16 +118,27 @@ function ensureLeaveDateRangeControls() {
             makeDateField("leaveEndDate", "Leave until")
         );
 
-        const staffSelect = $("leaveStaff");
-        const insertBefore =
-            staffSelect?.closest("label, .form-group, .leave-field") ||
-            staffSelect?.parentElement;
+      const staffSelect = $("leaveStaff");
 
-        if (insertBefore && leaveSection.contains(insertBefore)) {
-            leaveSection.insertBefore(wrapper, insertBefore);
-        } else {
-            leaveSection.prepend(wrapper);
-        }
+// Find the direct child of leaveSection that contains
+// the staff selector. insertBefore requires a direct child.
+let insertBefore = staffSelect;
+
+while (
+    insertBefore &&
+    insertBefore.parentElement !== leaveSection
+) {
+    insertBefore = insertBefore.parentElement;
+}
+
+if (
+    insertBefore &&
+    insertBefore.parentElement === leaveSection
+) {
+    leaveSection.insertBefore(wrapper, insertBefore);
+} else {
+    leaveSection.prepend(wrapper);
+}
     }
 
     const start = $("leaveStartDate");
