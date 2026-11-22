@@ -927,15 +927,23 @@ function closeManpowerModal() {
 }
 
 
-/* =========================================================
-   36. SAVE PRESENT MANPOWER
 
-   Only modifies the manpower table.
+/* =========================================================
+   36.   SAVE PRESENT MANPOWER
+   Uses UPSERT to prevent duplicate primary-key errors.
 ========================================================= */
 
 async function savePresentManpower() {
     const venue = manpowerVenue;
     const date = manpowerDate;
+
+    if (!venue || !date) {
+        throw new Error("Venue or date is missing.");
+    }
+
+    if (!supabaseClient) {
+        throw new Error("Supabase is not connected.");
+    }
 
     const record = {
         venue,
@@ -945,46 +953,26 @@ async function savePresentManpower() {
         notes: valueOf("manpowerNotes").trim()
     };
 
-    const {
-        data: existing,
-        error: readError
-    } = await supabaseClient
+    const { data, error } = await supabaseClient
         .from("manpower")
-        .select("venue,date")
-        .eq("venue", venue)
-        .eq("date", date)
-        .maybeSingle();
+        .upsert(record, {
+            onConflict: "venue,date"
+        })
+        .select("venue,date");
 
-    if (readError) throw readError;
-
-    let result;
-
-    if (existing) {
-        result = await supabaseClient
-            .from("manpower")
-            .update({
-                staff: record.staff,
-                required: record.required,
-                notes: record.notes
-            })
-            .eq("venue", venue)
-            .eq("date", date)
-            .select("venue,date");
-    } else {
-        result = await supabaseClient
-            .from("manpower")
-            .insert(record)
-            .select("venue,date");
+    if (error) {
+        console.error("Supabase manpower upsert error:", error);
+        throw error;
     }
 
-    if (result.error) throw result.error;
-
-    if (!result.data || result.data.length !== 1) {
+    if (!data || data.length === 0) {
         throw new Error(
             "Supabase did not confirm the manpower save. " +
-            "Check table permissions and RLS."
+            "Please check your table permissions and RLS policies."
         );
     }
+
+    console.log("Manpower saved successfully:", data);
 }
 
 /* =========================================================
