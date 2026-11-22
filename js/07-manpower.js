@@ -124,27 +124,27 @@ function ensureLeaveDateRangeControls() {
             makeDateField("leaveEndDate", "Leave until")
         );
 
-      const staffSelect = $("leaveStaff");
+        const staffSelect = $("leaveStaff");
 
-// Find the direct child of leaveSection that contains
-// the staff selector. insertBefore requires a direct child.
-let insertBefore = staffSelect;
+        // Find the direct child of leaveSection that contains
+        // the staff selector. insertBefore requires a direct child.
+        let insertBefore = staffSelect;
 
-while (
-    insertBefore &&
-    insertBefore.parentElement !== leaveSection
-) {
-    insertBefore = insertBefore.parentElement;
-}
+        while (
+            insertBefore &&
+            insertBefore.parentElement !== leaveSection
+        ) {
+            insertBefore = insertBefore.parentElement;
+        }
 
-if (
-    insertBefore &&
-    insertBefore.parentElement === leaveSection
-) {
-    leaveSection.insertBefore(wrapper, insertBefore);
-} else {
-    leaveSection.prepend(wrapper);
-}
+        if (
+            insertBefore &&
+            insertBefore.parentElement === leaveSection
+        ) {
+            leaveSection.insertBefore(wrapper, insertBefore);
+        } else {
+            leaveSection.prepend(wrapper);
+        }
     }
 
     const start = $("leaveStartDate");
@@ -330,41 +330,44 @@ function renderLeaveEntries() {
         remove.className = "small-btn";
         remove.textContent = "Remove";
 
-       remove.addEventListener("click", () => {
-          const entry = getLeaveDraft()[index];
-      
-          if (!entry) return;
-      
-          // Mark the entire original saved period for deletion.
-          if (
-              entry.originalStartDate &&
-              entry.originalEndDate
-          ) {
-              removedLeavePeriods.push({
-                  staff: entry.staff,
-                  reason: entry.reason,
-                  startDate: entry.originalStartDate,
-                  endDate: entry.originalEndDate
-              });
-          }
-      
-          // Remove the whole period from the draft.
-          getLeaveDraft().splice(index, 1);
-      
-          // Cancel editing if this period was being edited.
-          if (editingLeaveIndex === index) {
-              cancelLeavePeriodEdit();
-          }
-      
-          renderLeaveEntries();
-      
-          console.log(
-              "Entire Off / Leave period marked for removal:",
-              entry
-          );
-      });
+        remove.addEventListener("click", () => {
+            const entry = getLeaveDraft()[index];
 
+            if (!entry) return;
 
+            // Mark the entire original saved period for deletion.
+            if (
+                entry.originalStartDate &&
+                entry.originalEndDate
+            ) {
+                removedLeavePeriods.push({
+                    staff: entry.staff,
+                    reason: entry.reason,
+                    startDate: entry.originalStartDate,
+                    endDate: entry.originalEndDate
+                });
+            }
+
+            // Remove the whole period from the draft.
+            getLeaveDraft().splice(index, 1);
+
+            // Cancel editing if this period was being edited.
+            if (editingLeaveIndex === index) {
+                cancelLeavePeriodEdit();
+            }
+
+            renderLeaveEntries();
+
+            console.log(
+                "Entire Off / Leave period marked for removal:",
+                entry
+            );
+        });
+
+        item.append(details, edit, remove);
+        container.appendChild(item);
+    });
+}
 
 function cancelLeavePeriodEdit() {
     editingLeaveIndex = null;
@@ -445,7 +448,7 @@ function addLeaveEntry() {
 
             leaveEntry.originalEndDate =
                 oldEntry.originalEndDate ||
-                oldEntry.endDate;
+            oldEntry.endDate;
 
             entries[existingIndex] = leaveEntry;
         } else {
@@ -586,39 +589,39 @@ async function openManpowerSection(venue, date, mode) {
     setValue("requiredManpower", REQUIRED_MANPOWER);
     setValue("manpowerNotes", record.notes || "");
 
- // Reset edit and removal tracking each time the modal opens.
-editingLeaveIndex = null;
-removedLeavePeriods = [];
+    // Reset edit and removal tracking each time the modal opens.
+    editingLeaveIndex = null;
+    removedLeavePeriods = [];
 
-// Load saved leave periods from Supabase.
-// This allows the user to edit the complete period.
-try {
-    if (mode === "leave" && supabaseClient) {
-        draftLeaveEntries =
-            await loadLeavePeriodsForDate(venue, date);
-    } else {
-        draftLeaveEntries =
-            Array.isArray(record.leaveEntries)
-                ? record.leaveEntries.map(entry => ({
-                    staff: String(
-                        entry.staff || entry.name || ""
-                    ).trim(),
-                    reason: String(
-                        entry.reason || "Off Day"
-                    ),
-                    startDate: date,
-                    endDate: date
-                })).filter(entry => entry.staff)
-                : [];
+    // Load saved leave periods from Supabase.
+    // This allows the user to edit the complete period.
+    try {
+        if (mode === "leave" && supabaseClient) {
+            draftLeaveEntries =
+                await loadLeavePeriodsForDate(venue, date);
+        } else {
+            draftLeaveEntries =
+                Array.isArray(record.leaveEntries)
+                    ? record.leaveEntries.map(entry => ({
+                        staff: String(
+                            entry.staff || entry.name || ""
+                        ).trim(),
+                        reason: String(
+                            entry.reason || "Off Day"
+                        ),
+                        startDate: date,
+                        endDate: date
+                    })).filter(entry => entry.staff)
+                    : [];
+        }
+    } catch (error) {
+        console.error(
+            "Could not load saved leave periods:",
+            error
+        );
+
+        draftLeaveEntries = [];
     }
-} catch (error) {
-    console.error(
-        "Could not load saved leave periods:",
-        error
-    );
-
-    draftLeaveEntries = [];
-}
 
     renderStaffChecklist(record.staff || []);
     renderLeaveStaffOptions();
@@ -830,30 +833,71 @@ async function saveLeaveEntries() {
     const date = manpowerDate;
 
     if (!venue || !date) {
-        throw new Error(
-            "Missing venue or date for Off / Leave save."
-        );
+        throw new Error("Missing venue or date for Off / Leave save.");
     }
 
-    const desiredEntries = getLeaveDraft().map(entry => ({
-        venue,
-        date,
-        staff: entry.staff,
-        reason: entry.reason
-    }));
+    if (!supabaseClient) {
+        throw new Error("Supabase is not connected.");
+    }
 
-    console.log("Saving Off / Leave entries:", {
-        venue,
-        date,
-        entries: desiredEntries
+    const draft = getLeaveDraft();
+
+    // Remove entire original ranges for deleted or edited periods.
+    const periodsToDelete = [
+        ...removedLeavePeriods,
+        ...draft
+            .filter(entry =>
+                entry.originalStartDate &&
+                entry.originalEndDate
+            )
+            .map(entry => ({
+                staff: entry.staff,
+                startDate: entry.originalStartDate,
+                endDate: entry.originalEndDate
+            }))
+    ];
+
+    const uniquePeriods = [];
+    const periodKeys = new Set();
+
+    periodsToDelete.forEach(period => {
+        if (
+            !period.staff ||
+            !period.startDate ||
+            !period.endDate
+        ) {
+            return;
+        }
+
+        const key = [
+            period.staff,
+            period.startDate,
+            period.endDate
+        ].join("|");
+
+        if (!periodKeys.has(key)) {
+            periodKeys.add(key);
+            uniquePeriods.push(period);
+        }
     });
 
-    // Expand every selected leave period into one record per date.
-    // The existing table stores one staff/venue/date record, so this
-    // keeps the current database structure and calendar loading intact.
+    // Delete every database row belonging to the original period.
+    for (const period of uniquePeriods) {
+        const { error } = await supabaseClient
+            .from("manpower_leave_entries")
+            .delete()
+            .eq("venue", venue)
+            .eq("staff", period.staff)
+            .gte("date", period.startDate)
+            .lte("date", period.endDate);
+
+        if (error) throw error;
+    }
+
+    // Expand each draft period into one row per date.
     const rangeEntries = [];
 
-    for (const entry of getLeaveDraft()) {
+    for (const entry of draft) {
         const startDate = entry.startDate || date;
         const endDate = entry.endDate || date;
 
@@ -867,12 +911,12 @@ async function saveLeaveEntries() {
                 venue,
                 date: leaveDate,
                 staff: entry.staff,
-                reason: entry.reason
+                reason: entry.reason || "Off Day"
             });
         }
     }
 
-    // Read existing records for the selected day.
+    // Remove selected-day entries that are no longer in the draft.
     const {
         data: existingRows,
         error: readError
@@ -884,56 +928,35 @@ async function saveLeaveEntries() {
 
     if (readError) throw readError;
 
-    // Add new entries or update existing entries.
-    // Skip this step when the draft is empty.
-    if (desiredEntries.length > 0) {
-        const {
-            error: upsertError
-        } = await supabaseClient
-            .from("manpower_leave_entries")
-            .upsert(desiredEntries, {
-                onConflict: "venue,date,staff"
-            });
+    const draftStaff = new Set(
+        draft.map(entry => entry.staff)
+    );
 
-        if (upsertError) throw upsertError;
+    const rowsToRemove = (existingRows || []).filter(
+        row => !draftStaff.has(row.staff)
+    );
+
+    for (const row of rowsToRemove) {
+        const { error } = await supabaseClient
+            .from("manpower_leave_entries")
+            .delete()
+            .eq("id", row.id);
+
+        if (error) throw error;
     }
 
-    // Save the full date ranges. Upsert prevents duplicate records
-    // for the same venue, date and staff member.
-    if (rangeEntries.length > 0) {
-        const {
-            error: rangeUpsertError
-        } = await supabaseClient
+    // Upsert the complete new or edited periods.
+    if (rangeEntries.length) {
+        const { error } = await supabaseClient
             .from("manpower_leave_entries")
             .upsert(rangeEntries, {
                 onConflict: "venue,date,staff"
             });
 
-        if (rangeUpsertError) throw rangeUpsertError;
+        if (error) throw error;
     }
 
-    // Identify entries removed from the draft.
-    const desiredNames = new Set(
-        desiredEntries.map(entry => entry.staff)
-    );
-
-    const removedRows = (existingRows || []).filter(
-        row => !desiredNames.has(row.staff)
-    );
-
-    // Delete removed entries from Supabase.
-    for (const row of removedRows) {
-        const {
-            error: deleteError
-        } = await supabaseClient
-            .from("manpower_leave_entries")
-            .delete()
-            .eq("id", row.id);
-
-        if (deleteError) throw deleteError;
-    }
-
-    // Verify the final database contents.
+    // Verify selected-date rows against the draft.
     const {
         data: verifiedRows,
         error: verifyError
@@ -947,19 +970,17 @@ async function saveLeaveEntries() {
 
     const verified = verifiedRows || [];
 
-    if (verified.length !== desiredEntries.length) {
+    if (verified.length !== draft.length) {
         throw new Error(
-            "Unable to verify Off / Leave changes. " +
-            "Expected " + desiredEntries.length +
-            " record(s), but found " +
+            "Unable to verify Off / Leave changes. Expected " +
+            draft.length + " record(s), but found " +
             verified.length + "."
         );
     }
 
-    console.log(
-        "Verified Off / Leave records:",
-        verified
-    );
+    console.log("Verified Off / Leave records:", verified);
+
+    removedLeavePeriods = [];
 
     return verified;
 }
@@ -1068,10 +1089,28 @@ function clearPresentDraft() {
 ========================================================= */
 
 function clearLeaveDraft() {
+    // Mark every loaded saved period for full-range deletion.
+    getLeaveDraft().forEach(entry => {
+        if (
+            entry.originalStartDate &&
+            entry.originalEndDate
+        ) {
+            removedLeavePeriods.push({
+                staff: entry.staff,
+                reason: entry.reason,
+                startDate: entry.originalStartDate,
+                endDate: entry.originalEndDate
+            });
+        }
+    });
+
     draftLeaveEntries = [];
+    editingLeaveIndex = null;
     renderLeaveEntries();
 
-    console.log("Off / Leave draft cleared.");
+    console.log(
+        "Off / Leave draft cleared; saved periods marked for deletion."
+    );
 }
 
 
@@ -1166,3 +1205,4 @@ async function clearEntireManpowerDay() {
             button.disabled = false;
         }
     }
+}
