@@ -331,7 +331,38 @@ function renderLeaveEntries() {
         remove.textContent = "Remove";
 
         remove.addEventListener("click", () => {
-            const removedEntry = getLeaveDraft()[index];
+    const entry = getLeaveDraft()[index];
+
+    if (!entry) return;
+
+    // Mark the entire original saved period for deletion.
+    if (
+        entry.originalStartDate &&
+        entry.originalEndDate
+    ) {
+        removedLeavePeriods.push({
+            staff: entry.staff,
+            reason: entry.reason,
+            startDate: entry.originalStartDate,
+            endDate: entry.originalEndDate
+        });
+    }
+
+    // Remove the whole period from the draft.
+    getLeaveDraft().splice(index, 1);
+
+    // If this period was being edited, cancel the edit.
+    if (editingLeaveIndex === index) {
+        cancelLeavePeriodEdit();
+    }
+
+    renderLeaveEntries();
+
+    console.log(
+        "Entire Off / Leave period marked for removal:",
+        entry
+    );
+});
 
             // Remember the original saved period so it can
             // be deleted from Supabase when Save is clicked.
