@@ -473,6 +473,10 @@ function renderEagleView() {
                         ? "Edit staff"
                         : "+ Staff";
 
+                staffButton.classList.add(
+                "calendar-add-button",
+                "staff-button"
+                );
                 manpowerButton.addEventListener("click", event => {
                     event.stopPropagation();
 
@@ -681,6 +685,10 @@ function renderEagleView() {
                         ? "Edit Off / Leave"
                         : "+ Off / Leave";
 
+                leaveButton.classList.add(
+                "calendar-add-button",
+                "leave-button"
+                    );
                 leaveButton.addEventListener("click", event => {
                     event.stopPropagation();
 
