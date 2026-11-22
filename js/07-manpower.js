@@ -390,19 +390,13 @@ function addLeaveEntry() {
     const range = getLeaveDateRange();
 
     if (!staff) {
-        alert(
-            "Please select a staff member for Off / Leave."
-        );
+        alert("Please select a staff member for Off / Leave.");
         return;
     }
 
     if (!range) return;
 
     const entries = getLeaveDraft();
-
-    const existingIndex = entries.findIndex(
-        entry => entry.staff === staff
-    );
 
     const leaveEntry = {
         staff,
@@ -411,124 +405,51 @@ function addLeaveEntry() {
         endDate: range.endDate
     };
 
-    if (existingIndex >= 0) {
-        entries[existingIndex] = leaveEntry;
+    // Updating an existing period.
+    if (
+        editingLeaveIndex !== null &&
+        entries[editingLeaveIndex]
+    ) {
+        const oldEntry = entries[editingLeaveIndex];
+
+        leaveEntry.originalStartDate =
+            oldEntry.originalStartDate ||
+            oldEntry.startDate;
+
+        leaveEntry.originalEndDate =
+            oldEntry.originalEndDate ||
+            oldEntry.endDate;
+
+        entries[editingLeaveIndex] = leaveEntry;
+
+        cancelLeavePeriodEdit();
     } else {
-        entries.push(leaveEntry);
+        // If the same staff member already exists in the draft,
+        // update their period instead of creating a duplicate.
+        const existingIndex = entries.findIndex(
+            entry => entry.staff === staff
+        );
+
+        if (existingIndex >= 0) {
+            const oldEntry = entries[existingIndex];
+
+            leaveEntry.originalStartDate =
+                oldEntry.originalStartDate ||
+                oldEntry.startDate;
+
+            leaveEntry.originalEndDate =
+                oldEntry.originalEndDate ||
+                oldEntry.endDate;
+
+            entries[existingIndex] = leaveEntry;
+        } else {
+            entries.push(leaveEntry);
+        }
+
+        setValue("leaveStaff", "");
     }
 
-    setValue("leaveStaff", "");
     renderLeaveEntries();
-}
-
-
-async function loadLeavePeriodsForDate(venue, date) {
-    const { data, error } = await supabaseClient
-        .from("manpower_leave_entries")
-        .select("date,staff,reason")
-        .eq("venue", venue)
-        .order("date", { ascending: true });
-
-    if (error) throw error;
-
-    const rows = (data || [])
-        .map(row => ({
-            date: String(row.date).slice(0, 10),
-            staff: String(row.staff || "").trim(),
-            reason: String(row.reason || "Off Day")
-        }))
-        .filter(row => row.staff);
-
-    // Only show staff who have leave on the selected calendar date.
-    const staffOnSelectedDate = new Set(
-        rows
-            .filter(row => row.date === date)
-            .map(row => row.staff)
-    );
-
-    const grouped = new Map();
-
-    rows.forEach(row => {
-        const key = row.staff + "\u0000" + row.reason;
-
-        if (!grouped.has(key)) {
-            grouped.set(key, []);
-        }
-
-        grouped.get(key).push(row.date);
-    });
-
-    const periods = [];
-
-    for (const [key, dates] of grouped.entries()) {
-        const [staff, reason] = key.split("\u0000");
-
-        if (!staffOnSelectedDate.has(staff)) {
-            continue;
-        }
-
-        const sortedDates = [...new Set(dates)].sort();
-
-        let startDate = null;
-        let previousDate = null;
-
-        const groups = [];
-
-        for (const currentDate of sortedDates) {
-            const current = new Date(
-                currentDate + "T00:00:00"
-            );
-
-            const previous = previousDate
-                ? new Date(previousDate + "T00:00:00")
-                : null;
-
-            const isConsecutive =
-                previous &&
-                current - previous === 86400000;
-
-            if (!startDate || !isConsecutive) {
-                if (startDate) {
-                    groups.push({
-                        startDate,
-                        endDate: previousDate
-                    });
-                }
-
-                startDate = currentDate;
-            }
-
-            previousDate = currentDate;
-        }
-
-        if (startDate) {
-            groups.push({
-                startDate,
-                endDate: previousDate
-            });
-        }
-
-        // Return the continuous period containing the selected date.
-        groups
-            .filter(group =>
-                group.startDate <= date &&
-                group.endDate >= date
-            )
-            .forEach(group => {
-                periods.push({
-                    staff,
-                    reason,
-                    startDate: group.startDate,
-                    endDate: group.endDate,
-
-                    // Keep the original saved dates for cleanup.
-                    originalStartDate: group.startDate,
-                    originalEndDate: group.endDate
-                });
-            });
-    }
-
-    return periods;
 }
 
 /* =========================================================
@@ -559,24 +480,39 @@ function openManpowerSection(venue, date, mode) {
     setValue("requiredManpower", REQUIRED_MANPOWER);
     setValue("manpowerNotes", record.notes || "");
 
-    // Load existing leave entries for this venue/date.
-    // This happens when opening the modal, not when saving.
-    draftLeaveEntries = Array.isArray(record.leaveEntries)
-        ? record.leaveEntries
-            .map(entry => ({
-                staff: String(
-                    entry.staff || entry.name || ""
-                ).trim(),
+ // Reset edit and removal tracking each time the modal opens.
+editingLeaveIndex = null;
+removedLeavePeriods = [];
 
-                reason: String(
-                    entry.reason || "Off Day"
-                ),
+// Load saved leave periods from Supabase.
+// This allows the user to edit the complete period.
+try {
+    if (mode === "leave" && supabaseClient) {
+        draftLeaveEntries =
+            await loadLeavePeriodsForDate(venue, date);
+    } else {
+        draftLeaveEntries =
+            Array.isArray(record.leaveEntries)
+                ? record.leaveEntries.map(entry => ({
+                    staff: String(
+                        entry.staff || entry.name || ""
+                    ).trim(),
+                    reason: String(
+                        entry.reason || "Off Day"
+                    ),
+                    startDate: date,
+                    endDate: date
+                })).filter(entry => entry.staff)
+                : [];
+    }
+} catch (error) {
+    console.error(
+        "Could not load saved leave periods:",
+        error
+    );
 
-                startDate: manpowerDate,
-                endDate: manpowerDate
-            }))
-            .filter(entry => entry.staff)
-        : [];
+    draftLeaveEntries = [];
+}
 
     renderStaffChecklist(record.staff || []);
     renderLeaveStaffOptions();
