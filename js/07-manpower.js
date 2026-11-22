@@ -1166,4 +1166,3 @@ async function clearEntireManpowerDay() {
             button.disabled = false;
         }
     }
-}
