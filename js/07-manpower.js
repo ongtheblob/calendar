@@ -464,7 +464,7 @@ function openLeaveModal(venue, date) {
     openManpowerSection(venue, date, "leave");
 }
 
-function openManpowerSection(venue, date, mode) {
+async function openManpowerSection(venue, date, mode) {
     const requestedMode =
         mode === "leave" ? "leave" : "manpower";
 
