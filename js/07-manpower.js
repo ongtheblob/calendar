@@ -1,4 +1,3 @@
-
 /* =========================================================
    30. PRESENT STAFF CHECKLIST
 ========================================================= */
@@ -75,6 +74,146 @@ function updateStaffStatus() {
 
 
 /* =========================================================
+   31.1 LEAVE DATE RANGE CONTROLS
+   Added dynamically so index.html does not need new controls.
+========================================================= */
+
+function ensureLeaveDateRangeControls() {
+    const leaveSection = document.querySelector(".leave-management");
+    if (!leaveSection) return;
+
+    let wrapper = $("leaveDateRangeControls");
+
+    if (!wrapper) {
+        wrapper = document.createElement("div");
+        wrapper.id = "leaveDateRangeControls";
+        wrapper.className = "leave-date-range-controls";
+        wrapper.style.display = "flex";
+        wrapper.style.flexWrap = "wrap";
+        wrapper.style.alignItems = "center";
+        wrapper.style.gap = "12px";
+        wrapper.style.margin = "0 0 12px";
+
+        const makeDateField = (id, labelText) => {
+            const group = document.createElement("label");
+            group.style.display = "flex";
+            group.style.flexDirection = "column";
+            group.style.gap = "4px";
+            group.style.fontWeight = "600";
+            group.textContent = labelText;
+
+            const input = document.createElement("input");
+            input.type = "date";
+            input.id = id;
+            input.style.minWidth = "150px";
+            input.style.padding = "8px";
+            input.style.border = "1px solid #cbd5e1";
+            input.style.borderRadius = "6px";
+            group.appendChild(input);
+            return group;
+        };
+
+        wrapper.append(
+            makeDateField("leaveStartDate", "Leave from"),
+            makeDateField("leaveEndDate", "Leave until")
+        );
+
+        const staffSelect = $("leaveStaff");
+        const insertBefore =
+            staffSelect?.closest("label, .form-group, .leave-field") ||
+            staffSelect?.parentElement;
+
+        if (insertBefore && leaveSection.contains(insertBefore)) {
+            leaveSection.insertBefore(wrapper, insertBefore);
+        } else {
+            leaveSection.prepend(wrapper);
+        }
+    }
+
+    const start = $("leaveStartDate");
+    const end = $("leaveEndDate");
+
+    if (start && !start.value) {
+        start.value = manpowerDate || "";
+    }
+
+    if (end && !end.value) {
+        end.value = manpowerDate || "";
+    }
+}
+
+function getLeaveDateRange() {
+    const start = valueOf(
+        "leaveStartDate",
+        manpowerDate || ""
+    ).trim();
+
+    const end = valueOf(
+        "leaveEndDate",
+        manpowerDate || ""
+    ).trim();
+
+    if (!start || !end) {
+        alert(
+            "Please select both the first and last leave dates."
+        );
+        return null;
+    }
+
+    const startDate = new Date(start + "T00:00:00");
+    const endDate = new Date(end + "T00:00:00");
+
+    if (
+        Number.isNaN(startDate.getTime()) ||
+        Number.isNaN(endDate.getTime()) ||
+        endDate < startDate
+    ) {
+        alert(
+            "The leave end date must be on or after the start date."
+        );
+        return null;
+    }
+
+    const days =
+        Math.round((endDate - startDate) / 86400000) + 1;
+
+    if (days > 366) {
+        alert(
+            "Please select a leave period of 366 days or less."
+        );
+        return null;
+    }
+
+    return {
+        startDate: start,
+        endDate: end,
+        days
+    };
+}
+
+function datesInLeaveRange(start, end) {
+    const dates = [];
+    const current = new Date(start + "T00:00:00");
+    const last = new Date(end + "T00:00:00");
+
+    while (current <= last) {
+        const year = current.getFullYear();
+        const month = String(
+            current.getMonth() + 1
+        ).padStart(2, "0");
+        const day = String(
+            current.getDate()
+        ).padStart(2, "0");
+
+        dates.push(`${year}-${month}-${day}`);
+        current.setDate(current.getDate() + 1);
+    }
+
+    return dates;
+}
+
+
+/* =========================================================
    31. OFF / LEAVE STAFF OPTIONS
 ========================================================= */
 
@@ -115,7 +254,7 @@ function renderLeaveEntries() {
         const empty = document.createElement("div");
         empty.className = "leave-empty";
         empty.textContent =
-            "No Off / Leave entries for this day.";
+            "No staff leave added yet.";
 
         container.appendChild(empty);
         return;
@@ -126,8 +265,32 @@ function renderLeaveEntries() {
         item.className = "leave-entry-item";
 
         const details = document.createElement("span");
+
+        const rangeStart =
+            entry.startDate || manpowerDate;
+        const rangeEnd =
+            entry.endDate || manpowerDate;
+
+        const dateLabel =
+            rangeStart && rangeEnd
+                ? (
+                    rangeStart === rangeEnd
+                        ? " (" +
+                            formatDisplayDate(rangeStart) +
+                            ")"
+                        : " (" +
+                            formatDisplayDate(rangeStart) +
+                            " – " +
+                            formatDisplayDate(rangeEnd) +
+                            ")"
+                )
+                : "";
+
         details.textContent =
-            entry.staff + " — " + entry.reason;
+            entry.staff +
+            " — " +
+            entry.reason +
+            dateLabel;
 
         const remove = document.createElement("button");
         remove.type = "button";
@@ -161,21 +324,21 @@ function renderLeaveEntries() {
 
 function addLeaveEntry() {
     const staff = valueOf("leaveStaff").trim();
-    const reason =
-        valueOf("leaveReason", "Off Day").trim() || "Off Day";
 
-    console.log("ADD OFF / LEAVE clicked", {
-        staff,
-        reason,
-        mode: manpowerModalMode,
-        venue: manpowerVenue,
-        date: manpowerDate
-    });
+    const reason =
+        valueOf("leaveReason", "Off Day").trim() ||
+        "Off Day";
+
+    const range = getLeaveDateRange();
 
     if (!staff) {
-        alert("Please select a staff member for Off / Leave.");
+        alert(
+            "Please select a staff member for Off / Leave."
+        );
         return;
     }
+
+    if (!range) return;
 
     const entries = getLeaveDraft();
 
@@ -183,19 +346,18 @@ function addLeaveEntry() {
         entry => entry.staff === staff
     );
 
-    if (existingIndex >= 0) {
-        entries[existingIndex].reason = reason;
-    } else {
-        entries.push({
-            staff,
-            reason
-        });
-    }
+    const leaveEntry = {
+        staff,
+        reason,
+        startDate: range.startDate,
+        endDate: range.endDate
+    };
 
-    console.log(
-        "Off / Leave draft after adding:",
-        JSON.stringify(entries)
-    );
+    if (existingIndex >= 0) {
+        entries[existingIndex] = leaveEntry;
+    } else {
+        entries.push(leaveEntry);
+    }
 
     setValue("leaveStaff", "");
     renderLeaveEntries();
@@ -238,28 +400,52 @@ function openManpowerSection(venue, date, mode) {
                 staff: String(
                     entry.staff || entry.name || ""
                 ).trim(),
+
                 reason: String(
                     entry.reason || "Off Day"
-                )
+                ),
+
+                startDate: manpowerDate,
+                endDate: manpowerDate
             }))
             .filter(entry => entry.staff)
         : [];
 
     renderStaffChecklist(record.staff || []);
     renderLeaveStaffOptions();
+
+    ensureLeaveDateRangeControls();
+
+    if ($("leaveStartDate")) {
+        $("leaveStartDate").value = date;
+    }
+
+    if ($("leaveEndDate")) {
+        $("leaveEndDate").value = date;
+    }
+
     renderLeaveEntries();
 
     updateStaffCount();
     updateStaffStatus();
 
-    const presentSection = $("presentManpowerSection");
-    const notesSection = $("manpowerNotesSection");
+    const presentSection =
+        $("presentManpowerSection");
+
+    const notesSection =
+        $("manpowerNotesSection");
+
     const leaveSection =
         document.querySelector(".leave-management");
-    const clearDayButton = $("clearManpowerDay");
 
-    const showPresent = requestedMode === "manpower";
-    const showLeave = requestedMode === "leave";
+    const clearDayButton =
+        $("clearManpowerDay");
+
+    const showPresent =
+        requestedMode === "manpower";
+
+    const showLeave =
+        requestedMode === "leave";
 
     if (presentSection) {
         presentSection.hidden = !showPresent;
@@ -316,11 +502,17 @@ function openManpowerSection(venue, date, mode) {
 function closeManpowerModal() {
     $("manpowerModal")?.classList.remove("visible");
 
-    const presentSection = $("presentManpowerSection");
-    const notesSection = $("manpowerNotesSection");
+    const presentSection =
+        $("presentManpowerSection");
+
+    const notesSection =
+        $("manpowerNotesSection");
+
     const leaveSection =
         document.querySelector(".leave-management");
-    const clearDayButton = $("clearManpowerDay");
+
+    const clearDayButton =
+        $("clearManpowerDay");
 
     if (presentSection) {
         presentSection.hidden = false;
@@ -354,7 +546,6 @@ function closeManpowerModal() {
     }
 }
 
-
 /* =========================================================
    36. SAVE PRESENT MANPOWER
 
@@ -373,13 +564,15 @@ async function savePresentManpower() {
         notes: valueOf("manpowerNotes").trim()
     };
 
-    const { data: existing, error: readError } =
-        await supabaseClient
-            .from("manpower")
-            .select("venue,date")
-            .eq("venue", venue)
-            .eq("date", date)
-            .maybeSingle();
+    const {
+        data: existing,
+        error: readError
+    } = await supabaseClient
+        .from("manpower")
+        .select("venue,date")
+        .eq("venue", venue)
+        .eq("date", date)
+        .maybeSingle();
 
     if (readError) throw readError;
 
@@ -446,27 +639,68 @@ async function saveLeaveEntries() {
         entries: desiredEntries
     });
 
+    // Expand every selected leave period into one record per date.
+    // The existing table stores one staff/venue/date record, so this
+    // keeps the current database structure and calendar loading intact.
+    const rangeEntries = [];
+
+    for (const entry of getLeaveDraft()) {
+        const startDate = entry.startDate || date;
+        const endDate = entry.endDate || date;
+
+        for (
+            const leaveDate of datesInLeaveRange(
+                startDate,
+                endDate
+            )
+        ) {
+            rangeEntries.push({
+                venue,
+                date: leaveDate,
+                staff: entry.staff,
+                reason: entry.reason
+            });
+        }
+    }
+
     // Read existing records for the selected day.
-    const { data: existingRows, error: readError } =
-        await supabaseClient
-            .from("manpower_leave_entries")
-            .select("id,staff")
-            .eq("venue", venue)
-            .eq("date", date);
+    const {
+        data: existingRows,
+        error: readError
+    } = await supabaseClient
+        .from("manpower_leave_entries")
+        .select("id,staff")
+        .eq("venue", venue)
+        .eq("date", date);
 
     if (readError) throw readError;
 
     // Add new entries or update existing entries.
     // Skip this step when the draft is empty.
     if (desiredEntries.length > 0) {
-        const { error: upsertError } =
-            await supabaseClient
-                .from("manpower_leave_entries")
-                .upsert(desiredEntries, {
-                    onConflict: "venue,date,staff"
-                });
+        const {
+            error: upsertError
+        } = await supabaseClient
+            .from("manpower_leave_entries")
+            .upsert(desiredEntries, {
+                onConflict: "venue,date,staff"
+            });
 
         if (upsertError) throw upsertError;
+    }
+
+    // Save the full date ranges. Upsert prevents duplicate records
+    // for the same venue, date and staff member.
+    if (rangeEntries.length > 0) {
+        const {
+            error: rangeUpsertError
+        } = await supabaseClient
+            .from("manpower_leave_entries")
+            .upsert(rangeEntries, {
+                onConflict: "venue,date,staff"
+            });
+
+        if (rangeUpsertError) throw rangeUpsertError;
     }
 
     // Identify entries removed from the draft.
@@ -480,22 +714,25 @@ async function saveLeaveEntries() {
 
     // Delete removed entries from Supabase.
     for (const row of removedRows) {
-        const { error: deleteError } =
-            await supabaseClient
-                .from("manpower_leave_entries")
-                .delete()
-                .eq("id", row.id);
+        const {
+            error: deleteError
+        } = await supabaseClient
+            .from("manpower_leave_entries")
+            .delete()
+            .eq("id", row.id);
 
         if (deleteError) throw deleteError;
     }
 
     // Verify the final database contents.
-    const { data: verifiedRows, error: verifyError } =
-        await supabaseClient
-            .from("manpower_leave_entries")
-            .select("id,venue,date,staff,reason")
-            .eq("venue", venue)
-            .eq("date", date);
+    const {
+        data: verifiedRows,
+        error: verifyError
+    } = await supabaseClient
+        .from("manpower_leave_entries")
+        .select("id,venue,date,staff,reason")
+        .eq("venue", venue)
+        .eq("date", date);
 
     if (verifyError) throw verifyError;
 
@@ -665,22 +902,24 @@ async function clearEntireManpowerDay() {
         const date = manpowerDate;
 
         // Delete Off / Leave entries.
-        const { error: leaveError } =
-            await supabaseClient
-                .from("manpower_leave_entries")
-                .delete()
-                .eq("venue", venue)
-                .eq("date", date);
+        const {
+            error: leaveError
+        } = await supabaseClient
+            .from("manpower_leave_entries")
+            .delete()
+            .eq("venue", venue)
+            .eq("date", date);
 
         if (leaveError) throw leaveError;
 
         // Delete Present Manpower.
-        const { error: manpowerError } =
-            await supabaseClient
-                .from("manpower")
-                .delete()
-                .eq("venue", venue)
-                .eq("date", date);
+        const {
+            error: manpowerError
+        } = await supabaseClient
+            .from("manpower")
+            .delete()
+            .eq("venue", venue)
+            .eq("date", date);
 
         if (manpowerError) throw manpowerError;
 
