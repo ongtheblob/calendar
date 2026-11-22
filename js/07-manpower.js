@@ -4,6 +4,12 @@
 
 let manpowerModalMode = "manpower";
 
+// Tracks which leave entry is currently being edited.
+let editingLeaveIndex = null;
+
+// Tracks saved leave periods that the user removes.
+let removedLeavePeriods = [];
+
 // draftLeaveEntries is declared in 03-state.js.
 // Do not declare it again in this file.
 function getLeaveDraft() {
@@ -264,9 +270,7 @@ function renderLeaveEntries() {
     if (!entries.length) {
         const empty = document.createElement("div");
         empty.className = "leave-empty";
-        empty.textContent =
-            "No staff leave added yet.";
-
+        empty.textContent = "No staff leave added yet.";
         container.appendChild(empty);
         return;
     }
@@ -275,27 +279,23 @@ function renderLeaveEntries() {
         const item = document.createElement("div");
         item.className = "leave-entry-item";
 
+        // Staff, reason and leave dates.
         const details = document.createElement("span");
 
-        const rangeStart =
-            entry.startDate || manpowerDate;
-        const rangeEnd =
-            entry.endDate || manpowerDate;
+        const from = entry.startDate || manpowerDate;
+        const until = entry.endDate || manpowerDate;
 
-        const dateLabel =
-            rangeStart && rangeEnd
-                ? (
-                    rangeStart === rangeEnd
-                        ? " (" +
-                            formatDisplayDate(rangeStart) +
-                            ")"
-                        : " (" +
-                            formatDisplayDate(rangeStart) +
-                            " – " +
-                            formatDisplayDate(rangeEnd) +
-                            ")"
-                )
-                : "";
+        const dateLabel = from && until
+            ? (
+                from === until
+                    ? " (" + formatDisplayDate(from) + ")"
+                    : " (" +
+                        formatDisplayDate(from) +
+                        " – " +
+                        formatDisplayDate(until) +
+                        ")"
+            )
+            : "";
 
         details.textContent =
             entry.staff +
@@ -303,29 +303,76 @@ function renderLeaveEntries() {
             entry.reason +
             dateLabel;
 
+        // Edit button.
+        const edit = document.createElement("button");
+        edit.type = "button";
+        edit.className = "small-btn";
+        edit.textContent = "Edit period";
+
+        edit.addEventListener("click", () => {
+            editingLeaveIndex = index;
+
+            setValue("leaveStaff", entry.staff);
+            setValue("leaveReason", entry.reason);
+            setValue("leaveStartDate", entry.startDate || manpowerDate);
+            setValue("leaveEndDate", entry.endDate || manpowerDate);
+
+            const addButton = $("addLeaveEntry");
+
+            if (addButton) {
+                addButton.textContent = "Update period";
+            }
+        });
+
+        // Remove button.
         const remove = document.createElement("button");
         remove.type = "button";
         remove.className = "small-btn";
         remove.textContent = "Remove";
 
-        remove.setAttribute(
-            "aria-label",
-            "Remove " + entry.staff + " leave entry"
-        );
-
         remove.addEventListener("click", () => {
-            getLeaveDraft().splice(index, 1);
-            renderLeaveEntries();
+            const removedEntry = getLeaveDraft()[index];
 
-            console.log(
-                "Off / Leave draft after removal:",
-                JSON.stringify(getLeaveDraft())
-            );
+            // Remember the original saved period so it can
+            // be deleted from Supabase when Save is clicked.
+            if (
+                removedEntry?.originalStartDate &&
+                removedEntry?.originalEndDate
+            ) {
+                removedLeavePeriods.push({
+                    staff: removedEntry.staff,
+                    startDate: removedEntry.originalStartDate,
+                    endDate: removedEntry.originalEndDate
+                });
+            }
+
+            if (editingLeaveIndex === index) {
+                cancelLeavePeriodEdit();
+            }
+
+            getLeaveDraft().splice(index, 1);
+
+            renderLeaveEntries();
         });
 
-        item.append(details, remove);
+        item.append(details, edit, remove);
         container.appendChild(item);
     });
+}
+
+function cancelLeavePeriodEdit() {
+    editingLeaveIndex = null;
+
+    const addButton = $("addLeaveEntry");
+
+    if (addButton) {
+        addButton.textContent = "Add Off / Leave";
+    }
+
+    setValue("leaveStaff", "");
+    setValue("leaveReason", "Off Day");
+    setValue("leaveStartDate", manpowerDate || "");
+    setValue("leaveEndDate", manpowerDate || "");
 }
 
 
@@ -374,6 +421,115 @@ function addLeaveEntry() {
     renderLeaveEntries();
 }
 
+
+async function loadLeavePeriodsForDate(venue, date) {
+    const { data, error } = await supabaseClient
+        .from("manpower_leave_entries")
+        .select("date,staff,reason")
+        .eq("venue", venue)
+        .order("date", { ascending: true });
+
+    if (error) throw error;
+
+    const rows = (data || [])
+        .map(row => ({
+            date: String(row.date).slice(0, 10),
+            staff: String(row.staff || "").trim(),
+            reason: String(row.reason || "Off Day")
+        }))
+        .filter(row => row.staff);
+
+    // Only show staff who have leave on the selected calendar date.
+    const staffOnSelectedDate = new Set(
+        rows
+            .filter(row => row.date === date)
+            .map(row => row.staff)
+    );
+
+    const grouped = new Map();
+
+    rows.forEach(row => {
+        const key = row.staff + "\u0000" + row.reason;
+
+        if (!grouped.has(key)) {
+            grouped.set(key, []);
+        }
+
+        grouped.get(key).push(row.date);
+    });
+
+    const periods = [];
+
+    for (const [key, dates] of grouped.entries()) {
+        const [staff, reason] = key.split("\u0000");
+
+        if (!staffOnSelectedDate.has(staff)) {
+            continue;
+        }
+
+        const sortedDates = [...new Set(dates)].sort();
+
+        let startDate = null;
+        let previousDate = null;
+
+        const groups = [];
+
+        for (const currentDate of sortedDates) {
+            const current = new Date(
+                currentDate + "T00:00:00"
+            );
+
+            const previous = previousDate
+                ? new Date(previousDate + "T00:00:00")
+                : null;
+
+            const isConsecutive =
+                previous &&
+                current - previous === 86400000;
+
+            if (!startDate || !isConsecutive) {
+                if (startDate) {
+                    groups.push({
+                        startDate,
+                        endDate: previousDate
+                    });
+                }
+
+                startDate = currentDate;
+            }
+
+            previousDate = currentDate;
+        }
+
+        if (startDate) {
+            groups.push({
+                startDate,
+                endDate: previousDate
+            });
+        }
+
+        // Return the continuous period containing the selected date.
+        groups
+            .filter(group =>
+                group.startDate <= date &&
+                group.endDate >= date
+            )
+            .forEach(group => {
+                periods.push({
+                    staff,
+                    reason,
+                    startDate: group.startDate,
+                    endDate: group.endDate,
+
+                    // Keep the original saved dates for cleanup.
+                    originalStartDate: group.startDate,
+                    originalEndDate: group.endDate
+                });
+            });
+    }
+
+    return periods;
+}
 
 /* =========================================================
    34. OPEN MANPOWER / OFF-LEAVE MODALS
