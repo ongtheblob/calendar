@@ -928,9 +928,10 @@ function closeManpowerModal() {
 
 
 
+
 /* =========================================================
    36.   SAVE PRESENT MANPOWER
-   Uses UPSERT to prevent duplicate primary-key errors.
+   Primary key: (venue, date)
 ========================================================= */
 
 async function savePresentManpower() {
@@ -945,9 +946,11 @@ async function savePresentManpower() {
         throw new Error("Supabase is not connected.");
     }
 
+    // Only send columns that belong to this record.
+    // Do not send an id or manually generated primary key.
     const record = {
-        venue,
-        date,
+        venue: venue,
+        date: date,
         staff: selectedStaff(),
         required: REQUIRED_MANPOWER,
         notes: valueOf("manpowerNotes").trim()
@@ -961,18 +964,23 @@ async function savePresentManpower() {
         .select("venue,date");
 
     if (error) {
-        console.error("Supabase manpower upsert error:", error);
+        console.error("Manpower save failed:", {
+            message: error.message,
+            code: error.code,
+            details: error.details,
+            hint: error.hint
+        });
+
         throw error;
     }
 
     if (!data || data.length === 0) {
         throw new Error(
-            "Supabase did not confirm the manpower save. " +
-            "Please check your table permissions and RLS policies."
+            "Supabase did not confirm the manpower save."
         );
     }
 
-    console.log("Manpower saved successfully:", data);
+    console.log("Manpower saved:", data);
 }
 
 /* =========================================================
