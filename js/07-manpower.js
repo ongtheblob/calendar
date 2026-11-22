@@ -94,27 +94,19 @@ function ensureLeaveDateRangeControls() {
         wrapper = document.createElement("div");
         wrapper.id = "leaveDateRangeControls";
         wrapper.className = "leave-date-range-controls";
-        wrapper.style.display = "flex";
-        wrapper.style.flexWrap = "wrap";
-        wrapper.style.alignItems = "center";
-        wrapper.style.gap = "12px";
-        wrapper.style.margin = "0 0 12px";
+        wrapper.setAttribute("aria-label", "Leave date range");
 
         const makeDateField = (id, labelText) => {
             const group = document.createElement("label");
-            group.style.display = "flex";
-            group.style.flexDirection = "column";
-            group.style.gap = "4px";
-            group.style.fontWeight = "600";
+            group.className = "leave-date-field";
             group.textContent = labelText;
 
             const input = document.createElement("input");
             input.type = "date";
             input.id = id;
-            input.style.minWidth = "150px";
-            input.style.padding = "8px";
-            input.style.border = "1px solid #cbd5e1";
-            input.style.borderRadius = "6px";
+            input.className = "leave-date-input";
+            input.setAttribute("aria-label", labelText);
+
             group.appendChild(input);
             return group;
         };
@@ -124,24 +116,11 @@ function ensureLeaveDateRangeControls() {
             makeDateField("leaveEndDate", "Leave until")
         );
 
-        const staffSelect = $("leaveStaff");
+        const formCard = leaveSection.querySelector(".leave-form-card");
+        const fieldsGrid = leaveSection.querySelector(".leave-fields-grid");
 
-        // Find the direct child of leaveSection that contains
-        // the staff selector. insertBefore requires a direct child.
-        let insertBefore = staffSelect;
-
-        while (
-            insertBefore &&
-            insertBefore.parentElement !== leaveSection
-        ) {
-            insertBefore = insertBefore.parentElement;
-        }
-
-        if (
-            insertBefore &&
-            insertBefore.parentElement === leaveSection
-        ) {
-            leaveSection.insertBefore(wrapper, insertBefore);
+        if (formCard && fieldsGrid) {
+            formCard.insertBefore(wrapper, fieldsGrid);
         } else {
             leaveSection.prepend(wrapper);
         }
@@ -159,6 +138,56 @@ function ensureLeaveDateRangeControls() {
     }
 }
 
+
+/* =========================================================
+   31.2 LEAVE FORM FEEDBACK
+========================================================= */
+
+function showLeaveFormFeedback(message = "") {
+    const feedback = $("leaveFormFeedback");
+
+    if (feedback) {
+        feedback.textContent = message;
+    }
+
+    const staffSelect = $("leaveStaff");
+    const startInput = $("leaveStartDate");
+    const endInput = $("leaveEndDate");
+
+    if (staffSelect) {
+        staffSelect.removeAttribute("aria-invalid");
+    }
+
+    if (startInput) {
+        startInput.removeAttribute("aria-invalid");
+    }
+
+    if (endInput) {
+        endInput.removeAttribute("aria-invalid");
+    }
+}
+
+function setupLeaveFormControls() {
+    const cancelButton = $("cancelLeaveEdit");
+
+    if (!cancelButton || cancelButton.dataset.bound === "true") {
+        return;
+    }
+
+    cancelButton.dataset.bound = "true";
+
+    cancelButton.addEventListener("click", () => {
+        cancelLeavePeriodEdit();
+        showLeaveFormFeedback();
+        renderLeaveEntries();
+    });
+}
+
+
+/* =========================================================
+   31.3 LEAVE DATE VALIDATION
+========================================================= */
+
 function getLeaveDateRange() {
     const start = valueOf(
         "leaveStartDate",
@@ -171,9 +200,24 @@ function getLeaveDateRange() {
     ).trim();
 
     if (!start || !end) {
-        alert(
-            "Please select both the first and last leave dates."
+        showLeaveFormFeedback(
+            "Choose both a start date and an end date."
         );
+
+        if (!start && $("leaveStartDate")) {
+            $("leaveStartDate").setAttribute(
+                "aria-invalid",
+                "true"
+            );
+        }
+
+        if (!end && $("leaveEndDate")) {
+            $("leaveEndDate").setAttribute(
+                "aria-invalid",
+                "true"
+            );
+        }
+
         return null;
     }
 
@@ -185,9 +229,17 @@ function getLeaveDateRange() {
         Number.isNaN(endDate.getTime()) ||
         endDate < startDate
     ) {
-        alert(
-            "The leave end date must be on or after the start date."
+        showLeaveFormFeedback(
+            "The end date must be the same as or later than the start date."
         );
+
+        if ($("leaveEndDate")) {
+            $("leaveEndDate").setAttribute(
+                "aria-invalid",
+                "true"
+            );
+        }
+
         return null;
     }
 
@@ -195,9 +247,10 @@ function getLeaveDateRange() {
         Math.round((endDate - startDate) / 86400000) + 1;
 
     if (days > 366) {
-        alert(
-            "Please select a leave period of 366 days or less."
+        showLeaveFormFeedback(
+            "Please keep each leave period to 366 days or fewer."
         );
+
         return null;
     }
 
@@ -208,21 +261,30 @@ function getLeaveDateRange() {
     };
 }
 
+
+/* =========================================================
+   31.4 EXPAND DATE RANGE INTO INDIVIDUAL DATES
+========================================================= */
+
 function datesInLeaveRange(start, end) {
     const dates = [];
+
     const current = new Date(start + "T00:00:00");
     const last = new Date(end + "T00:00:00");
 
     while (current <= last) {
         const year = current.getFullYear();
+
         const month = String(
             current.getMonth() + 1
         ).padStart(2, "0");
+
         const day = String(
             current.getDate()
         ).padStart(2, "0");
 
         dates.push(`${year}-${month}-${day}`);
+
         current.setDate(current.getDate() + 1);
     }
 
@@ -245,8 +307,10 @@ function renderLeaveStaffOptions() {
 
     STAFF_LIST.forEach(name => {
         const option = document.createElement("option");
+
         option.value = name;
         option.textContent = name;
+
         select.appendChild(option);
     });
 
@@ -265,22 +329,40 @@ function renderLeaveEntries() {
     if (!container) return;
 
     const entries = getLeaveDraft();
+
     container.innerHTML = "";
 
     if (!entries.length) {
         const empty = document.createElement("div");
+
         empty.className = "leave-empty";
-        empty.textContent = "No staff leave added yet.";
+
+        empty.textContent =
+            "No leave periods added for this day. " +
+            "Add a staff member above to get started.";
+
         container.appendChild(empty);
         return;
     }
 
     entries.forEach((entry, index) => {
         const item = document.createElement("div");
+
         item.className = "leave-entry-item";
 
-        // Staff, reason and leave dates.
-        const details = document.createElement("span");
+        // Display-only elements. No database writes occur here.
+        const details = document.createElement("div");
+
+        details.className = "leave-entry-details";
+
+        const staffLabel = document.createElement("span");
+
+        staffLabel.className = "leave-entry-staff";
+        staffLabel.textContent = entry.staff || "Staff member";
+
+        const metaLabel = document.createElement("span");
+
+        metaLabel.className = "leave-entry-meta";
 
         const from = entry.startDate || manpowerDate;
         const until = entry.endDate || manpowerDate;
@@ -288,23 +370,23 @@ function renderLeaveEntries() {
         const dateLabel = from && until
             ? (
                 from === until
-                    ? " (" + formatDisplayDate(from) + ")"
-                    : " (" +
-                        formatDisplayDate(from) +
-                        " – " +
-                        formatDisplayDate(until) +
-                        ")"
+                    ? formatDisplayDate(from)
+                    : formatDisplayDate(from) +
+                      " – " +
+                      formatDisplayDate(until)
             )
-            : "";
+            : "Date not set";
 
-        details.textContent =
-            entry.staff +
-            " — " +
-            entry.reason +
+        metaLabel.textContent =
+            (entry.reason || "Leave") +
+            " · " +
             dateLabel;
+
+        details.append(staffLabel, metaLabel);
 
         // Edit button.
         const edit = document.createElement("button");
+
         edit.type = "button";
         edit.className = "small-btn";
         edit.textContent = "Edit period";
@@ -314,37 +396,64 @@ function renderLeaveEntries() {
 
             setValue("leaveStaff", entry.staff);
             setValue("leaveReason", entry.reason);
-            setValue("leaveStartDate", entry.startDate || manpowerDate);
-            setValue("leaveEndDate", entry.endDate || manpowerDate);
+
+            setValue(
+                "leaveStartDate",
+                entry.startDate || manpowerDate
+            );
+
+            setValue(
+                "leaveEndDate",
+                entry.endDate || manpowerDate
+            );
 
             const addButton = $("addLeaveEntry");
 
             if (addButton) {
-                addButton.textContent = "Update period";
+                addButton.innerHTML =
+                    '<span aria-hidden="true">✓</span> ' +
+                    "Update leave period";
             }
+
+            const formTitle = document.querySelector(
+                ".leave-form-heading h5"
+            );
+
+            if (formTitle) {
+                formTitle.textContent = "Edit leave period";
+            }
+
+            const cancelButton = $("cancelLeaveEdit");
+
+            if (cancelButton) {
+                cancelButton.hidden = false;
+            }
+
+            showLeaveFormFeedback();
         });
 
         // Remove button.
         const remove = document.createElement("button");
+
         remove.type = "button";
-        remove.className = "small-btn";
+        remove.className = "small-btn leave-remove-button";
         remove.textContent = "Remove";
 
         remove.addEventListener("click", () => {
-            const entry = getLeaveDraft()[index];
+            const currentEntry = getLeaveDraft()[index];
 
-            if (!entry) return;
+            if (!currentEntry) return;
 
             // Mark the entire original saved period for deletion.
             if (
-                entry.originalStartDate &&
-                entry.originalEndDate
+                currentEntry.originalStartDate &&
+                currentEntry.originalEndDate
             ) {
                 removedLeavePeriods.push({
-                    staff: entry.staff,
-                    reason: entry.reason,
-                    startDate: entry.originalStartDate,
-                    endDate: entry.originalEndDate
+                    staff: currentEntry.staff,
+                    reason: currentEntry.reason,
+                    startDate: currentEntry.originalStartDate,
+                    endDate: currentEntry.originalEndDate
                 });
             }
 
@@ -354,20 +463,31 @@ function renderLeaveEntries() {
             // Cancel editing if this period was being edited.
             if (editingLeaveIndex === index) {
                 cancelLeavePeriodEdit();
+            } else if (
+                editingLeaveIndex !== null &&
+                editingLeaveIndex > index
+            ) {
+                editingLeaveIndex -= 1;
             }
 
             renderLeaveEntries();
 
             console.log(
                 "Entire Off / Leave period marked for removal:",
-                entry
+                currentEntry
             );
         });
 
         item.append(details, edit, remove);
+
         container.appendChild(item);
     });
 }
+
+
+/* =========================================================
+   32.1 RESET LEAVE PERIOD EDITING
+========================================================= */
 
 function cancelLeavePeriodEdit() {
     editingLeaveIndex = null;
@@ -375,13 +495,39 @@ function cancelLeavePeriodEdit() {
     const addButton = $("addLeaveEntry");
 
     if (addButton) {
-        addButton.textContent = "Add Off / Leave";
+        addButton.innerHTML =
+            '<span aria-hidden="true">＋</span> ' +
+            "Add leave period";
+    }
+
+    const formTitle = document.querySelector(
+        ".leave-form-heading h5"
+    );
+
+    if (formTitle) {
+        formTitle.textContent = "Add a leave period";
+    }
+
+    const cancelButton = $("cancelLeaveEdit");
+
+    if (cancelButton) {
+        cancelButton.hidden = true;
     }
 
     setValue("leaveStaff", "");
     setValue("leaveReason", "Off Day");
-    setValue("leaveStartDate", manpowerDate || "");
-    setValue("leaveEndDate", manpowerDate || "");
+
+    setValue(
+        "leaveStartDate",
+        manpowerDate || ""
+    );
+
+    setValue(
+        "leaveEndDate",
+        manpowerDate || ""
+    );
+
+    showLeaveFormFeedback();
 }
 
 
@@ -390,6 +536,8 @@ function cancelLeavePeriodEdit() {
 ========================================================= */
 
 function addLeaveEntry() {
+    showLeaveFormFeedback();
+
     const staff = valueOf("leaveStaff").trim();
 
     const reason =
@@ -399,7 +547,17 @@ function addLeaveEntry() {
     const range = getLeaveDateRange();
 
     if (!staff) {
-        alert("Please select a staff member for Off / Leave.");
+        showLeaveFormFeedback(
+            "Select a staff member before adding this leave period."
+        );
+
+        if ($("leaveStaff")) {
+            $("leaveStaff").setAttribute(
+                "aria-invalid",
+                "true"
+            );
+        }
+
         return;
     }
 
@@ -432,6 +590,7 @@ function addLeaveEntry() {
         entries[editingLeaveIndex] = leaveEntry;
 
         cancelLeavePeriodEdit();
+
     } else {
         // If the same staff member already exists in the draft,
         // update their period instead of creating a duplicate.
@@ -448,9 +607,10 @@ function addLeaveEntry() {
 
             leaveEntry.originalEndDate =
                 oldEntry.originalEndDate ||
-            oldEntry.endDate;
+                oldEntry.endDate;
 
             entries[existingIndex] = leaveEntry;
+
         } else {
             entries.push(leaveEntry);
         }
@@ -472,6 +632,7 @@ function openManpowerModal(venue, date) {
 function openLeaveModal(venue, date) {
     openManpowerSection(venue, date, "leave");
 }
+
 
 /* =========================================================
    LOAD SAVED OFF / LEAVE DATE PERIODS
@@ -573,6 +734,11 @@ async function loadLeavePeriodsForDate(venue, date) {
     );
 }
 
+
+/* =========================================================
+   OPEN MANPOWER SECTION
+========================================================= */
+
 async function openManpowerSection(venue, date, mode) {
     const requestedMode =
         mode === "leave" ? "leave" : "manpower";
@@ -627,6 +793,8 @@ async function openManpowerSection(venue, date, mode) {
     renderLeaveStaffOptions();
 
     ensureLeaveDateRangeControls();
+    setupLeaveFormControls();
+    showLeaveFormFeedback();
 
     if ($("leaveStartDate")) {
         $("leaveStartDate").value = date;
@@ -758,6 +926,7 @@ function closeManpowerModal() {
     }
 }
 
+
 /* =========================================================
    36. SAVE PRESENT MANPOWER
 
@@ -818,7 +987,6 @@ async function savePresentManpower() {
     }
 }
 
-
 /* =========================================================
    37. SAVE OFF / LEAVE ENTRIES
 
@@ -833,7 +1001,9 @@ async function saveLeaveEntries() {
     const date = manpowerDate;
 
     if (!venue || !date) {
-        throw new Error("Missing venue or date for Off / Leave save.");
+        throw new Error(
+            "Missing venue or date for Off / Leave save."
+        );
     }
 
     if (!supabaseClient) {
@@ -881,7 +1051,7 @@ async function saveLeaveEntries() {
         }
     });
 
-    // Delete every database row belonging to the original period.
+    // Delete saved rows belonging to original leave periods.
     for (const period of uniquePeriods) {
         const { error } = await supabaseClient
             .from("manpower_leave_entries")
@@ -945,7 +1115,7 @@ async function saveLeaveEntries() {
         if (error) throw error;
     }
 
-    // Upsert the complete new or edited periods.
+    // Insert or update all dates in the selected leave periods.
     if (rangeEntries.length) {
         const { error } = await supabaseClient
             .from("manpower_leave_entries")
@@ -973,12 +1143,17 @@ async function saveLeaveEntries() {
     if (verified.length !== draft.length) {
         throw new Error(
             "Unable to verify Off / Leave changes. Expected " +
-            draft.length + " record(s), but found " +
-            verified.length + "."
+            draft.length +
+            " record(s), but found " +
+            verified.length +
+            "."
         );
     }
 
-    console.log("Verified Off / Leave records:", verified);
+    console.log(
+        "Verified Off / Leave records:",
+        verified
+    );
 
     removedLeavePeriods = [];
 
@@ -998,7 +1173,8 @@ async function saveManpower() {
     const buttonMode = saveButton?.dataset.mode;
 
     const saveMode =
-        buttonMode === "leave" || buttonMode === "manpower"
+        buttonMode === "leave" ||
+        buttonMode === "manpower"
             ? buttonMode
             : manpowerModalMode;
 
@@ -1015,6 +1191,7 @@ async function saveManpower() {
         alert(
             "Please reopen the Manpower or Off / Leave window."
         );
+
         return;
     }
 
@@ -1106,6 +1283,8 @@ function clearLeaveDraft() {
 
     draftLeaveEntries = [];
     editingLeaveIndex = null;
+
+    cancelLeavePeriodEdit();
     renderLeaveEntries();
 
     console.log(
@@ -1121,7 +1300,9 @@ function clearLeaveDraft() {
 ========================================================= */
 
 async function clearEntireManpowerDay() {
-    if (!manpowerVenue || !manpowerDate) return;
+    if (!manpowerVenue || !manpowerDate) {
+        return;
+    }
 
     const confirmed = confirm(
         "Delete ALL manpower information for " +
