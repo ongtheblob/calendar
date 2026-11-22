@@ -473,7 +473,7 @@ function renderEagleView() {
                         ? "Edit staff"
                         : "+ Staff";
 
-                staffButton.classList.add(
+                manpowerButton.classList.add(
                 "calendar-add-button",
                 "staff-button"
                 );
